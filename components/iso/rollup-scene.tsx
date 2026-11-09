@@ -46,7 +46,7 @@ const LAST: Record<Kind, Step> = {
   optimistic: {
     at: 8,
     title: 'Chờ khiếu nại',
-    body: 'Rollup lạc quan coi lô là đúng. Trong khoảng 7 ngày, ai thấy sai có thể nộp bằng chứng gian lận để sửa lại.',
+    body: 'Rollup lạc quan coi lô là đúng. Trong thời gian khiếu nại (thường vài ngày tới một tuần), ai thấy sai có thể nộp bằng chứng gian lận để sửa lại.',
   },
   zk: { at: 8, title: 'Kèm bằng chứng', body: 'ZK-rollup gửi kèm bằng chứng hợp lệ. Ethereum kiểm tra bằng chứng, nên không cần thời gian khiếu nại.' },
 };

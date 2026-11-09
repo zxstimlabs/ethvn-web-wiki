@@ -193,6 +193,16 @@ Dùng thống nhất trên toàn wiki (và trong ví ETH.vn). Phần lớn theo 
 | inclusion list (FOCIL, EIP-7805) | danh sách bắt buộc đưa vào | Mới là kế hoạch (tháng 11 năm 2026) |
 | escape hatch | lối thoát | Rút tài sản về Ethereum khi bên vận hành Layer 2 không hợp tác |
 | validium | validium | Giữ nguyên. Dữ liệu không đăng lên Ethereum |
+| optimium | optimium | Giữ nguyên (tên ETHBEAT dùng). Như rollup lạc quan nhưng dữ liệu không đăng lên Ethereum |
+| challenge period | thời gian khiếu nại | Của rollup lạc quan. Ghi số ngày theo từng mạng, có ngày tháng |
+| bond (fraud proofs) | tiền ký quỹ | Không viết "đặt cọc", vốn dành cho staking |
+| recursive proof | bằng chứng đệ quy | |
+| trusted setup | nghi thức thiết lập | Của SNARK. STARK không cần |
+| zkEVM | zkEVM | Giữ nguyên |
+| data availability committee (DAC) | hội đồng giữ dữ liệu | |
+| sidechain | chuỗi phụ | Không phải Layer 2 theo ethereum.org |
+| plasma | plasma | Giữ nguyên |
+| state channel, payment channel | kênh trạng thái, kênh thanh toán | |
 | permissioned / private chain | chuỗi riêng (chuỗi cấp phép) | |
 | tokenization | token hóa | |
 | real-world assets (RWA) | tài sản thực (RWA) | |

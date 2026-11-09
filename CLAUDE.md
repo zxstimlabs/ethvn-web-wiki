@@ -55,6 +55,8 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
   - It is also out of date on EIP-7702; the pages cover that an upgraded account's original key keeps full control.
   - Glamsterdam is described as planned, not live (as of November 2026).
   - Smart contracts, consensus, validators and gas were added on the user's request.
+  - Layer 2 (user's request, 2026-11-09) covers the L2 types: why data on Ethereum matters, optimistic rollups (bisection fraud proofs, bond, challenge period), ZK-rollups (validity proofs, recursion, SNARK vs STARK, zkEVM), a comparison table, then validium, optimium, sidechains, plasma and state channels in one table. Base's ZK + TEE multiproof is the "line is blurring" callout.
+    - Per-network facts come from ETHBEAT, read 2026-11-09, and are dated in the text: Arbitrum One challenge 6d 8h; Base 5d (1d when both proofs agree); ZKsync Era 1-day execution delay; ZKsync Era and Scroll wrap STARKs in SNARKs; Arbitrum Nova moved from optimium to optimistic rollup on 2026-08-31. Polygon zkEVM is now "Other" (proof system removed Dec 2025), so it isn't a ZK example. Refresh these with dates.
   - Đồng thuận covers the Byzantine Generals Problem, which ethereum.org barely covers, so it cites Lamport et al. 1982; then proof of work, then proof of stake.
   - Trình xác thực covers why stake is required and how global the network is.
   - Gas covers why gas exists; `bat-dau/phi-gas` covers how to pay less.
