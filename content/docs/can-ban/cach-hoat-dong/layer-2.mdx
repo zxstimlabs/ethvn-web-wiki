@@ -1,0 +1,69 @@
+---
+title: Layer 2
+description: Layer 2 chạy giao dịch bên ngoài Ethereum cho nhanh và rẻ, rồi ghi dữ liệu về Ethereum để thừa hưởng sự an toàn của nó.
+sources:
+  - https://ethereum.org/layer-2/learn/
+  - https://ethereum.org/developers/docs/scaling/
+  - https://ethereum.org/developers/docs/scaling/optimistic-rollups/
+  - https://ethereum.org/developers/docs/scaling/zk-rollups/
+  - https://ethereum.org/roadmap/dencun/
+  - https://ethereum.org/roadmap/fusaka/
+---
+
+Mỗi [khối](./khoi.mdx) của Ethereum chỉ chứa được một lượng giao dịch giới hạn, để người bình thường vẫn chạy được nút. Khi nhiều người dùng cùng lúc, phí tăng lên. **Layer 2** là cách giải quyết: chạy giao dịch ở nơi khác cho nhanh và rẻ, nhưng vẫn dựa vào Ethereum để giữ an toàn.
+
+Theo ethereum.org, Layer 2 là một chuỗi khối riêng, mở rộng Ethereum và thừa hưởng các bảo đảm an toàn của Ethereum. Ethereum khi đó được gọi là **Layer 1**.
+
+## Rollup: làm ở ngoài, ghi lại ở Ethereum
+
+Phần lớn Layer 2 ngày nay là **rollup**. Cách hoạt động:
+
+1. Bạn gửi giao dịch tới Layer 2. Một **bộ sắp xếp** (sequencer) xếp thứ tự và xác nhận gần như tức thì.
+2. Rất nhiều giao dịch được gom thành một **lô** (batch) và nén lại. Một lần chuyển ETH chiếm khoảng 112 byte trên Ethereum, nhưng chỉ khoảng 12 byte trong lô của rollup.
+3. Dữ liệu của lô được đăng lên Ethereum. Ai cũng tải về được để tự tính lại mọi số dư trên Layer 2.
+4. Ethereum được thuyết phục rằng lô này đúng, theo một trong hai cách bên dưới.
+
+Vì dữ liệu nằm trên Ethereum, muốn đảo ngược một giao dịch trên rollup thì phải đảo ngược chính Ethereum.
+
+<RollupScene />
+
+## Hai loại rollup
+
+**Rollup lạc quan** (optimistic rollup) mặc định coi mỗi lô là đúng. Sau khi lô được đăng, có khoảng **7 ngày** để bất kỳ ai nộp **bằng chứng gian lận** (fraud proof) nếu thấy sai. Chỉ cần một người trung thực theo dõi là đủ để bắt lỗi. Hệ quả: rút tiền từ rollup lạc quan về Ethereum phải chờ hết 7 ngày, trừ khi bạn trả phí cho một dịch vụ ứng trước. Ví dụ: Arbitrum One, OP Mainnet, Base.
+
+**ZK-rollup** gửi kèm mỗi lô một **bằng chứng hợp lệ** (validity proof): một bằng chứng toán học rằng mọi giao dịch trong lô được tính đúng. Hợp đồng trên Ethereum kiểm tra bằng chứng trước khi chấp nhận lô, nên không cần thời gian khiếu nại. Rút tiền chỉ cần chờ bằng chứng được tạo và kiểm tra. Ví dụ: ZKsync Era, Linea, Scroll, Starknet, Taiko.
+
+Bấm **Lạc quan** hoặc **ZK** ở hình trên để so sánh hai cách.
+
+<Callout type="info" title="Lưu ý">
+"ZK" (zero-knowledge, không kiến thức) không có nghĩa là riêng tư. Dữ liệu giao dịch của ZK-rollup vẫn được đăng công khai lên Ethereum.
+</Callout>
+
+## Blob: chỗ chứa dữ liệu rẻ cho rollup
+
+Đăng dữ liệu lên Ethereum là khoản chi lớn nhất của rollup. Từ nâng cấp Dencun năm 2024 (EIP-4844), rollup đăng dữ liệu vào **blob**: một loại dữ liệu đi kèm khối, có thị trường phí riêng và rẻ hơn nhiều so với trước.
+
+Blob không được giữ mãi. Các nút giữ blob khoảng 18 ngày, đủ lâu để bất kỳ ai tải về và kiểm tra. Nâng cấp Fusaka tháng 12 năm 2025 thêm PeerDAS, cho mỗi nút chỉ cần giữ một phần dữ liệu blob, mở đường cho nhiều blob hơn mỗi khối.
+
+## Những đánh đổi cần biết
+
+- **Bộ sắp xếp thường do một bên vận hành.** Bên đó có thể làm chậm hoặc từ chối giao dịch của bạn. Nhiều rollup cho phép bạn tự đưa giao dịch qua Ethereum sau một thời gian chờ, nhưng cách này phức tạp hơn. ETHBEAT (trước đây là L2BEAT) cho biết mạng nào có lối thoát này.
+- **Layer 2 còn non trẻ.** Mức độ an toàn khác nhau giữa các mạng. Trang [ETHBEAT](https://ethbeat.org) đánh giá từng mạng: ai có thể nâng cấp hợp đồng, có bằng chứng gian lận hay bằng chứng hợp lệ chưa.
+- **Không phải mạng nào tự gọi là "Layer 2" cũng là rollup.** Chuỗi phụ (sidechain) hay validium tự lo an toàn theo cách khác, không thừa hưởng đầy đủ an toàn của Ethereum.
+
+<Callout type="warn" title="Cảnh báo">
+Tiền trên Layer 2 nằm trên mạng đó, không nằm trên Ethereum. Muốn chuyển qua lại phải dùng **cầu nối** (bridge). Khi gửi hoặc rút từ sàn, chọn đúng mạng: gửi nhầm mạng có thể mất tiền.
+</Callout>
+
+## Tóm tắt
+
+- Layer 2 chạy giao dịch bên ngoài Ethereum rồi ghi dữ liệu về Ethereum, nên nhanh và rẻ mà vẫn dựa vào an toàn của Ethereum.
+- Rollup lạc quan chờ khoảng 7 ngày để ai cũng có thể khiếu nại. ZK-rollup kèm bằng chứng hợp lệ nên không cần chờ khiếu nại.
+- Từ năm 2024, rollup đăng dữ liệu vào blob, rẻ hơn nhiều.
+- Kiểm tra mức độ an toàn của từng mạng trên ETHBEAT trước khi gửi số tiền lớn.
+
+## Đọc tiếp
+
+- [Khối](./khoi.mdx)
+- [Phí gas](../bat-dau/phi-gas.mdx): vì sao Layer 2 rẻ hơn
+- [Ethereum nâng cấp thế nào](./nang-cap.mdx): những gì sắp tới

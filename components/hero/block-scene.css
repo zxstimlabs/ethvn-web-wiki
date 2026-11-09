@@ -1,0 +1,713 @@
+/* Home hero: "a block is born". Scene colours are CSS variables so the
+   code-generated SVG follows the light/dark theme without any JS. */
+
+.eth-scene {
+  --bg: var(--color-fd-background);
+  --fg: var(--color-fd-foreground);
+  --muted: var(--color-fd-muted-foreground);
+  --grid: color-mix(in oklab, var(--fg) 6%, transparent);
+  --lane: color-mix(in oklab, var(--fg) 17%, transparent);
+
+  /* neutral device faces */
+  --ink: #474e5b;
+  --top: #ffffff;
+  --left: #f0f2f5;
+  --right: #e0e4ea;
+  --shade: rgb(15 23 42 / 0.07);
+  --rack: #e3e7ed;
+  --led: #10b981;
+  --screen: #e6eaf0;
+  --screen-on: #bfdbfe;
+
+  /* meaning colours: transaction, block, consensus, proposer */
+  --tx: #2563eb;
+  --block: #7c3aed;
+  --vote: #059669;
+  --amber: #d97706;
+  --stripe: rgb(124 58 237 / 0.32);
+
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dark .eth-scene {
+  --grid: color-mix(in oklab, var(--fg) 7%, transparent);
+  --lane: color-mix(in oklab, var(--fg) 18%, transparent);
+  --ink: #9aa3b2;
+  --top: #2a2e36;
+  --left: #1f2329;
+  --right: #171a1f;
+  --shade: rgb(0 0 0 / 0.35);
+  --rack: #13161a;
+  --screen: #13161a;
+  --screen-on: #1d4ed8;
+  --tx: #60a5fa;
+  --block: #a78bfa;
+  --vote: #34d399;
+  --amber: #fbbf24;
+  --stripe: rgb(167 139 250 / 0.4);
+}
+
+.eth-scene .tone-block {
+  --top: #f4f0ff;
+  --left: #e6ddfe;
+  --right: #d4c6fc;
+  --ink: #5b3fc4;
+}
+.eth-scene .tone-final {
+  --top: #ecfaf3;
+  --left: #cff1e0;
+  --right: #afe4ca;
+  --ink: #047857;
+  --stripe: rgb(4 120 87 / 0.3);
+}
+.eth-scene .tone-tx {
+  --top: #dbeafe;
+  --left: #93c5fd;
+  --right: #60a5fa;
+  --ink: #1d4ed8;
+}
+.dark .eth-scene .tone-block {
+  --top: #342b5c;
+  --left: #29224a;
+  --right: #201a3b;
+  --ink: #a78bfa;
+}
+.dark .eth-scene .tone-final {
+  --top: #153d30;
+  --left: #103026;
+  --right: #0b251d;
+  --ink: #34d399;
+  --stripe: rgb(52 211 153 / 0.35);
+}
+.dark .eth-scene .tone-tx {
+  --top: #60a5fa;
+  --left: #2563eb;
+  --right: #1d4ed8;
+  --ink: #bfdbfe;
+}
+
+/* faces */
+.eth-scene .f-top,
+.eth-scene .f-left,
+.eth-scene .f-right {
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.eth-scene .f-top {
+  fill: var(--top);
+}
+.eth-scene .f-left {
+  fill: var(--left);
+}
+.eth-scene .f-right {
+  fill: var(--right);
+}
+.eth-scene .shade {
+  fill: var(--shade);
+}
+.eth-scene .grid-line {
+  fill: none;
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+
+/* device details */
+.eth-scene .rack,
+.eth-scene .screen {
+  fill: var(--rack);
+  stroke: var(--ink);
+  stroke-width: 0.6;
+}
+.eth-scene .screen {
+  fill: var(--screen);
+  transition: fill 0.2s;
+}
+.eth-scene .wallet[data-send='true'] .screen {
+  fill: var(--screen-on);
+}
+.eth-scene .vent {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.eth-scene .led {
+  fill: var(--led);
+}
+.eth-scene .eth {
+  fill: var(--ink);
+  opacity: 0.45;
+}
+.eth-scene .stripe {
+  fill: none;
+  stroke: var(--stripe);
+  stroke-width: 1;
+}
+.eth-scene .ghost {
+  fill: none;
+  stroke: var(--block);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.6;
+}
+
+/* validators: picked as proposer, or voting */
+.eth-scene .validator .f-top {
+  transition: fill 0.12s;
+}
+.eth-scene .validator[data-state='lit'] .f-top {
+  fill: color-mix(in oklab, var(--amber) 30%, var(--top));
+}
+.eth-scene .validator[data-state='proposer'] .f-top {
+  fill: color-mix(in oklab, var(--amber) 60%, var(--top));
+}
+.eth-scene .validator[data-state='proposer'] .f-left,
+.eth-scene .validator[data-state='proposer'] .f-right,
+.eth-scene .validator[data-state='proposer'] .f-top {
+  stroke: var(--amber);
+}
+.eth-scene .validator[data-state='voting'] .f-top {
+  fill: color-mix(in oklab, var(--vote) 50%, var(--top));
+}
+
+/* lanes: idle on the ground, "marching ants" in the packet's colour when busy */
+.eth-scene .lane {
+  fill: none;
+  stroke: var(--lane);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  transition: opacity 0.3s;
+}
+.eth-scene .lane[data-on='off'] {
+  opacity: 0;
+}
+.eth-scene .lane[data-on='tx'],
+.eth-scene .lane[data-on='block'],
+.eth-scene .lane[data-on='vote'] {
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  animation: eth-ants 0.5s linear infinite;
+}
+.eth-scene .lane[data-on='tx'] {
+  stroke: var(--tx);
+}
+.eth-scene .lane[data-on='block'] {
+  stroke: var(--block);
+}
+.eth-scene .lane[data-on='vote'] {
+  stroke: var(--vote);
+}
+@keyframes eth-ants {
+  to {
+    stroke-dashoffset: -9;
+  }
+}
+
+/* chain */
+.eth-scene .link {
+  stroke: var(--block);
+  stroke-width: 1.5;
+}
+.eth-scene .link-head {
+  fill: var(--block);
+}
+.eth-scene .gapline {
+  stroke: var(--muted);
+  stroke-width: 1.25;
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.eth-scene .final-dot {
+  fill: var(--vote);
+}
+.eth-scene .check {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dark .eth-scene .check {
+  stroke: #0b0b0c;
+}
+
+/* rings */
+.eth-scene .ring {
+  fill: none;
+  stroke-width: 1.5;
+}
+.eth-scene .ring[data-tone='amber'] {
+  stroke: var(--amber);
+}
+.eth-scene .ring[data-tone='block'] {
+  stroke: var(--block);
+}
+.eth-scene .ring[data-tone='vote'] {
+  stroke: var(--vote);
+}
+
+/* packets and callouts */
+.eth-scene .vote-dot {
+  fill: var(--vote);
+}
+.eth-scene .seal-dot {
+  fill: var(--amber);
+}
+.eth-scene .seal-text {
+  font-size: 9.5px;
+  font-weight: 600;
+  fill: var(--amber);
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+}
+.eth-scene .ptag-bg {
+  fill: var(--amber);
+}
+.eth-scene .ptag-text {
+  font-size: 9.5px;
+  font-weight: 600;
+  fill: var(--bg);
+}
+.eth-scene .ptag-line {
+  font-size: 9.5px;
+  font-weight: 700;
+  fill: var(--amber);
+}
+.eth-scene .ptag-leader {
+  stroke: var(--amber);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+/* text */
+.eth-scene .lbl {
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.eth-scene .lbl-title {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--fg);
+}
+.eth-scene .lbl-sub {
+  font-size: 9.5px;
+  fill: var(--muted);
+}
+.eth-scene .tag {
+  font-size: 9.5px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+}
+.eth-scene .tag-head {
+  fill: var(--fg);
+  font-weight: 600;
+}
+.eth-scene .tag-final {
+  fill: var(--vote);
+  font-weight: 600;
+}
+.eth-scene .badge-title {
+  font-size: 9.5px;
+  fill: var(--vote);
+  font-weight: 600;
+}
+.eth-scene .badge-count {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* HTML chrome around the scene */
+.eth-scene .eth-bar {
+  background: var(--block);
+  opacity: 0.7;
+}
+.eth-scene .eth-live-dot {
+  background: var(--vote);
+  animation: eth-pulse 2s ease-in-out infinite;
+}
+@keyframes eth-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+.eth-scene .eth-step[data-tone='tx'] .eth-step-bar {
+  background: var(--tx);
+}
+.eth-scene .eth-step[data-tone='block'] .eth-step-bar {
+  background: var(--block);
+}
+.eth-scene .eth-step[data-tone='vote'] .eth-step-bar {
+  background: var(--vote);
+}
+
+/* ── node internals, builders, relay board, 2/3 gauge, fast-forward ── */
+
+/* the wallet's transaction (and its slab in every builder's block) */
+.eth-scene .tone-mine {
+  --top: #bfdbfe;
+  --left: #3b82f6;
+  --right: #2563eb;
+  --ink: #1d4ed8;
+}
+/* execution layer, consensus layer, MEV-Boost */
+.eth-scene .tone-el {
+  --top: #f3f7ff;
+  --left: #e4ecfb;
+  --right: #d3def3;
+}
+.eth-scene .tone-cl {
+  --top: #f7f4ff;
+  --left: #ebe5fb;
+  --right: #dcd3f5;
+}
+.eth-scene .tone-mev {
+  --top: #fff8ec;
+  --left: #f8ead0;
+  --right: #efdbb6;
+}
+.eth-scene .tone-just {
+  --top: #f1fbf6;
+  --left: #e0f3ea;
+  --right: #cbe9da;
+  --ink: #059669;
+  --stripe: rgb(5 150 105 / 0.25);
+}
+.dark .eth-scene .tone-mine {
+  --top: #93c5fd;
+  --left: #3b82f6;
+  --right: #1d4ed8;
+  --ink: #dbeafe;
+}
+.dark .eth-scene .tone-el {
+  --top: #252d3b;
+  --left: #1d2430;
+  --right: #171c26;
+}
+.dark .eth-scene .tone-cl {
+  --top: #2b2740;
+  --left: #221f33;
+  --right: #1b1829;
+}
+.dark .eth-scene .tone-mev {
+  --top: #352c1d;
+  --left: #2a2317;
+  --right: #211c12;
+}
+.dark .eth-scene .tone-just {
+  --top: #17322a;
+  --left: #122a22;
+  --right: #0e221b;
+  --ink: #34d399;
+  --stripe: rgb(52 211 153 / 0.3);
+}
+
+.eth-scene .face-lbl {
+  font-size: 7px;
+  font-weight: 600;
+  fill: var(--fg);
+  opacity: 0.8;
+}
+.eth-scene .bus {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 1 3;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+.eth-scene .module .f-top {
+  transition: fill 0.15s;
+}
+.eth-scene .module[data-state='busy'] .f-top {
+  fill: color-mix(in oklab, var(--tx) 30%, var(--top));
+}
+.eth-scene .module[data-state='proposer'] .f-top {
+  fill: color-mix(in oklab, var(--amber) 45%, var(--top));
+}
+.eth-scene .module[data-state='signing'] .f-top {
+  fill: color-mix(in oklab, var(--amber) 75%, var(--top));
+}
+.eth-scene .module[data-state='proposer'] :is(.f-top, .f-left, .f-right),
+.eth-scene .module[data-state='signing'] :is(.f-top, .f-left, .f-right) {
+  stroke: var(--amber);
+}
+.eth-scene .builder[data-win='true'] .ghost {
+  stroke: var(--amber);
+  stroke-dasharray: none;
+  stroke-width: 1.5;
+  opacity: 1;
+}
+
+.eth-scene .board-title {
+  font-size: 8.5px;
+  fill: var(--muted);
+}
+.eth-scene .board-row {
+  font-size: 9.5px;
+  fill: var(--fg);
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+}
+.eth-scene .board-row[data-win='true'] {
+  fill: var(--amber);
+  font-weight: 700;
+}
+.eth-scene .bid-dot {
+  fill: var(--block);
+}
+
+.eth-scene .msg-dot {
+  stroke: var(--bg);
+  stroke-width: 1;
+}
+.eth-scene .msg[data-tone='amber'] .msg-dot {
+  fill: var(--amber);
+}
+.eth-scene .msg[data-tone='block'] .msg-dot {
+  fill: var(--block);
+}
+.eth-scene .msg-text {
+  font-size: 9px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+}
+.eth-scene .msg[data-tone='amber'] .msg-text {
+  fill: var(--amber);
+}
+.eth-scene .msg[data-tone='block'] .msg-text {
+  fill: var(--block);
+}
+.eth-scene .lane[data-on='amber'] {
+  stroke: var(--amber);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  animation: eth-ants 0.5s linear infinite;
+}
+
+.eth-scene .just-mark {
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--vote);
+}
+.eth-scene .tag-just {
+  fill: var(--vote);
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.eth-scene .gauge-title,
+.eth-scene .gauge-status,
+.eth-scene .gauge-mark {
+  font-size: 9px;
+  fill: var(--muted);
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+}
+.eth-scene .gauge-pct {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.eth-scene .gauge-track {
+  fill: color-mix(in oklab, var(--fg) 6%, transparent);
+  stroke: var(--lane);
+  stroke-width: 1;
+}
+.eth-scene .gauge-fill {
+  fill: var(--muted);
+  opacity: 0.6;
+}
+.eth-scene .gauge[data-done='true'] .gauge-fill {
+  fill: var(--vote);
+  opacity: 1;
+}
+.eth-scene .gauge[data-done='true'] .gauge-status {
+  fill: var(--vote);
+  font-weight: 600;
+}
+.eth-scene .gauge-tick {
+  stroke: var(--fg);
+  stroke-width: 1.25;
+}
+.eth-scene .gauge-mark {
+  fill: var(--fg);
+  font-weight: 700;
+}
+
+.eth-scene .ff-title {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--amber);
+}
+.eth-scene .ff-status {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--fg);
+}
+.eth-scene .ff[data-state='final'] .ff-status {
+  fill: var(--vote);
+}
+
+/* "+" buttons: relationships on the lines (larger) and details on parts (mini) */
+.eth-scene .info {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.3s;
+}
+.eth-scene .info-hit {
+  fill: transparent;
+}
+.eth-scene .info-box {
+  fill: var(--bg);
+  stroke: var(--muted);
+  stroke-width: 1.1;
+  transition:
+    fill 0.15s,
+    stroke 0.15s;
+}
+.eth-scene .info-plus {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1.4;
+  stroke-linecap: square;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.2s;
+}
+.eth-scene .info:hover .info-box,
+.eth-scene .info:focus-visible .info-box {
+  stroke: var(--amber);
+  fill: color-mix(in oklab, var(--amber) 18%, var(--bg));
+}
+.eth-scene .info:focus-visible .info-box {
+  stroke-width: 2;
+}
+/* visited: quieter, so the unexplored ones stand out */
+.eth-scene .info[data-seen='true'] .info-box {
+  fill: color-mix(in oklab, var(--fg) 12%, var(--bg));
+  stroke: var(--lane);
+}
+.eth-scene .info[data-seen='true'] .info-plus {
+  stroke: var(--muted);
+}
+.eth-scene .info[data-active='true'] .info-box {
+  fill: var(--fg);
+  stroke: var(--fg);
+}
+.eth-scene .info[data-active='true'] .info-plus {
+  stroke: var(--bg);
+  transform: rotate(45deg);
+}
+/* the network's buttons stay clickable while it is dimmed, just quieter */
+.eth-scene[data-mode='ff'] .info-net:not(:hover):not(:focus-visible) {
+  opacity: 0.55;
+}
+/* until the first one is opened, the first stop of the tour invites a click */
+.eth-scene:not([data-explored='true']) .info[data-info='wallet'] .info-box {
+  stroke: var(--amber);
+  animation: eth-invite 1.8s ease-in-out infinite;
+}
+@keyframes eth-invite {
+  50% {
+    stroke-width: 3;
+  }
+}
+
+.eth-scene .hud-paused {
+  display: none;
+  color: var(--fg);
+  font-weight: 600;
+}
+.eth-scene[data-paused='true'] .hud-paused {
+  display: inline;
+}
+.eth-scene[data-paused='true'] .hud-live,
+.eth-scene[data-paused='true'] .hud-ff {
+  display: none;
+}
+
+/* header while fast-forwarding */
+.eth-scene .hud-ff {
+  display: none;
+  color: var(--amber);
+  font-weight: 600;
+}
+.eth-scene[data-mode='ff'] .hud-ff {
+  display: inline;
+}
+.eth-scene[data-mode='ff'] .hud-live {
+  display: none;
+}
+.eth-scene[data-mode='ff'] .hud-num {
+  color: var(--amber);
+}
+.eth-scene[data-mode='ff'] .eth-bar {
+  background: var(--amber);
+}
+
+.eth-scene .ff-panel {
+  fill: color-mix(in oklab, var(--bg) 92%, transparent);
+  stroke: var(--lane);
+  stroke-width: 1;
+}
+
+/* tall (phone) layout: drawn about 1:1 on screen, so text is set larger.
+   Keep title/tag/gauge sizes in step with TALL.font in layout.ts. */
+.eth-scene[data-layout='tall'] .lbl-title {
+  font-size: 12.5px;
+}
+.eth-scene[data-layout='tall'] .tag {
+  font-size: 10px;
+}
+.eth-scene[data-layout='tall'] .badge-title,
+.eth-scene[data-layout='tall'] .badge-title,
+.eth-scene[data-layout='tall'] .seal-text,
+.eth-scene[data-layout='tall'] .ptag-line {
+  font-size: 10.5px;
+}
+.eth-scene[data-layout='tall'] .badge-count {
+  font-size: 12px;
+}
+.eth-scene[data-layout='tall'] .gauge-title,
+.eth-scene[data-layout='tall'] .gauge-status,
+.eth-scene[data-layout='tall'] .gauge-mark,
+.eth-scene[data-layout='tall'] .board-title,
+.eth-scene[data-layout='tall'] .msg-text {
+  font-size: 10px;
+}
+.eth-scene[data-layout='tall'] .gauge-pct,
+.eth-scene[data-layout='tall'] .board-row {
+  font-size: 10.5px;
+}
+.eth-scene[data-layout='tall'] .face-lbl {
+  font-size: 7.5px;
+}
+.eth-scene[data-layout='tall'] .ff-title {
+  font-size: 13px;
+}
+.eth-scene[data-layout='tall'] .ff-status {
+  font-size: 11.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eth-scene *,
+  .eth-scene *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}

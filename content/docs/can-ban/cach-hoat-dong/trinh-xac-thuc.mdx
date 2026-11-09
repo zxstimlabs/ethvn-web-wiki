@@ -1,0 +1,78 @@
+---
+title: Trình xác thực
+description: Những người khóa ETH làm tiền cọc để giữ an toàn cho Ethereum, chạy máy ở gần trăm quốc gia. Làm đúng được thưởng, gian lận mất cọc.
+sources:
+  - https://ethereum.org/staking/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/rewards-and-penalties/
+  - https://ethereum.org/developers/docs/nodes-and-clients/client-diversity/
+  - https://ethereum.org/roadmap/pectra/
+  - https://ethernodes.org/countries
+---
+
+**Trình xác thực** (validator) là những người giữ an toàn cho Ethereum. Họ là "các vị tướng" trong bài toán [đồng thuận](./dong-thuan.mdx): đề xuất khối mới, kiểm tra khối của người khác và bỏ phiếu. Để được làm việc đó, họ phải đặt cọc ETH.
+
+## Phải đặt cọc mới được tham gia
+
+Muốn chạy một trình xác thực, bạn khóa ít nhất **32 ETH** vào hợp đồng đặt cọc của Ethereum. Lý do rất đơn giản: người bỏ phiếu phải có thứ để mất nếu gian lận. Không có tiền cọc thì không có phiếu.
+
+- **Vì sao là 32 ETH mà không ít hơn?** Mức tối thiểu càng thấp thì càng nhiều trình xác thực, càng nhiều phiếu phải gửi qua lại mỗi khe, và máy chạy nút càng phải mạnh.
+- **Tối đa bao nhiêu?** Từ nâng cấp Pectra (tháng 5 năm 2025), một trình xác thực có thể giữ tới 2.048 ETH. Người có nhiều ETH không cần chạy hàng chục trình xác thực riêng lẻ nữa.
+- **Bao lâu thì bắt đầu?** Sau khi nạp tiền cọc, trình xác thực phải xếp hàng chờ kích hoạt, từ vài giờ tới vài tuần tùy số người đang chờ.
+
+Chỉ chạy một nút để tự kiểm tra chuỗi khối thì không cần ETH nào. Tiền cọc chỉ cần khi bạn muốn bỏ phiếu.
+
+<ValidatorsScene />
+
+## Trình xác thực làm gì?
+
+- **Đề xuất khối.** Mỗi khe 12 giây, một trình xác thực được chọn ngẫu nhiên để đề xuất khối. Tiền cọc càng nhiều thì càng hay được chọn.
+- **Bỏ phiếu.** Mỗi kỷ nguyên (6,4 phút), mọi trình xác thực đang hoạt động bỏ một phiếu **chứng thực** (attestation) cho khối đầu chuỗi và cho mốc của kỷ nguyên. Phiếu được chia theo từng **ủy ban** (committee) nhỏ, mỗi khe một ủy ban.
+
+## Thưởng và phạt
+
+- **Làm đúng được thưởng.** Bỏ phiếu đúng hạn và đề xuất khối thì nhận thêm ETH mới phát hành, cộng với tiền boa từ phí giao dịch. Tỷ lệ thưởng như nhau với mọi người, không phụ thuộc bạn giàu hay nghèo.
+- **Vắng mặt bị trừ một ít.** Máy tắt thì mất khoảng số tiền lẽ ra kiếm được trong thời gian đó. Hoạt động lại một thời gian tương đương là bù được. Vắng mặt không phải là gian lận.
+- **Gian lận bị cắt tiền cọc** (slashing). Có ba lỗi bị coi là gian lận, ví dụ ký hai khối khác nhau cho cùng một khe. Trình xác thực vi phạm bị trừ ngay một phần nhỏ tiền cọc, rồi bị buộc rời mạng lưới sau 36 ngày. Nếu chỉ một mình vi phạm, tổng thiệt hại thường dưới 0,1%. Nếu rất nhiều trình xác thực cùng vi phạm một lúc, như trong một cuộc tấn công có tổ chức, họ có thể mất tới toàn bộ tiền cọc.
+
+Phần lớn các vụ bị cắt tiền cọc tới nay là do sơ suất: chạy cùng một khóa trên hai máy một lúc, khiến khóa đó ký hai lần.
+
+## Có những cách đặt cọc nào?
+
+| Cách | Cần bao nhiêu | Đánh đổi |
+|---|---|---|
+| Tự đặt cọc tại nhà | 32 ETH | Tự giữ khóa, nhận đủ phần thưởng, giúp mạng lưới phi tập trung nhất. Phải tự lo máy chạy ổn định |
+| Vận hành nút có thế chấp | Khoảng 1,5 tới 4 ETH | Tự chạy máy, phần tiền cọc còn lại do người khác góp qua một giao thức |
+| Ủy quyền cho dịch vụ | 32 ETH | Bên dịch vụ chạy máy và giữ khóa ký. Bạn giữ quyền rút tiền, nhưng phải tin bên dịch vụ |
+| Đặt cọc chung, đặt cọc thanh khoản | Từ 0,01 ETH | Gom tiền nhiều người qua hợp đồng thông minh. Rủi ro lỗi hợp đồng và rủi ro tập trung vào ít bên vận hành |
+| Qua sàn giao dịch | Bất kỳ | Dễ nhất, nhưng phải tin sàn hoàn toàn và ít giúp ích cho mạng lưới nhất |
+
+<Callout type="error" title="Thận trọng">
+Đây không phải lời khuyên đầu tư. Mọi cách đặt cọc đều có rủi ro, và phần thưởng không được bảo đảm. Cẩn thận với những nơi hứa lãi cao bất thường cho việc "đặt cọc ETH": đó thường là lừa đảo.
+</Callout>
+
+## Ethereum toàn cầu đến đâu?
+
+Không có cơ quan nào đếm chính xác số nút, vì ai cũng chạy nút được mà không cần đăng ký. Các công cụ dò tìm chỉ thấy những nút nhận kết nối từ bên ngoài, nên con số thật còn lớn hơn. Theo [Ethernodes](https://ethernodes.org/countries), số liệu xem ngày 8 tháng 11 năm 2026:
+
+- Tìm thấy **8.717 nút** lớp thực thi ở **95 quốc gia và vùng lãnh thổ**, và 4.886 nút lớp đồng thuận ở 72 quốc gia và vùng lãnh thổ.
+- Có nút ở đủ các châu lục, từ Mỹ, Đức, Nhật, Singapore tới Brazil, Nam Phi, Úc. Việt Nam có 24 nút.
+- Nhiều nhất là Mỹ (khoảng 30%) và Đức (khoảng 14%), tiếp theo là Anh, Phần Lan và Pháp, mỗi nước khoảng 4%.
+
+Mạng lưới trải rộng như vậy nên không quốc gia nào một mình tắt được Ethereum. Miễn là trình xác thực nắm 2/3 tiền cọc còn hoạt động, chuỗi vẫn đạt tính cuối cùng. Nếu quá nhiều trình xác thực ngừng chạy cùng lúc, Ethereum dần trừ tiền cọc của những người vắng mặt cho tới khi những người còn lại đủ 2/3 trở lại.
+
+Nhưng sự phân tán chưa hoàn hảo, và cộng đồng đang theo dõi hai rủi ro:
+
+- **Tập trung về nơi đặt máy.** Gần một nửa số nút nằm ở hai nước, và nhiều nút thuê máy của vài nhà cung cấp đám mây lớn. Người tự chạy nút ở nhà giúp mạng lưới bớt phụ thuộc vào các nơi đó.
+- **Tập trung về phần mềm.** Mỗi nút chạy một trong nhiều phần mềm do các nhóm khác nhau viết. Nếu một phần mềm chiếm quá 2/3 mạng lưới và có lỗi, chuỗi có thể đi sai. Mục tiêu là không phần mềm nào chiếm quá 1/3. Xem tỷ lệ hiện tại ở [clientdiversity.org](https://clientdiversity.org).
+
+## Tóm tắt
+
+- Muốn làm trình xác thực phải đặt cọc ít nhất 32 ETH. Tiền cọc là thứ để mất nếu gian lận.
+- Làm đúng được thưởng, vắng mặt bị trừ ít, gian lận bị cắt tiền cọc và bị loại.
+- Nút Ethereum chạy ở khoảng 95 quốc gia và vùng lãnh thổ, nhưng vẫn tập trung nhiều ở Mỹ và Đức.
+
+## Đọc tiếp
+
+- [Đồng thuận](./dong-thuan.mdx): vì sao cần 2/3 số phiếu
+- [Địa chỉ và khóa](./dia-chi-va-khoa.mdx)

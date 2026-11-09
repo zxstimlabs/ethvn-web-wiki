@@ -1,0 +1,84 @@
+---
+title: Hợp đồng thông minh
+description: Những chương trình chạy trên Ethereum. Ai cũng đọc được mã, không ai một mình dừng hay sửa được, và mọi nút chạy ra cùng một kết quả.
+sources:
+  - https://ethereum.org/smart-contracts/
+  - https://ethereum.org/developers/docs/smart-contracts/
+  - https://ethereum.org/developers/docs/smart-contracts/upgrading/
+  - https://ethereum.org/developers/docs/transactions/
+---
+
+**Hợp đồng thông minh** (smart contract) là chương trình máy tính được lưu trên chuỗi khối. Nó làm theo logic "nếu điều này xảy ra thì làm điều kia", và luôn chạy đúng như mã đã viết. Đây là thứ làm Ethereum khác Bitcoin: ngoài chuyển tiền, Ethereum chạy được ứng dụng.
+
+Nhà khoa học máy tính Nick Szabo đặt ra cái tên này từ năm 1994. Ông hình dung một thị trường số nơi các thỏa thuận tự thực hiện, không cần bên trung gian đáng tin. Ethereum biến ý tưởng đó thành hiện thực.
+
+## Giống một máy bán hàng tự động
+
+Hãy nghĩ tới máy bán nước tự động:
+
+1. Bạn chọn món.
+2. Máy hiện giá.
+3. Bạn trả tiền.
+4. Máy kiểm tra bạn trả đủ chưa.
+5. Đủ thì máy nhả món. Thiếu thì không.
+
+Không cần người bán đứng cạnh. Luật đã được lập trình sẵn trong máy, và lần nào cũng chạy như nhau. Hợp đồng thông minh cũng vậy: đưa vào đúng điều kiện thì nhận được kết quả đã định trước.
+
+Ví dụ, bạn có thể viết một hợp đồng giữ tiền tiết kiệm cho con, chỉ cho rút sau một ngày nhất định. Rút sớm hơn, hợp đồng không chạy. Không cần ngân hàng, cũng không ai đổi ý giữa chừng được.
+
+## Hợp đồng nằm ở đâu?
+
+Hợp đồng thông minh là một loại [tài khoản](./dia-chi-va-khoa.mdx): có địa chỉ, có số dư, và thêm hai thứ:
+
+- **Mã** (code): các chức năng của hợp đồng, ví dụ "chuyển token".
+- **Dữ liệu** (state): những gì hợp đồng ghi nhớ, ví dụ số dư token của từng người.
+
+Hợp đồng không có khóa riêng tư. Không ai ký thay nó được, nó chỉ làm theo mã. Hợp đồng cũng không tự chạy: nó chỉ chạy khi có ai đó gửi [giao dịch](./chu-ky-so.mdx) gọi tới một chức năng của nó.
+
+<ContractScene />
+
+Trong hình, An gọi hợp đồng token USDC để chuyển 30 USDC cho Bình. Mỗi nút chạy cùng đoạn mã, ra cùng kết quả, và số dư được cập nhật. Khi An thử chuyển 500 USDC, nhiều hơn số đang có, mã dừng ở dòng kiểm tra. Giao dịch bị **hoàn tác** (revert): dữ liệu giữ nguyên như chưa có gì xảy ra, nhưng phí gas cho phần đã chạy vẫn bị tính.
+
+## Điều gì làm hợp đồng thông minh đặc biệt?
+
+- **Tự động và dự đoán được.** Hợp đồng chạy chính xác theo mã, không cần ai diễn giải. Hai thẩm phán có thể hiểu một hợp đồng giấy theo hai cách; hợp đồng thông minh thì chỉ có một cách.
+- **Công khai.** Ai cũng xem được mã và mọi giao dịch đã gọi tới hợp đồng.
+- **Không cần xin phép.** Ai biết lập trình cũng có thể **triển khai** (deploy) hợp đồng lên Ethereum. Triển khai cũng là một giao dịch, nên chỉ cần trả phí gas.
+- **Ghép nối được.** Hợp đồng gọi được hợp đồng khác, như những khối Lego. Một sàn đổi token gọi tới các hợp đồng token; một ứng dụng cho vay dùng giá từ một hợp đồng khác. Nhờ vậy ứng dụng mới xây được rất nhanh trên những gì đã có.
+- **Khó sửa sau khi triển khai.** Mã của hợp đồng mặc định không thay đổi được. Điều này giúp người dùng tin rằng luật sẽ không bị đổi. Một số dự án dùng cách thiết kế cho phép nâng cấp (ví dụ mẫu proxy), nghĩa là có người giữ quyền thay logic. Khi dùng một ứng dụng, nên biết ai giữ quyền đó.
+
+## Hợp đồng thông minh dùng để làm gì?
+
+Gần như mọi thứ một chương trình máy tính làm được. Những ứng dụng phổ biến nhất:
+
+| Ứng dụng | Hợp đồng làm gì |
+|---|---|
+| Token, stablecoin | Ghi số dư của từng người và cho phép chuyển, như USDC |
+| Sàn đổi token phi tập trung | Đổi token này lấy token khác theo công thức, không cần người khớp lệnh |
+| Cho vay | Giữ tài sản thế chấp. Khi giá trị xuống quá thấp, bất kỳ ai cũng có thể gọi hợp đồng để thanh lý |
+| NFT | Ghi ai sở hữu từng tài sản số độc nhất |
+| DAO | Cho thành viên bỏ phiếu, và thực hiện kết quả theo đúng luật đã định |
+| Ví thông minh, ví đa chữ ký | Cần nhiều chữ ký mới chuyển được tiền, hoặc đặt hạn mức chi tiêu |
+
+## Giới hạn cần biết
+
+- **Không tự biết chuyện ngoài đời.** Hợp đồng chỉ đọc được dữ liệu trên Ethereum. Muốn biết giá vàng hay kết quả một trận đấu, nó cần một **oracle**: dịch vụ đưa dữ liệu bên ngoài vào chuỗi khối. Hợp đồng chỉ an toàn bằng oracle mà nó tin.
+- **Mã sai thì sai đúng như mã.** Hợp đồng làm đúng những gì được viết, kể cả lỗi. Kẻ gian có thể lợi dụng lỗi để rút tiền, và vì mã khó sửa nên thiệt hại thường không lấy lại được. Năm 2016, một lỗi trong hợp đồng The DAO khiến 3,6 triệu ETH bị rút ra.
+- **Mỗi lần chạy đều tốn gas.** Mã càng phức tạp, phí càng cao.
+
+<Callout type="warn" title="Cảnh báo">
+Trước khi dùng một ứng dụng: vào đúng trang web chính thức, chỉ ký khi hiểu giao dịch sẽ làm gì, và cẩn thận khi cấp quyền cho hợp đồng dùng token của bạn. Xem [Chữ ký số](./chu-ky-so.mdx#ký-cái-gì-thì-đọc-kỹ-cái-đó) và [Giữ an toàn](../bat-dau/giu-an-toan.mdx).
+</Callout>
+
+## Tóm tắt
+
+- Hợp đồng thông minh là chương trình kèm dữ liệu, đặt tại một địa chỉ trên Ethereum.
+- Nó chỉ chạy khi có giao dịch gọi tới, và mọi nút chạy ra cùng một kết quả.
+- Lệnh vi phạm luật trong mã bị hoàn tác, nhưng phí gas vẫn mất.
+- Hợp đồng công khai, không cần xin phép và ghép nối được với nhau, nhưng lỗi trong mã có thể khiến người dùng mất tiền.
+
+## Đọc tiếp
+
+- [Token, stablecoin và NFT](../dung-ethereum/token-stablecoin-nft.mdx): những hợp đồng bạn dùng nhiều nhất
+- [Gas](./gas.mdx): vì sao mỗi lần chạy hợp đồng đều tốn phí
+- [Khối](./khoi.mdx): giao dịch gọi hợp đồng được đưa vào khối thế nào

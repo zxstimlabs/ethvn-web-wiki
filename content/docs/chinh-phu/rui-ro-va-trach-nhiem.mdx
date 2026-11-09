@@ -1,0 +1,86 @@
+---
+title: Rủi ro và trách nhiệm
+description: Khóa của cơ quan là con dấu số. Phí phải trả bằng ETH. Giá trị pháp lý do luật quyết định. Nhiều thí điểm đã dừng. Những điều cần tính trước khi bắt đầu.
+sources:
+  - https://publicsector.ethereum.foundation/case-studies/
+  - https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf
+  - https://publicsector.ethereum.foundation/docs/epic-mandate-brief.pdf
+  - https://prysm.offchainlabs.com/docs/misc/mainnet-postmortems/
+---
+
+## Khóa là con dấu
+
+Trên Ethereum, cơ quan được nhận diện bằng một địa chỉ, và mọi bản ghi được ký bằng **khóa riêng tư** của địa chỉ đó. Xem [Địa chỉ và khóa](../can-ban/cach-hoat-dong/dia-chi-va-khoa.mdx).
+
+- **Mất khóa:** không đăng được bản ghi mới, không thu hồi được giấy tờ đã cấp.
+- **Lộ khóa:** người khác đăng thay cơ quan, và bản ghi giả không xóa được.
+- **Cách giảm rủi ro:**
+  - dùng ví **nhiều chữ ký** (multisig) để mỗi bản ghi quan trọng cần vài cán bộ cùng ký (xem [Ví thông minh](../can-ban/dung-ethereum/vi-thong-minh.mdx));
+  - giữ khóa trong thiết bị chuyên dụng;
+  - có quy trình bàn giao khi đổi người;
+  - có kế hoạch đổi khóa và cách thông báo địa chỉ mới.
+- **Người dân** giữ giấy tờ trong ví cũng cần cách khôi phục khi mất điện thoại. Các trang của EF về OpenCerts, Canada và Bhutan đều nêu vấn đề quản lý khóa.
+
+## Phải giữ ETH để trả phí
+
+Mỗi lần ghi tốn [phí gas](../can-ban/cach-hoat-dong/gas.mdx), trả bằng ETH. Ở Singapore, các trường tham gia OpenCerts phải tự trả phí này. Với một cơ quan nhà nước, việc này đặt ra các câu hỏi:
+
+- **Dự toán:** giá ETH biến động, mức phí cũng biến động.
+- **Hạch toán:** ghi nhận và quyết toán khoản ETH như thế nào.
+- **Quy định:** cơ quan có được nắm giữ tài sản mã hóa hay không. Cần đối chiếu với quy định hiện hành về ngân sách, kế toán và tài sản mã hóa.
+
+Cách giảm chi phí: dùng Layer 2 có phí thấp hơn, gộp nhiều bản ghi vào một giao dịch, hoặc để một bên khác trả phí thay. Bên trả phí thay vẫn là người phải giữ ETH.
+
+## Giá trị pháp lý
+
+Không tài liệu nào của EF mà wiki đã đọc dẫn ra một đạo luật công nhận giá trị pháp lý của bản ghi trên chuỗi. Chính hướng dẫn của EF lưu ý rằng các ngân hàng trung ương coi **tính cuối cùng của thanh toán** (settlement finality) là khái niệm pháp lý, không chỉ là chuyện kỹ thuật. Một bản ghi trên Ethereum có giá trị chứng cứ hay không là do pháp luật quy định.
+
+## Dữ liệu cá nhân
+
+Dữ liệu trên mạng chính công khai và không xóa được, trong khi luật trao cho người dân quyền chỉnh sửa và yêu cầu xóa dữ liệu của mình. Xem [Đưa gì lên chuỗi, giữ gì ngoài chuỗi](./dua-gi-len-chuoi.mdx).
+
+## Phụ thuộc nhà cung cấp và nguồn dữ liệu
+
+Dùng một mạng không ai sở hữu không có nghĩa là hết phụ thuộc:
+
+- **Oracle:** số liệu kinh tế của Hoa Kỳ lên chuỗi qua hai công ty tư nhân (Chainlink và Pyth).
+- **Nguồn dữ liệu:** ở Kenya, khi chính phủ Hoa Kỳ tạm đóng cửa, dữ liệu vệ tinh bị gián đoạn và một đợt chi trả chậm 18 ngày.
+- **Phần mềm và tư vấn:** thí điểm ở Canada dùng phần mềm của một công ty (Bitaccess). Trang của EF về dự án này đặt câu hỏi hệ thống sẽ ra sao sau khi thí điểm kết thúc.
+
+Nhóm làm việc với khu vực công của EF cũng đặt "độc lập của tổ chức" làm nguyên tắc đầu tiên. Hãy giữ quyền với mã nguồn, dùng tiêu chuẩn mở, và có kế hoạch rút lui ngay từ đầu.
+
+## Thí điểm chưa phải là vận hành
+
+- OpenCerts (Singapore) bỏ mô hình dựa trên Ethereum năm 2025, sau 7 năm.
+- Thí điểm của Canada dừng năm 2019.
+- Giga ở Rwanda kết thúc năm 2025, khi chính phủ tự chi trả phí internet.
+- Kết quả ở Kenya do dự án tự báo cáo.
+
+Khi nghe một ví dụ "chạy trên Ethereum", hãy hỏi thêm: dự án còn chạy không, chạy trên mạng nào, và có đánh giá độc lập không. Một số ví dụ hay được nhắc thực ra chạy trên Polygon hay Celo, là những mạng riêng có trình xác thực riêng.
+
+## Rủi ro của chính mạng lưới
+
+- **Quy tắc thay đổi qua các đợt nâng cấp.** Các đợt này được lên kế hoạch và bàn công khai, nhưng cơ quan không có quyền quyết định.
+- **Sự cố vẫn xảy ra.** Tháng 5 năm 2023, mạng hai lần tạm ngừng đạt tính cuối cùng, khoảng 25 phút và khoảng một giờ, dù khối mới vẫn được tạo. Con số "chưa từng ngừng hoạt động" trong tài liệu của EF đúng hay không là tùy cách định nghĩa "ngừng".
+- **Lỗi trong hợp đồng thông minh.** Mã của cơ quan cần được kiểm toán độc lập. Các bản thử nghiệm kỹ thuật EF công bố tháng 11 năm 2026 mới chạy trên mạng thử nghiệm và chưa được kiểm toán.
+- **Layer 2 có thêm rủi ro bên vận hành.** Xem [Layer 2](../can-ban/cach-hoat-dong/layer-2.mdx).
+
+## Nguồn tài liệu có lập trường
+
+Quỹ Ethereum là bên vận động cho Ethereum. Bản giới thiệu của nhóm EPIC gọi Ethereum là lựa chọn dài hạn thực sự duy nhất cho hạ tầng công. Hướng dẫn của EF dùng những cụm như "đáng tin cậy nhất". Các nghiên cứu điển hình của EF thì thận trọng hơn và tự nêu giới hạn. Với quyết định lớn, hãy tìm thêm đánh giá độc lập.
+
+## Tóm tắt
+
+- Khóa của cơ quan là con dấu: cần nhiều chữ ký, thiết bị chuyên dụng, quy trình bàn giao và kế hoạch đổi khóa.
+- Trả phí bằng ETH đặt ra câu hỏi về dự toán, hạch toán và quy định.
+- Giá trị pháp lý của bản ghi do luật quyết định. Dữ liệu cá nhân không lên chuỗi công khai.
+- Nhiều ví dụ là thí điểm đã dừng. Hỏi rõ dự án còn chạy không, chạy trên mạng nào.
+
+## Đọc tiếp
+
+- [Làm việc với Quỹ Ethereum và tài liệu tham khảo](./hop-tac-va-tai-lieu.mdx)
+
+## Nguồn
+
+- Quỹ Ethereum: [nghiên cứu điển hình](https://publicsector.ethereum.foundation/case-studies/), [Ethereum Basics for Governments and Institutions](https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf), [EPIC Mandate Brief](https://publicsector.ethereum.foundation/docs/epic-mandate-brief.pdf)
+- Prysm: [báo cáo sự cố mạng chính](https://prysm.offchainlabs.com/docs/misc/mainnet-postmortems/) tháng 5 năm 2023

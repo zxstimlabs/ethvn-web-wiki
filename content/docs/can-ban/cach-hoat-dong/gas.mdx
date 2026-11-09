@@ -1,0 +1,75 @@
+---
+title: Gas
+description: Gas đo lượng tính toán mà mỗi giao dịch cần. Nhờ gas, Ethereum không bị spam, không bị treo vì vòng lặp vô tận, và người giữ mạng lưới được trả công.
+sources:
+  - https://ethereum.org/developers/docs/gas/
+  - https://ethereum.org/gas/
+  - https://ethereum.org/whitepaper/#computation-and-turing-completeness
+  - https://ethereum.org/ethereum-forks/#london
+---
+
+**Gas** là đơn vị đo lượng tính toán cần để thực hiện một việc trên Ethereum. Giống như xăng cho xe: đi xa thì tốn nhiều xăng, chạy chương trình phức tạp thì tốn nhiều gas.
+
+Bài [Phí gas](../bat-dau/phi-gas.mdx) hướng dẫn cách trả ít phí hơn. Bài này giải thích vì sao Ethereum cần gas ngay từ đầu.
+
+## Vì sao Ethereum cần gas?
+
+Ethereum là một chiếc máy tính dùng chung của cả thế giới. Điều đó kéo theo bốn vấn đề, và gas giải quyết cả bốn:
+
+1. **Mọi nút đều phải chạy lại.** Mỗi giao dịch được hàng nghìn nút chạy lại để kiểm tra. Tính toán trên Ethereum tốn tài nguyên của cả mạng lưới, nên người yêu cầu phải trả tiền.
+2. **Chống spam.** Nếu giao dịch miễn phí, kẻ xấu có thể gửi hàng triệu giao dịch rác làm nghẽn mạng lưới. Có phí thì spam rất tốn kém.
+3. **Chống vòng lặp vô tận.** Ethereum chạy được mọi loại chương trình, kể cả chương trình chạy mãi không dừng. Về lý thuyết, không có cách nào biết trước một chương trình bất kỳ có dừng hay không. Gas đặt ra một mức trần: hết gas là chương trình bị dừng, nên không ai làm treo được mạng lưới.
+4. **Giữ cho khối vừa phải.** Mỗi khối có giới hạn gas, nên máy tính bình thường vẫn đủ sức chạy nút.
+
+<GasScene />
+
+## Đơn vị gas và giá gas
+
+Cần phân biệt hai thứ:
+
+- **Lượng gas** phụ thuộc vào việc bạn làm. Mỗi phép tính có một giá gas cố định: phép cộng rẻ, ghi dữ liệu lâu dài lên chuỗi đắt hơn nhiều.
+- **Giá mỗi đơn vị gas** phụ thuộc vào độ đông của mạng lưới, tính bằng **gwei**. 1 gwei bằng một phần tỷ ETH.
+
+| Việc | Lượng gas (khoảng) |
+|---|---|
+| Gửi ETH | 21.000 |
+| Chuyển một token ERC-20 | 65.000 |
+| Chuyển một NFT | 85.000 |
+| Đổi token trên một sàn phi tập trung | 185.000 |
+
+Phí bạn trả bằng lượng gas đã dùng nhân với giá mỗi đơn vị gas. Ví dụ minh họa của ethereum.org: gửi ETH dùng 21.000 gas, phí cơ sở 10 gwei và phí ưu tiên 2 gwei, thì phí là 21.000 × 12 = 252.000 gwei, tức 0,000252 ETH. Giá thật thay đổi theo từng khối.
+
+## Giới hạn gas: trả cho phần đã dùng
+
+Khi gửi giao dịch, ví đặt một **giới hạn gas**: lượng gas tối đa bạn chịu trả.
+
+- **Dùng ít hơn giới hạn:** bạn chỉ trả cho phần đã dùng. Đặt giới hạn 50.000 cho một lần gửi ETH thì vẫn chỉ dùng 21.000, phần còn lại không bị tính.
+- **Giới hạn quá thấp so với mức tối thiểu:** giao dịch bị từ chối ngay, không vào khối và không tốn gì.
+- **Hết gas giữa chừng:** giao dịch dừng lại và **hoàn tác** mọi thay đổi, nhưng gas đã dùng vẫn mất. Công tính toán đã bỏ ra rồi, nên vẫn phải trả.
+
+## Phí cơ sở bị đốt, phí ưu tiên cho trình xác thực
+
+Từ nâng cấp London (tháng 8 năm 2021, EIP-1559), phí gồm hai phần:
+
+- **Phí cơ sở** (base fee): do giao thức tự đặt cho mỗi khối. Mỗi khối có một mức gas mục tiêu bằng nửa giới hạn. Khối trước đông hơn mục tiêu thì phí cơ sở tăng, vắng hơn thì giảm, mỗi lần tối đa 12,5%. Phí cơ sở bị **đốt**: biến mất vĩnh viễn, không ai nhận.
+- **Phí ưu tiên** (priority fee), hay tiền boa: trả cho trình xác thực đưa giao dịch của bạn vào khối. Không có tiền boa, trình xác thực không có lý do để chọn giao dịch của bạn.
+
+Ví cũng đặt một **phí tối đa** mỗi đơn vị gas. Bạn không bao giờ trả quá mức này. Nếu phí cơ sở lúc giao dịch vào khối thấp hơn, phần chênh lệch không bị tính.
+
+Vì phần lớn phí bị đốt, khi mạng lưới bận, lượng ETH bị đốt có thể nhiều hơn lượng ETH mới phát hành cho trình xác thực.
+
+<Callout type="info" title="Lưu ý">
+Phí trên Ethereum luôn trả bằng ETH, kể cả khi bạn gửi token khác. Hãy giữ một ít ETH trong ví để trả phí. Việc chuyển sang bằng chứng cổ phần năm 2022 không làm phí rẻ hơn. Thứ làm phí rẻ hơn là [Layer 2](./layer-2.mdx), nơi rollup trả một loại gas riêng cho dữ liệu blob.
+</Callout>
+
+## Tóm tắt
+
+- Gas đo lượng tính toán. Mọi nút đều phải chạy lại giao dịch, nên tính toán phải trả tiền.
+- Gas chống spam, chống vòng lặp vô tận và giữ khối ở kích thước vừa phải.
+- Phí bằng gas đã dùng nhân với giá gas. Phí cơ sở bị đốt, phí ưu tiên trả cho trình xác thực.
+- Hết gas giữa chừng thì giao dịch bị hoàn tác, nhưng phí vẫn mất.
+
+## Đọc tiếp
+
+- [Phí gas](../bat-dau/phi-gas.mdx): cách trả ít phí hơn
+- [Khối](./khoi.mdx): giới hạn gas của mỗi khối

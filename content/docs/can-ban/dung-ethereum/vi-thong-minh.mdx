@@ -1,0 +1,49 @@
+---
+title: Ví thông minh
+description: Tài khoản thường do một khóa duy nhất điều khiển. Ví thông minh cho tài khoản của bạn luật riêng như hạn mức, khôi phục qua người thân, gộp lệnh, nhờ trả phí, nhưng cũng có rủi ro mới cần biết.
+sources:
+  - https://ethereum.org/roadmap/account-abstraction/
+  - https://ethereum.org/roadmap/pectra/7702/
+  - https://ethereum.org/roadmap/pectra/
+  - https://ethereum.org/roadmap/fusaka/
+  - https://ethereum.org/wallets/find-wallet/
+---
+
+Tài khoản bạn tạo bằng một ví bình thường là tài khoản do khóa riêng tư điều khiển (EOA, xem [Địa chỉ và khóa](../cach-hoat-dong/dia-chi-va-khoa.mdx)). Theo ethereum.org: có khóa là làm được mọi thứ, không có khóa là không làm được gì. Mất khóa thì không lấy lại được; lộ khóa thì kẻ gian lấy hết ngay lập tức.
+
+**Ví thông minh** (smart wallet, smart account) thay đổi điều đó: tài khoản của bạn có thêm mã của một [hợp đồng thông minh](../cach-hoat-dong/hop-dong-thong-minh.mdx), nên bạn đặt được luật cho chính nó. Hướng phát triển này gọi là **trừu tượng hóa tài khoản** (account abstraction).
+
+<SmartWalletScene />
+
+## Ví thông minh làm được gì?
+
+- **Khôi phục qua người thân** (social recovery): chọn trước vài người hoặc vài thiết bị bạn tin. Mất điện thoại thì họ cùng xác nhận để gắn khóa mới vào tài khoản. Không còn cảnh mất một mảnh giấy là mất hết.
+- **Nhiều chữ ký** (multisig): giao dịch lớn cần nhiều khóa cùng ký, ví dụ 2 trên 3 thiết bị.
+- **Hạn mức và danh sách tin cậy:** mỗi ngày chỉ chuyển tối đa một số tiền, hoặc chỉ chuyển tới những địa chỉ đã duyệt. Kẻ gian lấy được điện thoại cũng không rút hết được.
+- **Gộp lệnh:** cho phép chi tiêu và đổi token trong cùng một giao dịch, thay vì ký hai lần.
+- **Nhờ trả phí:** ứng dụng có thể trả phí gas thay bạn, hoặc bạn trả phí bằng token khác thay vì ETH.
+- **Passkey:** ký bằng vân tay hay khuôn mặt, với khóa nằm trong chip bảo mật của điện thoại. Từ nâng cấp Fusaka (tháng 12 năm 2025), Ethereum hỗ trợ sẵn loại chữ ký này.
+
+## Hai cách để có ví thông minh
+
+1. **Tài khoản hợp đồng riêng** (theo tiêu chuẩn ERC-4337, chạy trên mạng chính từ tháng 3 năm 2023). Bạn có một địa chỉ mới, chính là một hợp đồng thông minh. Mọi luật nằm trong hợp đồng đó.
+2. **Nâng cấp tài khoản thường** (EIP-7702, từ nâng cấp Pectra tháng 5 năm 2025). Bạn giữ nguyên địa chỉ cũ và gắn thêm mã của một hợp đồng để có gộp lệnh, nhờ trả phí… Điểm quan trọng: **khóa riêng tư ban đầu vẫn có toàn quyền**. Gắn mã ví nhiều chữ ký vào tài khoản không biến nó thành ví nhiều chữ ký thật. Nếu cụm từ khôi phục cũ bị lộ, các luật mới không cứu được bạn.
+
+<Callout type="error" title="Thận trọng">
+Kẻ gian có thể dụ bạn "nâng cấp tài khoản" bằng cách gắn mã của một hợp đồng do chúng viết. Ký lệnh đó là trao toàn quyền tài khoản cho kẻ gian. Chỉ nâng cấp qua chính ứng dụng ví của bạn, không bao giờ qua một trang web hay đường dẫn lạ.
+</Callout>
+
+## Sắp tới
+
+Một đề xuất cho đợt nâng cấp Hegotá (giao dịch dạng khung, EIP-8141) có thể đưa khôi phục, hạn mức và nhờ trả phí vào thẳng giao thức, và mở đường cho chữ ký an toàn trước máy tính lượng tử. Tính tới tháng 11 năm 2026, đây vẫn là kế hoạch.
+
+## Tóm tắt
+
+- Tài khoản thường: một khóa làm mọi thứ, mất khóa là mất hết.
+- Ví thông minh: tài khoản có luật riêng như khôi phục qua người thân, nhiều chữ ký, hạn mức, gộp lệnh, nhờ trả phí, passkey.
+- Nâng cấp tài khoản thường (EIP-7702) giữ địa chỉ cũ, nhưng khóa cũ vẫn có toàn quyền. Chỉ nâng cấp qua ứng dụng ví của bạn.
+
+## Đọc tiếp
+
+- [Quyền riêng tư](./quyen-rieng-tu.mdx)
+- [Chữ ký số](../cach-hoat-dong/chu-ky-so.mdx)

@@ -1,0 +1,69 @@
+---
+title: Đọc một giao dịch
+description: Trình khám phá khối cho bạn tự tra mọi giao dịch, khối và địa chỉ trên Ethereum. Biết đọc trang giao dịch là biết tiền của mình đã đi đâu.
+sources:
+  - https://ethereum.org/developers/docs/data-and-analytics/block-explorers/
+  - https://ethereum.org/developers/docs/transactions/
+  - https://ethereum.org/community/support/scams/
+  - https://ethereum.org/guides/how-to-revoke-token-access/
+---
+
+Ethereum không có tổng đài để hỏi "tiền của tôi đã tới chưa". Nhưng vì mọi dữ liệu đều công khai, bạn có thể tự tra bằng **trình khám phá khối** (block explorer): một trang web hiển thị giao dịch, khối và địa chỉ trên Ethereum.
+
+Có nhiều trình khám phá khối. Etherscan được dùng nhiều nhất. Blockscout và Otterscan là mã nguồn mở. Beaconcha.in hiển thị lớp đồng thuận (khe, kỷ nguyên, trình xác thực). Ethplorer chuyên về token và có giao diện tiếng Việt. Tất cả đều do bên thứ ba vận hành, đọc từ cùng một chuỗi khối.
+
+<ExplorerScene />
+
+## Trang giao dịch có gì?
+
+Dán **mã băm giao dịch** (transaction hash) vào ô tìm kiếm. Ví thường có nút "xem trên trình khám phá khối" sau khi gửi.
+
+| Mục | Nghĩa |
+|---|---|
+| Trạng thái | Đang chờ, thành công hay thất bại |
+| Khối | Khối nào chứa giao dịch. Xem [Khối](../cach-hoat-dong/khoi.mdx) |
+| Thời gian | Lúc khối được tạo |
+| Từ, Tới | Địa chỉ gửi và địa chỉ nhận. "Tới" có thể là một [hợp đồng thông minh](../cach-hoat-dong/hop-dong-thong-minh.mdx) |
+| Giá trị | Số ETH được chuyển |
+| Token đã chuyển | Nếu giao dịch chuyển token, phần này cho biết token nào, bao nhiêu, cho ai |
+| Phí giao dịch | Tổng phí đã trả. Một phần bị đốt, phần còn lại cho trình xác thực |
+| Giới hạn gas, gas đã dùng | Bạn cho phép tối đa bao nhiêu gas, và thực tế dùng bao nhiêu. Xem [Gas](../cach-hoat-dong/gas.mdx) |
+| Phí cơ sở, phí ưu tiên | Giá mỗi đơn vị gas, tính bằng gwei |
+| Nonce | Số thứ tự giao dịch của địa chỉ gửi, đếm từ 0. Xem [Chữ ký số](../cach-hoat-dong/chu-ky-so.mdx#nonce-mỗi-giao-dịch-chỉ-chạy-một-lần) |
+| Dữ liệu đầu vào | Lệnh gửi tới hợp đồng. Nếu mã nguồn hợp đồng đã được công khai, trình khám phá khối dịch lệnh này ra tên dễ đọc |
+
+## Giao dịch đã chắc chắn chưa?
+
+"Thành công" nghĩa là giao dịch đã nằm trong một khối. Khoảng 13 tới 19 phút sau, khối đó đạt [tính cuối cùng](../cach-hoat-dong/dong-thuan.mdx#bằng-chứng-cổ-phần) và gần như không thể đảo ngược. Các trang về khối và kỷ nguyên thường ghi rõ khối đã đạt tính cuối cùng hay chưa.
+
+- **Đang chờ** (pending): giao dịch chưa vào khối, thường do phí ưu tiên thấp, hoặc do một giao dịch trước của bạn (nonce nhỏ hơn) còn kẹt.
+- **Thất bại** (failed): giao dịch đã vào khối nhưng bị hoàn tác, ví dụ do hết gas hoặc hợp đồng từ chối. Phí cho phần đã chạy vẫn mất.
+
+## Trang địa chỉ và trang khối
+
+- **Trang địa chỉ** cho thấy số dư ETH, các token đang giữ và toàn bộ lịch sử giao dịch. Ai cũng xem được: xem [Quyền riêng tư](./quyen-rieng-tu.mdx).
+- **Trang hợp đồng** có thêm người tạo, giao dịch tạo, và mã nguồn nếu đã được công khai.
+- **Trang khối** cho thấy số khối, thời gian, số giao dịch, gas đã dùng trên giới hạn, phí cơ sở, lượng phí bị đốt và mã băm của khối cha.
+
+## Dùng trình khám phá khối để tự bảo vệ
+
+- **Kiểm tra token có thật không.** Ai cũng tạo được token mang tên bất kỳ. Lấy địa chỉ hợp đồng chính thức từ trang của dự án rồi so với trình khám phá khối.
+- **Kiểm tra và thu hồi quyền chi tiêu.** Các công cụ như Revoke.cash hay trang kiểm tra quyền của Etherscan liệt kê những hợp đồng bạn đã cho phép dùng token của mình. Thu hồi quyền không làm mất tiền.
+- **Báo cáo địa chỉ lừa đảo** trên các trang như Chainabuse.
+
+Nhãn trình khám phá khối gắn cho một địa chỉ ("lừa đảo", tên sàn…) chỉ để tham khảo, không phải sự thật tuyệt đối.
+
+<Callout type="error" title="Thận trọng">
+Không ai đảo ngược được giao dịch đã vào khối. Người tự xưng là "hỗ trợ" của Etherscan, của ví hay của Ethereum, xin mã băm giao dịch rồi đòi cụm từ khôi phục hoặc phí "mở khóa", đều là kẻ lừa đảo. Hãy gõ địa chỉ trình khám phá khối trực tiếp, đừng bấm vào đường dẫn lạ.
+</Callout>
+
+## Tóm tắt
+
+- Trình khám phá khối cho bạn tự tra mọi giao dịch, khối và địa chỉ.
+- Trang giao dịch cho biết trạng thái, khối, ai gửi gì cho ai, phí, gas và nonce.
+- Dùng nó để kiểm tra token, thu hồi quyền chi tiêu và tự kiểm chứng thay vì tin lời người khác.
+
+## Đọc tiếp
+
+- [Token, stablecoin và NFT](./token-stablecoin-nft.mdx)
+- [Quyền riêng tư](./quyen-rieng-tu.mdx): ai cũng tra được như bạn

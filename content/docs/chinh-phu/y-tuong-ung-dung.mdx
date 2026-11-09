@@ -1,0 +1,49 @@
+---
+title: Ý tưởng ứng dụng, chưa có dự án
+description: Sáu hướng Quỹ Ethereum gợi ý cho khu vực công, từ giám sát mua sắm công tới cấp phép xây dựng. Tất cả mới là ý tưởng, kèm những câu hỏi khó cho từng hướng.
+sources:
+  - https://publicsector.ethereum.foundation/potential-applications/
+  - https://publicsector.ethereum.foundation/institutional-engagement/
+  - https://pse.dev/articles/state-of-private-voting-2026/state-of-private-voting-2026-v2.pdf
+---
+
+Quỹ Ethereum (EF) gợi ý sáu hướng ứng dụng cho khu vực công, và tự ghi rõ đây là điểm khởi đầu để tìm hiểu, không phải báo cáo về dự án đã làm xong. Chưa có số liệu triển khai cho hướng nào.
+
+Trước khi đi vào từng hướng, hãy hỏi câu đầu tiên: **vấn đề này có thật sự cần một cuốn sổ chung mà không bên nào kiểm soát không?** Nếu đã có một cơ quan được mọi bên tin, một cơ sở dữ liệu thông thường thường là đủ. Chính nhóm làm việc với khu vực công của EF cũng nói kết quả trao đổi có thể là một cách làm không dùng Ethereum.
+
+## Sáu hướng
+
+1. **Giám sát mua sắm công.** Một cuốn sổ chung ghi các quyết định và phê duyệt, để cơ quan, nhà thầu và kiểm toán cùng đối chiếu.
+   - Câu hỏi khó: ai được ghi vào sổ, và phần nào của hồ sơ thầu được công khai.
+2. **Xét điều kiện mà lộ ít dữ liệu.** Chứng minh một điều kiện, ví dụ đủ tuổi, mà không lộ dữ liệu cá nhân khác. Cách làm: bằng chứng không kiến thức. Xem [Danh tính số và chứng chỉ](./danh-tinh-va-chung-chi.mdx).
+   - Câu hỏi khó: phải có giấy tờ số do cơ quan cấp trước, và tốc độ trên điện thoại rẻ (8 tới 10 giây trong thử nghiệm của EF).
+3. **Ngân sách có sự tham gia của người dân.** Đề xuất, bỏ phiếu, phân bổ và chi trả nằm trong một cuốn sổ theo dõi được. Cách làm: hợp đồng thông minh.
+   - Câu hỏi khó: bỏ phiếu bí mật mà vẫn đếm được, và mỗi người chỉ một phiếu. Báo cáo *State of Private Voting 2026* (PSE và Shutter) tổng hợp các cách đang được thử.
+4. **Truy xuất nguồn gốc thuốc.** Cơ quan y tế kiểm tra thuốc đến từ đâu và đã đi qua những đâu.
+   - Câu hỏi khó: dữ liệu nhập sai từ đầu vẫn sai, và mọi khâu trong chuỗi cung ứng phải cùng ghi.
+5. **Cấp phép xây dựng.** Hồ sơ, kết quả kiểm tra và quyết định được chia sẻ giữa các cơ quan, để người dân biết hồ sơ đang ở đâu và căn cứ của quyết định.
+   - Câu hỏi khó: dữ liệu cá nhân của người xin phép, và việc kết nối với hệ thống hiện có.
+6. **Cam kết khí hậu.** Cam kết, tiến độ và kết quả đánh giá được ghi lại để ai cũng theo dõi.
+   - Câu hỏi khó: phần lớn số liệu là tự báo cáo.
+
+## Những công cụ đi kèm
+
+EF cũng nêu một số cơ chế dùng chung cho nhiều hướng:
+
+- **Giao dịch bí mật mà vẫn kiểm toán được:** người ngoài không xem được, nhưng kiểm toán viên được trao **khóa xem** (viewing key) thì xem được.
+- **Thanh toán riêng tư:** mỗi lần nhận tiền dùng một **địa chỉ dùng một lần** (stealth address), để người ngoài không nối các khoản với nhau. Xem [Quyền riêng tư](../can-ban/dung-ethereum/quyen-rieng-tu.mdx).
+- **Hồ sơ chính thức kiểm chứng được:** xác nhận có chữ ký của cơ quan, cùng mã băm của văn bản. Xem [Đưa gì lên chuỗi](./dua-gi-len-chuoi.mdx).
+
+## Tóm tắt
+
+- Sáu hướng: mua sắm công, xét điều kiện, ngân sách có sự tham gia, truy xuất thuốc, cấp phép xây dựng, cam kết khí hậu. Tất cả mới là ý tưởng.
+- Câu hỏi đầu tiên: có cần một cuốn sổ chung mà không bên nào kiểm soát không. Nếu không, một cơ sở dữ liệu là đủ.
+
+## Đọc tiếp
+
+- [Đánh giá Ethereum](./danh-gia-va-lua-chon.mdx)
+
+## Nguồn
+
+- Quỹ Ethereum: [Ứng dụng tiềm năng](https://publicsector.ethereum.foundation/potential-applications/), [Làm việc với các tổ chức](https://publicsector.ethereum.foundation/institutional-engagement/)
+- PSE và Shutter: [State of Private Voting 2026](https://pse.dev/articles/state-of-private-voting-2026/state-of-private-voting-2026-v2.pdf)

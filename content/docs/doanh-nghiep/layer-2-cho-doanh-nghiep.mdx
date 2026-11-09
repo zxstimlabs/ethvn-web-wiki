@@ -1,0 +1,84 @@
+---
+title: Layer 2 cho doanh nghiệp
+description: Coinbase, Sony, Kraken, Robinhood đều chạy Layer 2 của riêng mình trên Ethereum. Dùng chung một Layer 2 có sẵn hay tự chạy một mạng riêng, ai đã làm, và mức độ chín muồi của chúng tới đâu.
+sources:
+  - https://ethereum.org/organizations/enterprise/enterprise-l2s/
+  - https://ethereum.org/layer-2/networks/
+  - https://ethbeat.org/stages
+  - https://ethbeat.org/layer2s/summary
+  - https://base.org/blog/next-chapter-for-base-chain-1
+  - https://forum.arbitrum.foundation/t/arbitrumdao-factsheet-robinhood-chain-mainnet-launch/31041
+  - https://www.db.com/news/detail/20250618-dama-2-litepaper-institutional-blueprint-for-asset-tokenisation-and-servicing-on-ethereum-layer-2
+---
+
+[Layer 2](../can-ban/cach-hoat-dong/layer-2.mdx) chạy giao dịch bên ngoài Ethereum cho nhanh và rẻ, rồi gửi dữ liệu và bằng chứng về Ethereum. Với doanh nghiệp, đây là cách dùng Ethereum phổ biến nhất hiện nay:
+
+- **Rẻ và nhanh.** Phí thường chỉ bằng một phần nhỏ so với trên Ethereum. Từ ngày 5 tháng 11 năm 2026, Base tạo khối mỗi 200 mili giây.
+- **Vẫn dựa vào Ethereum.** Kết quả cuối cùng được ghi trên Ethereum, nên thừa hưởng tính [trung lập](./khong-gian-khoi-trung-lap.mdx) và [kiểm chứng được](./kiem-chung.mdx) của Ethereum, ở mức tùy thiết kế của từng mạng.
+- **Không cần token riêng để giữ an toàn.** Layer 2 trả phí cho Ethereum bằng ETH. An toàn đến từ Ethereum, không từ một đồng token mới.
+
+## Dùng chung hay tự chạy
+
+| | Dùng một Layer 2 có sẵn | Tự chạy Layer 2 riêng |
+|---|---|---|
+| Bắt đầu | Triển khai hợp đồng là xong | Phải dựng và vận hành cả một mạng |
+| Người dùng, thanh khoản | Có sẵn, dùng chung | Phải tự thu hút |
+| Tùy chỉnh | Theo luật của mạng đó | Chọn được token trả phí, ai được tham gia, dữ liệu để đâu… Xem [Tùy chỉnh một Layer 2](./tuy-chinh-layer-2.mdx) |
+| Phí giao dịch | Trả cho bên vận hành mạng | Thuộc về bạn, trừ phần trả cho Ethereum |
+| Trách nhiệm | Của bên vận hành mạng | Của bạn: chạy bộ sắp xếp 24/7, bảo mật, nâng cấp |
+| Ai phải tin ai | Bạn tin bên vận hành | Khách hàng và đối tác tin bạn |
+
+Theo ethereum.org, một mạng riêng có thể lên trong vài tuần nhờ các bộ công cụ có sẵn. Thời gian thật phụ thuộc nhiều vào yêu cầu bảo mật và tuân thủ của bạn.
+
+## Ai đã chạy Layer 2 riêng
+
+Số liệu theo ETHBEAT (trước đây là L2BEAT), ngày 8 tháng 11 năm 2026.
+
+| Mạng | Công ty | Bộ công cụ | Ra mắt mạng chính | Mức độ (ETHBEAT) |
+|---|---|---|---|---|
+| Base | Coinbase | OP Stack, đang chuyển sang mã riêng | Tháng 7 năm 2023 | Stage 1 |
+| Ink | Kraken | OP Stack | Tháng 12 năm 2024 | Stage 1 |
+| Unichain | Uniswap Labs | OP Stack | Tháng 2 năm 2025 | Stage 1 |
+| World Chain | World | OP Stack | Tháng 10 năm 2024 | Chưa xếp hạng |
+| Soneium | Sony | OP Stack | Tháng 1 năm 2025 | Chưa xếp hạng |
+| Celo | Celo | OP Stack | Chuyển thành Layer 2 tháng 3 năm 2025 | Stage 0 |
+| Robinhood Chain | Robinhood | Arbitrum | Tháng 7 năm 2026 | Chưa xếp hạng |
+
+"Chưa xếp hạng" nghĩa là ETHBEAT chưa coi đó là rollup đủ điều kiện Stage 0, ví dụ vì hệ thống bằng chứng chưa chạy đầy đủ, hay vì chỉ vài bên được phép khiếu nại. Năm 2026, Base tuyên bố rời OP Stack để chuyển sang mã nguồn riêng, vẫn giữ tương thích trong giai đoạn chuyển.
+
+**Đã công bố, chưa xác nhận đang chạy:**
+
+- **DAMA 2** của Deutsche Bank, một nền tảng token hóa trên một chuỗi dựng bằng ZK Stack. Thông cáo tháng 6 năm 2025 đặt mục tiêu ra mắt bản đầu tiên trong nửa cuối năm 2025.
+- **Nightfall** do EY phát triển, một rollup giữ riêng tư bằng bằng chứng không kiến thức, mã nguồn mở. Năm 2026 có công bố triển khai trên Starknet, chưa thấy xác nhận mạng chính.
+- **Jovay** của Ant Digital (Ant Group). Có mạng thử nghiệm năm 2025, nhưng ETHBEAT hiện xếp vào nhóm đã lưu trữ.
+
+**Đã dừng:** Kinto, một Layer 2 chỉ cho người dùng đã xác minh danh tính và từng đạt Stage 1, đóng cửa ngày 30 tháng 9 năm 2025. Một mạng riêng có thể dừng; hãy tính trước người dùng sẽ rút tài sản thế nào.
+
+## Mức độ chín muồi: Stage 0, 1, 2
+
+ETHBEAT xếp các rollup theo ba mức:
+
+- **Stage 0:** dữ liệu và trạng thái được đăng lên Ethereum, ai cũng dựng lại được trạng thái, có hệ thống bằng chứng. Bên vận hành vẫn có nhiều quyền.
+- **Stage 1:** chỉ khi chiếm được ít nhất 75% của một **hội đồng bảo an** (security council) mới chặn được việc rút tiền hay rút sai được. Nâng cấp do bên khác thực hiện phải cho người dùng ít nhất 7 ngày để rút trước.
+- **Stage 2:** ai cũng nộp được bằng chứng gian lận, người dùng có ít nhất 30 ngày để rút trước một nâng cấp họ không muốn, và hội đồng bảo an chỉ được can thiệp khi có lỗi phát hiện trên chuỗi.
+
+Ngày 8 tháng 11 năm 2026, ETHBEAT theo dõi 95 mạng: 6 mạng ở Stage 1 (Base, Arbitrum One, OP Mainnet, Ink, Starknet, Unichain), 4 mạng ở Stage 2, đều rất nhỏ. Phần lớn Layer 2 của doanh nghiệp vẫn ở Stage 0 hoặc chưa xếp hạng. Nghĩa là người dùng còn phải tin bên vận hành nhiều hơn mức Ethereum đòi hỏi.
+
+## Tóm tắt
+
+- Layer 2 cho doanh nghiệp tốc độ, phí thấp và tùy chỉnh, trong khi vẫn ghi kết quả về Ethereum.
+- Dùng chung một mạng có sẵn thì đơn giản; tự chạy mạng riêng thì được tùy chỉnh và phí, đổi lại phải vận hành và khách hàng phải tin bạn.
+- Coinbase, Kraken, Uniswap Labs, Sony, World, Robinhood đều đã có mạng riêng. Phần lớn các mạng của doanh nghiệp chưa đạt Stage 1.
+
+## Đọc tiếp
+
+- [Tùy chỉnh một Layer 2](./tuy-chinh-layer-2.mdx)
+- [Layer 2](../can-ban/cach-hoat-dong/layer-2.mdx): rollup hoạt động thế nào
+
+## Nguồn
+
+- ethereum.org: [Layer 2 cho doanh nghiệp](https://ethereum.org/organizations/enterprise/enterprise-l2s/), [các mạng Layer 2](https://ethereum.org/layer-2/networks/)
+- ETHBEAT: [các mức Stage](https://ethbeat.org/stages), [tổng quan Layer 2](https://ethbeat.org/layer2s/summary) (đọc ngày 8 tháng 11 năm 2026)
+- [Base: chặng tiếp theo của Base Chain](https://base.org/blog/next-chapter-for-base-chain-1) (2026)
+- [Arbitrum DAO: Robinhood Chain ra mắt mạng chính](https://forum.arbitrum.foundation/t/arbitrumdao-factsheet-robinhood-chain-mainnet-launch/31041)
+- [Deutsche Bank: DAMA 2](https://www.db.com/news/detail/20250618-dama-2-litepaper-institutional-blueprint-for-asset-tokenisation-and-servicing-on-ethereum-layer-2) (tháng 6 năm 2025)

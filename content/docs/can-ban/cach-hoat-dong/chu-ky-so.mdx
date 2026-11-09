@@ -1,0 +1,71 @@
+---
+title: Chữ ký số
+description: Trên Ethereum không có mật khẩu hay ngân hàng xác nhận bạn là ai. Mỗi giao dịch mang một chữ ký số, ai cũng kiểm tra được mà không cần biết khóa của bạn.
+sources:
+  - https://ethereum.org/developers/docs/transactions/
+  - https://ethereum.org/developers/docs/accounts/
+  - https://ethereum.org/developers/docs/gas/
+---
+
+Khi bạn chuyển khoản ở ngân hàng, ngân hàng xác nhận bạn là chủ tài khoản qua mật khẩu và mã OTP. Ethereum không có ai đứng giữa để xác nhận. Thay vào đó, mỗi giao dịch mang theo một **chữ ký số** (digital signature).
+
+Chữ ký số giúp bất kỳ ai cũng kiểm tra được hai điều:
+
+1. Giao dịch do đúng chủ khóa riêng tư ký.
+2. Nội dung giao dịch không bị sửa sau khi ký.
+
+Không có chữ ký, ai cũng có thể phát đi lệnh "chuyển 5 ETH từ tài khoản của An sang tài khoản của tôi", và không ai phân biệt được lệnh đó có phải của An hay không.
+
+## Một giao dịch gồm những gì?
+
+**Giao dịch** (transaction) là một lệnh đã ký, gửi từ một tài khoản. Các phần chính:
+
+| Phần | Nghĩa |
+|---|---|
+| Từ | Địa chỉ gửi, là người ký giao dịch |
+| Tới | Địa chỉ nhận: một người, hoặc một hợp đồng thông minh |
+| Giá trị | Số ETH chuyển đi |
+| Dữ liệu | Lệnh gửi tới hợp đồng thông minh, nếu có. Chuyển ETH thông thường thì để trống |
+| Nonce | Số thứ tự giao dịch của tài khoản: 0, 1, 2… |
+| Giới hạn gas, phí tối đa, phí ưu tiên | Bạn sẵn sàng trả phí tới đâu. Xem [Phí gas](../bat-dau/phi-gas.mdx) |
+| Chữ ký | Được ví tạo ra bằng khóa riêng tư, từ toàn bộ nội dung phía trên |
+
+## Ký và kiểm tra
+
+<SignatureScene />
+
+Ví ký giao dịch ngay trên thiết bị của bạn. Khóa riêng tư không bao giờ rời khỏi ví. Thứ được gửi lên mạng lưới chỉ là nội dung giao dịch kèm chữ ký.
+
+Mỗi nút nhận được giao dịch sẽ tự kiểm tra. Từ chữ ký và nội dung, nút tính ra khóa công khai, rồi địa chỉ của người ký. Nếu địa chỉ đó đúng là người gửi, chữ ký hợp lệ. Nút làm được việc này mà không cần biết khóa riêng tư của bạn.
+
+Nếu ai đó sửa nội dung trên đường đi, dù chỉ một chữ số, phép kiểm tra sẽ ra một địa chỉ khác. Giao dịch bị từ chối. Muốn có chữ ký hợp lệ cho nội dung mới thì phải có khóa riêng tư của bạn.
+
+## Nonce: mỗi giao dịch chỉ chạy một lần
+
+Mỗi tài khoản có một bộ đếm gọi là **nonce**. Giao dịch đầu tiên có nonce 0, giao dịch sau có nonce 1, và cứ thế tăng dần. Với mỗi tài khoản, mỗi nonce chỉ được dùng một lần.
+
+Nhờ vậy, kẻ gian không thể lấy một giao dịch bạn đã ký rồi gửi lại lần nữa để rút tiền thêm lần nữa. Kiểu tấn công đó gọi là **tấn công phát lại** (replay attack).
+
+Nonce cũng giải thích một tình huống hay gặp: nếu một giao dịch bị kẹt vì trả phí quá thấp, các giao dịch sau của bạn sẽ phải chờ nó. Ví thường cho bạn tăng phí hoặc hủy giao dịch kẹt bằng cách gửi giao dịch mới cùng nonce.
+
+## Ký cái gì thì đọc kỹ cái đó
+
+Chữ ký không chỉ dùng để chuyển ETH. Bạn cũng ký khi đổi token, đăng nhập vào ứng dụng hay cho phép một hợp đồng thông minh dùng token của mình. Chữ ký có giá trị như chữ ký thật: ký rồi là không rút lại được.
+
+Vấn đề là nhiều yêu cầu ký chỉ hiện một chuỗi ký tự khó hiểu. Ký khi không hiểu mình đang ký gì gọi là **ký mù** (blind signing), và đó là cách nhiều người mất tiền. Ví mới đang chuyển sang **ký rõ ràng** (clear signing), hiện ra bằng lời ý định của giao dịch, ví dụ "Đổi 1.000 USDC lấy ít nhất 0,25 WETH".
+
+<Callout type="warn" title="Cảnh báo">
+Đừng ký khi không hiểu nội dung. Một chữ ký cấp quyền (approve hoặc permit) cho trang lạ có thể cho phép kẻ gian rút hết token đó khỏi ví của bạn mà không cần hỏi lại. Xem [Giữ an toàn](../bat-dau/giu-an-toan.mdx).
+</Callout>
+
+## Tóm tắt
+
+- Chữ ký số chứng minh giao dịch do chủ khóa ký và chưa bị sửa.
+- Ai cũng kiểm tra được chữ ký mà không cần biết khóa riêng tư.
+- Nonce đánh số giao dịch, nên một giao dịch đã ký không thể bị gửi lại để chạy lần hai.
+- Chỉ ký khi hiểu rõ mình đang ký gì.
+
+## Đọc tiếp
+
+- [Hợp đồng thông minh](./hop-dong-thong-minh.mdx): khi giao dịch gọi tới một chương trình
+- [Khối](./khoi.mdx): giao dịch đã ký được đưa vào khối thế nào

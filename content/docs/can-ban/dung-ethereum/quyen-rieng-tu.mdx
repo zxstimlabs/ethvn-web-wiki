@@ -1,0 +1,59 @@
+---
+title: Quyền riêng tư
+description: Ethereum công khai dưới bút danh, không ẩn danh. Ai cũng đọc được mọi giao dịch của một địa chỉ, và chỉ cần một lần địa chỉ bị gắn với tên bạn là cả lịch sử bị lộ.
+sources:
+  - https://ethereum.org/privacy/
+  - https://ethereum.org/privacy/ethereum/
+  - https://ethereum.org/roadmap/privacy/
+  - https://ethereum.org/latest/next-great-wallet-private/
+  - https://ethereum.org/run-a-node/
+---
+
+Nhiều người nghĩ tiền mã hóa là ẩn danh. Với Ethereum thì không. Trên chuỗi không ghi tên bạn, chỉ có địa chỉ, nên Ethereum **công khai dưới bút danh** (pseudonymous). Nhưng theo ethereum.org, chỉ cần phân tích cách một địa chỉ hoạt động là đủ để lộ thông tin nhạy cảm, thậm chí nhận ra người đứng sau.
+
+<PrivacyScene />
+
+## Những gì ai cũng xem được
+
+Mở một [trình khám phá khối](./doc-giao-dich.mdx), bất kỳ ai cũng thấy về một địa chỉ:
+
+- số dư hiện tại và các token đang giữ,
+- mọi khoản đã nhận và đã gửi, gửi cho ai, lúc nào,
+- mọi hợp đồng và ứng dụng địa chỉ đó từng dùng.
+
+Dữ liệu này nằm trên chuỗi mãi mãi, không xóa được.
+
+## Địa chỉ bị gắn với bạn thế nào?
+
+- **Rút tiền từ sàn đã xác minh danh tính.** Sàn biết địa chỉ nhận là của bạn. Dữ liệu của sàn có thể bị lộ hoặc bị yêu cầu cung cấp.
+- **Tự công khai:** đăng địa chỉ lên mạng xã hội, đặt tên ENS giống tên tài khoản mạng xã hội, nhận tiền công khai.
+- **Liên kết các địa chỉ:** nạp tiền cho nhiều địa chỉ từ cùng một nguồn, hay để chúng chuyển tiền qua lại, là đủ để người phân tích gom chúng thành của một người. Vì vậy dùng nhiều địa chỉ giúp ít hơn bạn nghĩ.
+- **Ví và nút cũng biết.** Nút mà ví của bạn hỏi (thường của một nhà cung cấp) thấy địa chỉ IP, các địa chỉ ví của bạn và lúc bạn dùng. Xem [Nút](../cach-hoat-dong/nut.mdx).
+
+## Giữ riêng tư hơn
+
+- **Tách địa chỉ theo việc**, và đừng nạp tiền cho chúng từ cùng một nguồn. Cách này giảm rủi ro, nhưng không làm bạn ẩn danh.
+- **Cẩn thận với những gì bạn công khai:** địa chỉ, tên ENS, ảnh chụp màn hình ví.
+- **Dùng nút của chính mình**, hoặc một nút bạn tin, thay cho nút mặc định của ví.
+- **Công cụ riêng tư** đang phát triển, như địa chỉ dùng một lần (stealth address, ERC-5564), các nhóm giao dịch riêng tư (privacy pools) và các Layer 2 tập trung vào riêng tư. Chúng có đánh đổi về phí và độ phức tạp, và mỗi quốc gia có quy định khác nhau: hãy tìm hiểu quy định hiện hành trước khi dùng.
+
+Công nghệ "không kiến thức" (ZK) không tự làm mọi thứ riêng tư: dữ liệu đăng lên chuỗi, địa chỉ IP hay ứng dụng bạn dùng vẫn có thể lộ thông tin.
+
+<Callout type="warn" title="Cảnh báo">
+Đừng khoe số dư hay địa chỉ đang giữ nhiều tiền. Khi người khác biết bạn có bao nhiêu, kẻ xấu có thể tìm tới bạn ngoài đời để ép bạn chuyển tiền. Những vụ như vậy đang tăng lên.
+</Callout>
+
+## Sắp tới
+
+Lộ trình của Ethereum đặt mục tiêu "riêng tư mặc định": đọc dữ liệu riêng tư, gửi giao dịch riêng tư, và chứng minh điều gì đó mà không lộ dữ liệu. Theo ethereum.org, chưa phần nào trong số này hoàn thành.
+
+## Tóm tắt
+
+- Ethereum công khai dưới bút danh: ai cũng đọc được mọi giao dịch của một địa chỉ.
+- Một lần địa chỉ bị gắn với tên bạn, ví dụ qua sàn, là cả lịch sử bị lộ.
+- Tách địa chỉ, cẩn thận khi công khai, dùng nút của mình. Không cách nào trong số đó làm bạn hoàn toàn ẩn danh.
+
+## Đọc tiếp
+
+- [Đọc một giao dịch](./doc-giao-dich.mdx): xem những gì người khác thấy
+- [Giữ an toàn](../bat-dau/giu-an-toan.mdx)

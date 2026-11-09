@@ -1,0 +1,62 @@
+---
+title: Địa chỉ và khóa
+description: Địa chỉ Ethereum được tính ra từ một cặp khóa. Địa chỉ cứ chia sẻ thoải mái; khóa riêng tư và cụm từ khôi phục thì phải giữ kín tuyệt đối.
+sources:
+  - https://ethereum.org/developers/docs/accounts/
+  - https://ethereum.org/glossary/
+---
+
+Địa chỉ Ethereum trông như thế này: `0x71C7656EC7ab88b098defB751B7401B5f6d8976F`. Bạn đưa nó cho người khác để nhận tiền, giống số tài khoản ngân hàng. Nhưng không có ngân hàng nào cấp địa chỉ này. Ví của bạn tự tính ra nó từ một cặp khóa.
+
+## Bạn giữ khóa, không giữ tiền
+
+Tài sản của bạn luôn nằm trên chuỗi khối Ethereum, không nằm trong điện thoại. Thứ bạn thực sự giữ là **khóa riêng tư** (private key): chìa khóa duy nhất cho phép tiêu tài sản đứng tên địa chỉ của bạn.
+
+Vì vậy cần phân biệt:
+
+- **Tài khoản** (account): một mục trên Ethereum, có địa chỉ, số dư và vài thông tin khác.
+- **Ví** (wallet): ứng dụng giúp bạn giữ khóa và dùng tài khoản. Mất điện thoại không làm mất tài khoản, nếu bạn còn cụm từ khôi phục.
+
+Ethereum có hai loại tài khoản. Loại bạn dùng hằng ngày do khóa riêng tư điều khiển (ethereum.org gọi là tài khoản thuộc sở hữu bên ngoài, viết tắt **EOA**). Loại thứ hai là **tài khoản hợp đồng**: do mã của hợp đồng thông minh điều khiển, không có khóa riêng tư.
+
+## Từ cụm từ khôi phục tới địa chỉ
+
+<KeysScene />
+
+1. **Cụm từ khôi phục.** Khi tạo ví, ví sinh ra một số ngẫu nhiên rất lớn và ghi lại thành 12 hoặc 24 từ. Một cụm từ có thể tạo ra nhiều tài khoản, nên ví thường cho bạn thêm tài khoản mà không cần cụm từ mới.
+2. **Khóa riêng tư.** Một số 256 bit, viết thành 64 ký tự thập lục phân. Số khóa có thể có lớn tới mức hai người gần như không bao giờ trùng nhau.
+3. **Khóa công khai.** Tính từ khóa riêng tư bằng thuật toán chữ ký số trên đường cong elliptic (ECDSA). Phép tính này chỉ đi một chiều.
+4. **Địa chỉ.** Lấy khóa công khai, băm bằng Keccak-256, giữ lại 20 byte cuối, rồi thêm `0x` phía trước. Kết quả là 42 ký tự: `0x` và 40 ký tự thập lục phân.
+
+Không có bước nào đi ngược được. Biết địa chỉ hay khóa công khai, không ai suy ra được khóa riêng tư. Đó là lý do bạn có thể đăng địa chỉ lên mạng mà vẫn an toàn.
+
+<Callout type="error" title="Thận trọng">
+Ai có khóa riêng tư hoặc cụm từ khôi phục là có toàn quyền với tài sản của bạn, và không ai lấy lại được cho bạn. Không chụp ảnh, không lưu lên đám mây, không gõ vào trang web nào, không đưa cho ai, kể cả người tự xưng là hỗ trợ kỹ thuật.
+</Callout>
+
+## Chữ hoa, chữ thường trong địa chỉ
+
+Bạn sẽ thấy cùng một địa chỉ khi viết thường toàn bộ, khi có lẫn chữ hoa. Cả hai đều chỉ cùng một tài khoản. Kiểu viết có chữ hoa là một cách kiểm tra lỗi gõ (checksum): nếu bạn gõ sai một ký tự, ví thường phát hiện ra.
+
+## Kiểm tra địa chỉ trước khi gửi
+
+Giao dịch trên Ethereum không đảo ngược được. Gửi nhầm địa chỉ là mất. Hãy:
+
+- **Sao chép và dán**, đừng gõ tay.
+- **So nhiều ký tự**, không chỉ vài ký tự đầu và cuối. Kẻ gian tạo địa chỉ giống phần đầu và phần cuối của địa chỉ bạn hay dùng, rồi gửi cho bạn một giao dịch nhỏ để địa chỉ giả nằm trong lịch sử giao dịch của bạn. Đừng sao chép địa chỉ từ lịch sử giao dịch.
+- **Gửi thử một khoản nhỏ** khi gửi số tiền lớn tới địa chỉ mới.
+
+<Callout type="warn" title="Cảnh báo">
+Một địa chỉ có thể dùng trên Ethereum và trên nhiều mạng khác dùng cùng định dạng (như các Layer 2). Số dư ở mỗi mạng là riêng. Khi gửi hoặc rút từ sàn, hãy chọn đúng mạng.
+</Callout>
+
+## Tóm tắt
+
+- Ví tính ra khóa riêng tư từ cụm từ khôi phục, khóa công khai từ khóa riêng tư, rồi địa chỉ từ khóa công khai.
+- Mỗi bước chỉ đi một chiều: địa chỉ chia sẻ được, khóa và cụm từ phải giữ kín.
+- Địa chỉ gồm `0x` và 40 ký tự. Kiểm tra kỹ trước khi gửi.
+
+## Đọc tiếp
+
+- [Chữ ký số](./chu-ky-so.mdx): khóa riêng tư được dùng để làm gì
+- [Ví, tài khoản và cụm từ khôi phục](../bat-dau/vi-va-tai-khoan.mdx): chọn ví và tạo tài khoản đầu tiên

@@ -1,0 +1,62 @@
+---
+title: Minh bạch tài chính và dữ liệu công
+description: Khi dòng tiền và số liệu được ghi lên một sổ công khai, ai cũng tự theo dõi được. Các thử nghiệm ở Canada, Hoa Kỳ, Kenya, Rwanda và của UNICEF, kể cả những gì chưa đạt.
+sources:
+  - https://publicsector.ethereum.foundation/case-studies/
+  - https://publicsector.ethereum.foundation/case-studies/nrc-irap-funding-transparency/
+  - https://publicsector.ethereum.foundation/case-studies/us-commerce-economic-data/
+  - https://publicsector.ethereum.foundation/case-studies/kenya-anticipatory-cash-transfers/
+  - https://publicsector.ethereum.foundation/case-studies/unicef-cryptofund/
+---
+
+Trên Ethereum, mỗi khoản chuyển đều để lại dấu vết công khai: bao nhiêu, từ địa chỉ nào, tới địa chỉ nào, lúc nào. Với tiền công và tiền viện trợ, điều đó cho phép người ngoài tự theo dõi, thay vì chờ báo cáo. Xem [Đọc một giao dịch](../can-ban/dung-ethereum/doc-giao-dich.mdx).
+
+Các ví dụ dưới đây lấy từ danh sách nghiên cứu điển hình của Quỹ Ethereum (EF). Trong 17 trường hợp EF liệt kê, chỉ 4 là của cơ quan chính phủ cấp quốc gia (Bhutan, Singapore, Canada, Hoa Kỳ). Phần còn lại do các tổ chức Liên Hợp Quốc hoặc tổ chức phi chính phủ thực hiện.
+
+## Canada: công bố các khoản tài trợ (2018 tới 2019, đã dừng)
+
+- Chương trình Hỗ trợ Nghiên cứu Công nghiệp (IRAP) của Hội đồng Nghiên cứu Quốc gia Canada công bố các khoản tài trợ, cùng mọi lần sửa đổi, qua một hợp đồng thông minh trên mạng chính Ethereum.
+- Thí điểm chạy từ tháng 1 năm 2018 tới ngày 1 tháng 3 năm 2019. Theo báo cáo kết quả, trang công bố có hơn 162.000 lượt người xem từ hơn 200 quốc gia.
+- Không có thông tin về việc đưa vào vận hành chính thức sau thí điểm.
+
+## Hoa Kỳ: số liệu kinh tế
+
+- Ngày 28 tháng 8 năm 2025, Bộ Thương mại công bố mã băm của báo cáo GDP lên 9 mạng chuỗi khối, trong đó có Ethereum. Xem [Đưa gì lên chuỗi](./dua-gi-len-chuoi.mdx).
+- Riêng biệt với việc đó, hai công ty **oracle** (dịch vụ đưa dữ liệu bên ngoài vào chuỗi khối) là Chainlink và Pyth cung cấp các số liệu như GDP cho hợp đồng thông minh. Các nguồn này vẫn chạy trong quý 3 năm 2026. Dữ liệu là của nhà nước, nhưng đường dẫn nó lên chuỗi phụ thuộc vào công ty tư nhân.
+
+## Kenya: tiền hỗ trợ trước hạn hán
+
+- Do các tổ chức phi chính phủ thực hiện, không phải chính phủ: Prosper Global Ventures (trước là Mercy Corps Ventures) và DIVA Donate.
+- Cách làm: một hợp đồng thông minh theo dõi chỉ số thảm thực vật đo từ vệ tinh. Khi chỉ số chạm ngưỡng hạn hán, tiền tự được giải ngân bằng stablecoin RLUSD (do Ripple phát hành), và tới tay người dân qua M-Pesa, dịch vụ tiền di động phổ biến ở Kenya.
+- Kết quả từ tháng 10 tới tháng 12 năm 2025, do chính dự án báo cáo và chưa được kiểm chứng độc lập: 4 trong 9 đợt kiểm tra kích hoạt chi trả, khoảng 16.000 USD đã được chi, tiền tới tay người nhận sau 1 tới 5,5 giờ, chi phí 3,6% so với mức tham chiếu 10%.
+- Một sự cố: khi chính phủ Hoa Kỳ tạm đóng cửa, nguồn dữ liệu vệ tinh bị gián đoạn và một đợt chi trả chậm 18 ngày.
+- Mạng: bản thử năm 2023 chạy trên Polygon, một mạng riêng có trình xác thực riêng. Bản mở rộng năm 2025 chạy trên Ethereum; tài liệu không nói mạng chính hay Layer 2.
+
+## UNICEF và Giga: nhận và dùng tiền mã hóa
+
+- **Quỹ CryptoFund của UNICEF** nhận và cấp vốn bằng tiền mã hóa từ năm 2019, tổng cộng hơn 4 triệu USD, trong đó có 2.602 ETH. Các khoản ETH chuyển đi đều theo dõi được trên Ethereum.
+- **Giga** là sáng kiến của UNICEF và Liên minh Viễn thông Quốc tế (ITU) nhằm kết nối internet cho trường học. Ở Rwanda, EF tặng 32 ETH, và một trình xác thực do Giga cùng Launchnodes vận hành bắt đầu chạy từ tháng 5 năm 2022.
+  - Tiền thưởng [đặt cọc](../can-ban/cach-hoat-dong/trinh-xac-thuc.mdx) cộng dồn khoảng 5.600 USD trong 2022 tới 2024, đủ trả phí internet cho một trường. Đây là tổng của cả giai đoạn, không phải lợi suất mỗi năm.
+  - Thí điểm kết thúc ngày 9 tháng 4 năm 2025, khi chính phủ Rwanda đã tự chi trả các hợp đồng internet.
+
+## Những điều cần lưu ý
+
+- **Minh bạch dòng tiền chưa phải minh bạch kết quả.** Sổ ghi được tiền đi đâu, không ghi được tiền đã được dùng đúng việc hay chưa.
+- **Chặng cuối nằm ngoài chuỗi.** Ở Kenya, phần tiền tới tay người dân đi qua M-Pesa, không nằm trên Ethereum.
+- **Stablecoin có thể bị đóng băng** bởi chính bên phát hành. Xem [Token, stablecoin và NFT](../can-ban/dung-ethereum/token-stablecoin-nft.mdx).
+- **Phần lớn là thí điểm nhỏ.** Khi đọc một ví dụ, hãy hỏi: dự án còn chạy không, chạy trên mạng nào, và kết quả có được đánh giá độc lập không.
+
+## Tóm tắt
+
+- Mọi khoản chuyển trên Ethereum để lại dấu vết công khai, nên người ngoài tự theo dõi được dòng tiền.
+- Các ví dụ hiện có phần lớn là thí điểm, nhiều dự án do tổ chức quốc tế hoặc phi chính phủ làm. Canada đã dừng từ 2019; Giga ở Rwanda kết thúc năm 2025.
+- Minh bạch dòng tiền không thay cho kiểm toán kết quả, và chặng cuối thường nằm ngoài chuỗi.
+
+## Đọc tiếp
+
+- [Ý tưởng ứng dụng, chưa có dự án](./y-tuong-ung-dung.mdx)
+- [Rủi ro và trách nhiệm](./rui-ro-va-trach-nhiem.mdx)
+
+## Nguồn
+
+- Quỹ Ethereum, nghiên cứu điển hình: [danh sách](https://publicsector.ethereum.foundation/case-studies/), [Canada NRC IRAP](https://publicsector.ethereum.foundation/case-studies/nrc-irap-funding-transparency/), [Bộ Thương mại Hoa Kỳ](https://publicsector.ethereum.foundation/case-studies/us-commerce-economic-data/), [Kenya](https://publicsector.ethereum.foundation/case-studies/kenya-anticipatory-cash-transfers/), [UNICEF CryptoFund](https://publicsector.ethereum.foundation/case-studies/unicef-cryptofund/)

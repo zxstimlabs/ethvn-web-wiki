@@ -1,0 +1,256 @@
+/* Isometric explainers in wiki pages. They share the home hero's palette and
+   face styles (block-scene.css, scoped to .eth-scene); this file adds what the
+   explainers need on top: a "wrong" colour, key and Layer 2 tones, labels. */
+
+.iso-scene {
+  --bad: #dc2626;
+  --key: #b45309;
+  --l2: #0e7490;
+}
+.dark .iso-scene {
+  --bad: #f87171;
+  --key: #fbbf24;
+  --l2: #22d3ee;
+}
+
+.eth-scene .tone-bad {
+  --top: #fee2e2;
+  --left: #fecaca;
+  --right: #fca5a5;
+  --ink: #b91c1c;
+  --stripe: rgb(185 28 28 / 0.3);
+}
+.eth-scene .tone-key {
+  --top: #fef3c7;
+  --left: #fde68a;
+  --right: #fcd34d;
+  --ink: #b45309;
+}
+.eth-scene .tone-l2 {
+  --top: #ecfeff;
+  --left: #cffafe;
+  --right: #a5f3fc;
+  --ink: #0e7490;
+  --stripe: rgb(14 116 144 / 0.3);
+}
+.dark .eth-scene .tone-bad {
+  --top: #4c1d1d;
+  --left: #3b1616;
+  --right: #2e1111;
+  --ink: #f87171;
+  --stripe: rgb(248 113 113 / 0.35);
+}
+.dark .eth-scene .tone-key {
+  --top: #4a3a12;
+  --left: #3b2e0e;
+  --right: #2e240b;
+  --ink: #fbbf24;
+}
+.dark .eth-scene .tone-l2 {
+  --top: #134e5e;
+  --left: #0f3f4d;
+  --right: #0b323d;
+  --ink: #22d3ee;
+  --stripe: rgb(34 211 238 / 0.35);
+}
+
+/* text */
+.iso-scene .iso-lbl,
+.iso-scene .iso-sub,
+.iso-scene .iso-hash,
+.iso-scene .iso-note {
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.iso-scene .iso-lbl {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--fg);
+}
+.iso-scene .iso-sub {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.iso-scene .iso-hash {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--block);
+  font-variant-numeric: tabular-nums;
+}
+.iso-scene .iso-note {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.iso-scene .is-bad {
+  fill: var(--bad);
+}
+.iso-scene .is-ok {
+  fill: var(--vote);
+}
+.iso-scene .is-key {
+  fill: var(--key);
+}
+.iso-scene .is-tx {
+  fill: var(--tx);
+}
+.iso-scene .is-l2 {
+  fill: var(--l2);
+}
+
+/* lines */
+.iso-scene .iso-line {
+  fill: none;
+  stroke: var(--lane);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+.iso-scene .iso-line[data-tone='block'] {
+  stroke: var(--block);
+  stroke-width: 1.5;
+}
+.iso-scene .iso-line[data-tone='tx'] {
+  stroke: var(--tx);
+  stroke-width: 1.5;
+}
+.iso-scene .iso-line[data-tone='ok'] {
+  stroke: var(--vote);
+  stroke-width: 1.5;
+}
+.iso-scene .iso-line[data-tone='key'] {
+  stroke: var(--key);
+  stroke-width: 1.5;
+}
+.iso-scene .iso-line[data-tone='l2'] {
+  stroke: var(--l2);
+  stroke-width: 1.5;
+}
+.iso-scene .iso-line[data-tone='bad'] {
+  stroke: var(--bad);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.iso-scene .iso-head[data-tone='block'] {
+  fill: var(--block);
+}
+.iso-scene .iso-head[data-tone='tx'] {
+  fill: var(--tx);
+}
+.iso-scene .iso-head[data-tone='ok'] {
+  fill: var(--vote);
+}
+.iso-scene .iso-head[data-tone='key'] {
+  fill: var(--key);
+}
+.iso-scene .iso-head[data-tone='l2'] {
+  fill: var(--l2);
+}
+.iso-scene .iso-head[data-tone='bad'] {
+  fill: var(--bad);
+}
+.iso-scene .iso-head[data-tone='lane'] {
+  fill: var(--lane);
+}
+
+/* round badges: ✓ / ✗ */
+.iso-scene .badge-ok {
+  fill: var(--vote);
+}
+.iso-scene .badge-bad {
+  fill: var(--bad);
+}
+.iso-scene .badge-mark {
+  fill: none;
+  stroke: var(--bg);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* flat cards (screen-aligned), for things with text: a transaction, a block header */
+.iso-scene .card {
+  fill: var(--bg);
+  stroke: var(--lane);
+  stroke-width: 1;
+}
+.iso-scene .card-title {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--muted);
+  letter-spacing: 0.06em;
+}
+.iso-scene .card-row {
+  font-size: 11.5px;
+  fill: var(--fg);
+  font-variant-numeric: tabular-nums;
+  /* rows align their values with spaces */
+  white-space: pre;
+}
+.iso-scene .card-row.is-active {
+  fill: var(--tx);
+  font-weight: 700;
+}
+.iso-scene .card-row.is-bad {
+  fill: var(--bad);
+  font-weight: 700;
+}
+
+/* step captions */
+.iso-scene .iso-step[data-active='true'] {
+  background: color-mix(in oklab, var(--fg) 5%, transparent);
+}
+.iso-scene .iso-step-bar {
+  background: var(--fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iso-scene * {
+    transition: none !important;
+  }
+}
+
+/* messages in flight */
+.iso-scene .pill {
+  fill: var(--bg);
+  stroke: var(--lane);
+  stroke-width: 1.25;
+}
+.iso-scene .pill-text {
+  font-size: 10.5px;
+  font-weight: 700;
+  fill: var(--fg);
+}
+.iso-scene .pill[data-tone='ok'] {
+  stroke: var(--vote);
+}
+.iso-scene .pill-text[data-tone='ok'] {
+  fill: var(--vote);
+}
+.iso-scene .pill[data-tone='bad'] {
+  stroke: var(--bad);
+}
+.iso-scene .pill-text[data-tone='bad'] {
+  fill: var(--bad);
+}
+.iso-scene .pill[data-tone='key'] {
+  stroke: var(--key);
+}
+.iso-scene .pill-text[data-tone='key'] {
+  fill: var(--key);
+}
+.iso-scene .pill[data-tone='tx'] {
+  stroke: var(--tx);
+}
+.iso-scene .pill-text[data-tone='tx'] {
+  fill: var(--tx);
+}
+
+/* burned fees */
+.iso-scene .flame-out {
+  fill: var(--bad);
+  opacity: 0.85;
+}
+.iso-scene .flame-in {
+  fill: var(--amber);
+}

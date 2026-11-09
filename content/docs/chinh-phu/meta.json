@@ -1,0 +1,18 @@
+{
+  "title": "Chính phủ",
+  "description": "Ethereum cho cơ quan nhà nước và khu vực công",
+  "icon": "Landmark",
+  "root": true,
+  "pages": [
+    "index",
+    "ethereum-cho-khu-vuc-cong",
+    "trung-lap-toan-cau",
+    "dua-gi-len-chuoi",
+    "danh-tinh-va-chung-chi",
+    "minh-bach-tai-chinh-va-du-lieu",
+    "y-tuong-ung-dung",
+    "danh-gia-va-lua-chon",
+    "rui-ro-va-trach-nhiem",
+    "hop-tac-va-tai-lieu"
+  ]
+}

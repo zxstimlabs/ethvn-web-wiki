@@ -1,0 +1,61 @@
+---
+title: Đưa gì lên chuỗi, giữ gì ngoài chuỗi
+description: Lên chuỗi là bằng chứng, không phải dữ liệu. Mã băm của văn bản, danh sách bên cấp được công nhận, trạng thái thu hồi. Dữ liệu cá nhân ở lại hệ thống của cơ quan.
+sources:
+  - https://publicsector.ethereum.foundation/evaluating-ethereum/
+  - https://publicsector.ethereum.foundation/potential-applications/
+  - https://publicsector.ethereum.foundation/case-studies/us-commerce-economic-data/
+  - https://thuvienphapluat.vn/van-ban/Cong-nghe-thong-tin/Luat-Bao-ve-du-lieu-ca-nhan-2025-91-2025-QH15-625628.aspx
+---
+
+Nguyên tắc chung: **đưa bằng chứng lên chuỗi, giữ dữ liệu ở lại.** Theo Quỹ Ethereum (EF), dữ liệu nhạy cảm có thể nằm nguyên trong hệ thống hiện có của cơ quan. Ethereum chỉ giữ những gì người khác cần để tự kiểm tra.
+
+## Những gì thường được đưa lên chuỗi
+
+- **Mã băm của văn bản.** **Mã băm** (hash) là "dấu vân tay" của một tệp: sửa một dấu phẩy là ra mã khác hẳn, và không ai dựng lại được tệp từ mã băm.
+- **Danh sách bên cấp được công nhận.** Ví dụ: những trường, những cơ quan được quyền cấp một loại giấy tờ.
+- **Trạng thái thu hồi.** Văn bằng, giấy phép nào đã bị thu hồi.
+- **Dòng tiền.** Khoản nào chuyển đi, từ đâu tới đâu, lúc nào. Xem [Minh bạch tài chính và dữ liệu công](./minh-bach-tai-chinh-va-du-lieu.mdx).
+
+## Ghi mã băm lên chuỗi: cách làm
+
+1. Cơ quan tính mã băm của tệp, ví dụ bản PDF của một báo cáo.
+2. Cơ quan gửi một giao dịch chứa mã băm đó, ký bằng khóa của cơ quan. Giao dịch nằm trong một khối, kèm thời điểm.
+3. Về sau, ai có tệp cũng tự tính lại mã băm và so với bản trên chuỗi. Trùng khớp nghĩa là tệp chưa bị sửa từ thời điểm đó, và đúng là do địa chỉ của cơ quan đăng.
+
+Mã băm của hàng nghìn văn bản có thể gộp thành một mã duy nhất, nên một giao dịch đủ cho cả một lô.
+
+**Ví dụ:** ngày 28 tháng 8 năm 2025, Bộ Thương mại Hoa Kỳ công bố mã băm của bản PDF số liệu GDP quý 2 năm 2025 lên 9 mạng chuỗi khối, trong đó có mạng chính Ethereum và hai mạng Layer 2 là Arbitrum One và OP Mainnet.
+
+<Callout type="warn" title="Quan trọng">
+Toàn vẹn không có nghĩa là đúng. Mã băm chứng minh văn bản không bị sửa, không chứng minh nội dung của nó đúng. Số liệu sai từ đầu thì ghi lên chuỗi vẫn sai.
+</Callout>
+
+## Vì sao dữ liệu cá nhân không nên lên chuỗi
+
+- **Công khai và vĩnh viễn.** Trên mạng chính, ai cũng đọc được, và không ai xóa được. Xem [Quyền riêng tư](../can-ban/dung-ethereum/quyen-rieng-tu.mdx).
+- **Va chạm với quyền của người dân.** Luật Bảo vệ dữ liệu cá nhân (số 91/2025/QH15, có hiệu lực từ ngày 1 tháng 1 năm 2026) ghi nhận quyền của chủ thể dữ liệu được chỉnh sửa và yêu cầu xóa dữ liệu. Dữ liệu đã ghi lên một chuỗi công khai thì không sửa, không xóa được. Hãy đối chiếu thiết kế với quy định hiện hành trước khi làm.
+- **Mã băm cũng có thể làm lộ.** Mã băm của một giá trị dễ đoán, như số căn cước hay ngày sinh, có thể bị dò ra bằng cách thử lần lượt mọi khả năng. Đừng ghi mã băm của dữ liệu cá nhân khi chưa có chuyên gia bảo mật thiết kế cách làm.
+- **Dấu vết đi kèm.** Dù không ghi dữ liệu, thời điểm, tần suất và các lần sửa đổi vẫn có thể tiết lộ thông tin.
+
+## Đọc nhiều, ghi ít
+
+Đọc dữ liệu trên Ethereum là miễn phí; chỉ ghi mới tốn [phí gas](../can-ban/cach-hoat-dong/gas.mdx). Theo EF, hệ thống danh tính số của Bhutan chủ yếu đọc và rất ít khi ghi.
+
+Một nghiên cứu của Đại học Rutgers mà EF dẫn lại ghi nhận phí trung vị trong quý 1 năm 2026 khoảng 0,012 USD trên Ethereum và khoảng 0,0015 USD trên ba mạng Layer 2. Phí thay đổi theo độ đông của mạng, nên hãy kiểm tra lại số liệu hiện tại.
+
+## Tóm tắt
+
+- Lên chuỗi: mã băm, danh sách bên cấp, trạng thái thu hồi, dòng tiền. Dữ liệu gốc ở lại hệ thống của cơ quan.
+- Mã băm chứng minh văn bản không bị sửa từ một thời điểm, không chứng minh nội dung đúng.
+- Dữ liệu cá nhân không lên chuỗi công khai: không sửa, không xóa được, và cả mã băm của nó cũng có thể làm lộ.
+
+## Đọc tiếp
+
+- [Danh tính số và chứng chỉ](./danh-tinh-va-chung-chi.mdx)
+- [Chuỗi khối là gì?](../can-ban/cach-hoat-dong/chuoi-khoi.mdx): mã băm nối các khối thế nào
+
+## Nguồn
+
+- Quỹ Ethereum: [Đánh giá Ethereum](https://publicsector.ethereum.foundation/evaluating-ethereum/), [Ứng dụng tiềm năng](https://publicsector.ethereum.foundation/potential-applications/), [Bộ Thương mại Hoa Kỳ: số liệu kinh tế](https://publicsector.ethereum.foundation/case-studies/us-commerce-economic-data/)
+- [Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15](https://thuvienphapluat.vn/van-ban/Cong-nghe-thong-tin/Luat-Bao-ve-du-lieu-ca-nhan-2025-91-2025-QH15-625628.aspx)

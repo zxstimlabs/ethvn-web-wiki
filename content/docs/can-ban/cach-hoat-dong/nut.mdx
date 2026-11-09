@@ -1,0 +1,73 @@
+---
+title: Nút
+description: Nút là máy tính chạy phần mềm Ethereum, giữ một bản sao chuỗi khối và tự kiểm tra mọi khối. Ai cũng chạy được, không cần ETH.
+sources:
+  - https://ethereum.org/developers/docs/nodes-and-clients/
+  - https://ethereum.org/run-a-node/
+  - https://ethereum.org/developers/docs/nodes-and-clients/nodes-as-a-service/
+  - https://ethereum.org/developers/docs/nodes-and-clients/light-clients/
+  - https://ethereum.org/developers/docs/nodes-and-clients/client-diversity/
+---
+
+Mạng lưới Ethereum không chạy trên máy chủ của một công ty nào. Nó là hàng nghìn máy tính nối với nhau, mỗi máy gọi là một **nút** (node). Mỗi nút giữ một bản sao [chuỗi khối](./chuoi-khoi.mdx) và tự kiểm tra mọi khối mới, không tin lời ai.
+
+## Một nút gồm những gì?
+
+Một nút là hai phần mềm chạy cùng nhau trên một máy:
+
+- **Phần mềm lớp thực thi** (execution client): nhận giao dịch, chạy chúng trong EVM và giữ trạng thái của Ethereum, tức số dư và dữ liệu của mọi tài khoản.
+- **Phần mềm lớp đồng thuận** (consensus client): làm phần [đồng thuận](./dong-thuan.mdx), theo dõi khối và phiếu bầu để biết đâu là chuỗi đúng.
+
+Người muốn làm [trình xác thực](./trinh-xac-thuc.mdx) chạy thêm phần mềm xác thực và đặt cọc 32 ETH. Chỉ chạy nút thì không cần ETH nào.
+
+Mỗi lớp có nhiều phần mềm do các nhóm độc lập viết bằng nhiều ngôn ngữ khác nhau, để một lỗi trong một phần mềm không làm hỏng cả mạng lưới:
+
+| Lớp | Một số phần mềm |
+|---|---|
+| Thực thi | Geth, Nethermind, Besu, Erigon, Reth, ethrex |
+| Đồng thuận | Lighthouse, Prysm, Teku, Nimbus, Lodestar, Grandine |
+
+<NodeScene />
+
+## Các loại nút
+
+- **Nút đầy đủ** (full node): kiểm tra mọi khối và giữ trạng thái gần đây. Đây là loại phổ biến nhất.
+- **Nút lưu trữ** (archive node): giữ mọi trạng thái trong quá khứ, chiếm hàng terabyte. Trình khám phá khối và các dịch vụ phân tích dùng loại này.
+- **Nút nhẹ** (light client): chỉ tải phần đầu của các khối, rất nhẹ, có thể chạy trên điện thoại. Theo ethereum.org, hiện chưa có phần mềm nút nhẹ nào được coi là sẵn sàng để dùng thật.
+
+## Vì sao nên tự chạy nút?
+
+- **Tự kiểm chứng.** Nút của bạn tự kiểm tra mọi khối và mọi số dư. Bạn không phải tin ai, đúng với tinh thần "đừng tin, hãy kiểm chứng".
+- **Riêng tư.** Khi ví hỏi một nút công cộng, nút đó thấy địa chỉ IP và các địa chỉ ví của bạn. Hỏi nút của chính mình thì không ai thấy.
+- **Chống kiểm duyệt.** Một nhà cung cấp có thể từ chối giao dịch từ một số địa chỉ hay một số quốc gia. Nút của bạn thì không.
+- **Góp phần giữ mạng lưới phi tập trung.** Càng nhiều người tự chạy nút, mạng lưới càng khó bị kiểm soát. Chính các nút buộc trình xác thực phải làm đúng luật.
+
+## Ví của bạn đang dùng nút của ai?
+
+Phần lớn ví không tự chạy nút. Chúng hỏi nút của các nhà cung cấp dịch vụ (RPC), như Infura hay Alchemy. Cách này tiện, nhưng bạn phải tin nhà cung cấp trả lời đúng và không lạm dụng dữ liệu của bạn. Họ không giữ khóa riêng tư của bạn và không lấy được tiền của bạn.
+
+Nhiều ví cho phép đổi sang một địa chỉ RPC khác, kể cả nút của chính bạn.
+
+## Cần máy như thế nào?
+
+Các trang của ethereum.org đưa ra yêu cầu hơi khác nhau, vì dữ liệu của Ethereum lớn dần theo thời gian:
+
+| | Tối thiểu | Khuyến nghị (EIP-7870) |
+|---|---|---|
+| CPU | 2 lõi trở lên | 4 lõi trở lên |
+| RAM | 16 GB | 32 GB |
+| Ổ cứng | SSD NVMe 2 TB | SSD NVMe 4 TB |
+| Mạng | 25 Mbit/s trở lên | 50 Mbit/s tải xuống, 15 Mbit/s tải lên |
+
+Ổ cứng thường là phần quan trọng nhất. Nên dùng mạng không giới hạn dung lượng, vì nút trao đổi dữ liệu liên tục. Có những máy làm sẵn để cắm là chạy (như DAppNode) và những công cụ giúp cài đặt dễ hơn (như eth-docker, Stereum, Sedge).
+
+## Tóm tắt
+
+- Nút là máy tính chạy hai phần mềm: lớp thực thi và lớp đồng thuận.
+- Nút tự kiểm tra mọi khối, nên bạn không phải tin ai. Chạy nút không cần ETH.
+- Phần lớn ví dùng nút của nhà cung cấp. Tự chạy nút giúp riêng tư hơn và chống kiểm duyệt.
+
+## Đọc tiếp
+
+- [Đồng thuận](./dong-thuan.mdx): các nút thống nhất với nhau thế nào
+- [Trình xác thực](./trinh-xac-thuc.mdx)

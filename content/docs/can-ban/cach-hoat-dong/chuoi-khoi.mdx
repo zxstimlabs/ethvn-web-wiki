@@ -1,0 +1,70 @@
+---
+title: Chuỗi khối là gì?
+description: Một cuốn sổ chung được chép ra hàng nghìn máy tính. Mỗi trang ghi dấu vân tay của trang trước, nên không ai sửa lén được quá khứ.
+sources:
+  - https://ethereum.org/developers/docs/intro-to-ethereum/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/
+---
+
+Hãy tưởng tượng một cuốn sổ ghi chép mọi giao dịch, được chép ra hàng nghìn máy tính trên khắp thế giới. Ai cũng đọc được. Muốn ghi thêm thì phải theo luật chung. Còn muốn sửa một trang cũ thì gần như không thể, vì mọi bản chép khác sẽ lập tức thấy sai.
+
+Đó là ý tưởng của **chuỗi khối** (blockchain): một cơ sở dữ liệu công khai, được cập nhật và chia sẻ giữa nhiều máy tính trong một mạng lưới.
+
+## Khối và chuỗi
+
+Dữ liệu không được ghi lẻ từng dòng, mà gom thành từng nhóm gọi là **khối** (block). Một khối của Ethereum thường chứa từ vài chục tới vài trăm giao dịch. Giao dịch chỉ được coi là thành công khi đã nằm trong một khối.
+
+Các khối nối với nhau thành chuỗi nhờ **mã băm** (hash):
+
+- Mã băm giống như dấu vân tay của dữ liệu. Cùng một dữ liệu thì luôn cho cùng một mã băm.
+- Đổi dù chỉ một chữ, mã băm đổi hoàn toàn.
+- Từ mã băm không thể tính ngược ra dữ liệu ban đầu.
+
+Mỗi khối ghi mã băm của khối liền trước, gọi là **khối cha**. Đó là sợi dây nối các khối lại với nhau, từ khối mới nhất về tận khối đầu tiên năm 2015.
+
+<ChainScene />
+
+## Vì sao không sửa lén được quá khứ?
+
+Giả sử ai đó muốn sửa một giao dịch trong khối cũ, ví dụ đổi số tiền mình đã gửi:
+
+1. Nội dung khối thay đổi, nên mã băm của khối đó đổi theo.
+2. Khối phía sau vẫn ghi mã băm cũ, nên không còn khớp. Chuỗi bị đứt.
+3. Muốn nối lại, người đó phải làm lại mọi khối phía sau, rồi thuyết phục cả mạng lưới nhận bản của mình.
+
+Bước cuối là bất khả thi trên Ethereum. Mỗi nút tự kiểm tra từng khối và chỉ đi theo chuỗi được nhiều phiếu nhất, tính theo số ETH đặt cọc. Một bản sửa lén sẽ bị các nút khác bỏ qua.
+
+## Ai giữ chuỗi khối?
+
+Các máy tính giữ chuỗi khối gọi là [**nút**](./nut.mdx) (node). Mỗi nút giữ một bản sao đầy đủ và tự kiểm tra mọi khối mới, không tin lời ai. Có hàng nghìn nút do cá nhân, công ty và tổ chức vận hành ở nhiều quốc gia, nên tắt bớt vài nút thì mạng lưới vẫn chạy.
+
+## Ai được thêm khối mới?
+
+Các nút phải đồng ý với nhau về từng khối mới. Cách đi đến đồng ý gọi là **cơ chế đồng thuận** (consensus mechanism), xem bài [Đồng thuận](./dong-thuan.mdx). Ethereum dùng **bằng chứng cổ phần** (proof of stake):
+
+- [**Trình xác thực**](./trinh-xac-thuc.mdx) (validator) đặt cọc ETH làm tài sản thế chấp và chạy phần mềm xác thực.
+- Cứ mỗi 12 giây, một trình xác thực được chọn ngẫu nhiên để đề xuất khối mới. Các trình xác thực khác kiểm tra và bỏ phiếu cho khối đó.
+- Làm đúng thì được thưởng. Gian lận hoặc vắng mặt thì bị phạt, nặng nhất là mất một phần tiền đặt cọc.
+
+Sau khoảng 13 tới 19 phút, khi hai mốc liên tiếp đều nhận phiếu từ 2/3 tổng số ETH đặt cọc, khối đạt **tính cuối cùng** (finality). Muốn đảo ngược khối đó, kẻ tấn công phải chịu mất ít nhất 1/3 tổng số ETH đặt cọc. Hình động ở [trang chủ](/) cho thấy toàn bộ quá trình này.
+
+<Callout type="info" title="Lưu ý">
+Ethereum không còn "đào" (mining) từ năm 2022. Bằng chứng công việc (proof of work) đã được thay bằng bằng chứng cổ phần trong sự kiện The Merge.
+</Callout>
+
+## Ethereum: chuỗi khối có máy tính bên trong
+
+Chuỗi khối của Bitcoin chủ yếu ghi ai gửi bao nhiêu cho ai. Ethereum ghi thêm một thứ: **trạng thái** (state) của một chiếc máy tính chung, gọi là **EVM** (Ethereum Virtual Machine). Trạng thái gồm số dư của mọi tài khoản và dữ liệu của mọi hợp đồng thông minh.
+
+Mỗi giao dịch là một yêu cầu tính toán. Khi khối mới được thêm vào, mọi nút chạy các giao dịch trong khối và cùng ra một trạng thái mới. Nhờ vậy, ứng dụng trên Ethereum chạy giống nhau ở mọi nơi.
+
+## Tóm tắt
+
+- Chuỗi khối là một cuốn sổ công khai, được chép ra hàng nghìn nút.
+- Mỗi khối ghi mã băm của khối cha. Sửa một khối cũ làm đứt chuỗi và bị các nút khác phát hiện.
+- Trình xác thực đặt cọc ETH để được đề xuất và bỏ phiếu cho khối mới. Gian lận thì mất tiền đặt cọc.
+
+## Đọc tiếp
+
+- [Đồng thuận](./dong-thuan.mdx): các nút thống nhất với nhau thế nào
+- [Khối](./khoi.mdx): trong một khối có gì

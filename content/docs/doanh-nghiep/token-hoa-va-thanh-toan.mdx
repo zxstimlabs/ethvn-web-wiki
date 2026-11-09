@@ -1,0 +1,73 @@
+---
+title: Token hóa và thanh toán bằng stablecoin
+description: Quỹ, trái phiếu và tiền số đang được phát hành dưới dạng token trên Ethereum. Stablecoin cho phép chuyển tiền quốc tế trong vài phút. Ai đang làm, và những rủi ro cần biết.
+sources:
+  - https://ethereum.org/organizations/enterprise/tokenization/
+  - https://ethereum.org/organizations/enterprise/onchain-finance/
+  - https://ethereum.org/organizations/small-business/
+  - https://ethereum.org/real-world-assets/
+  - https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf
+  - https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Resolution-05-2025-NQ-CP-pilot-implementation-of-crypto-asset-market-676472.aspx
+---
+
+**Token hóa** (tokenization) là ghi quyền sở hữu một tài sản, như chứng chỉ quỹ, trái phiếu hay tiền gửi, thành [token](../can-ban/dung-ethereum/token-stablecoin-nft.mdx) trên chuỗi khối. Token chuyển được 24/7, thanh toán xong trong vài phút thay vì vài ngày, và có thể kèm quy tắc tự chạy, ví dụ chỉ chuyển cho nhà đầu tư đã được xác minh.
+
+## Đang chạy trên Ethereum
+
+Số liệu thay đổi nhanh, nên mỗi con số đều ghi ngày.
+
+- **Stablecoin:** khoảng 135,3 tỷ USD trên Ethereum và 15,67 tỷ USD trên các Layer 2 (DefiLlama, qua ethereum.org, ngày 8 tháng 11 năm 2026). Phần lớn là USDT và USDC.
+- **Tài sản thực được token hóa:** khoảng 15,2 tỷ USD (Quỹ Ethereum, tháng 3 năm 2026).
+- **Ví dụ được nêu tên** (theo ethereum.org và Quỹ Ethereum):
+  - Quỹ BUIDL của BlackRock, phát hành qua Securitize.
+  - Trái phiếu số của Ngân hàng Đầu tư châu Âu (EIB), lần đầu năm 2021. Các đợt phát hành vẫn dùng hồ sơ pháp lý truyền thống và các tổ chức trung gian được cấp phép.
+  - Stablecoin EURCV của SG-Forge (thuộc Société Générale).
+  - Stablecoin PYUSD của PayPal và USDC của Circle.
+  - Quỹ thị trường tiền tệ dạng token của JPMorgan và của Amundi.
+- **Thí điểm:** nền tảng token hóa của Visa (VTAP), cho phép ngân hàng phát hành token ERC-20 của riêng mình.
+
+<Callout type="info" title="Lưu ý">
+Một số ví dụ hay được nhắc tới thực ra không chạy trên Ethereum. Giao dịch ngoại hối thử nghiệm của Cơ quan Tiền tệ Singapore cùng J.P. Morgan (2022) chạy qua Aave trên Polygon. Trái phiếu số của Siemens (2023) cũng phát hành trên Polygon, một mạng khác có trình xác thực riêng. Luôn hỏi: chạy trên mạng nào?
+</Callout>
+
+## Thanh toán bằng stablecoin
+
+Điểm mạnh:
+
+- **Nhanh và chạy suốt.** Giao dịch được xác nhận trong vài giây trên Layer 2, đạt tính cuối cùng sau khoảng 15 phút trên Ethereum, kể cả cuối tuần.
+- **Phí nhỏ,** nhất là trên Layer 2. Xem [Phí gas](../can-ban/bat-dau/phi-gas.mdx).
+- **Không có hoàn tiền ngược.** Người mua không đòi lại được tiền đã trả theo kiểu khiếu nại thẻ tín dụng.
+
+Những điều cần biết:
+
+- **Bên phát hành có thể đóng băng token** của một địa chỉ. Xem [Token, stablecoin và NFT](../can-ban/dung-ethereum/token-stablecoin-nft.mdx).
+- **Doanh thu có thể bị nhìn thấy.** Nếu bạn dùng một địa chỉ nhận tiền cho mọi khách, ai cũng xem được tổng doanh thu, kể cả đối thủ. Xem [Quyền riêng tư](../can-ban/dung-ethereum/quyen-rieng-tu.mdx).
+- **Chọn đúng mạng.** USDC trên Ethereum và USDC trên một Layer 2 nằm ở hai mạng khác nhau. Gửi nhầm mạng có thể mất tiền.
+- **Giữ khóa là việc của bạn.** Ai giữ khóa (một người, nhiều chữ ký, hay một đơn vị lưu ký) là rủi ro vận hành của chính doanh nghiệp. Xem [Ví thông minh](../can-ban/dung-ethereum/vi-thong-minh.mdx).
+- **Kế toán, thuế và đổi ra tiền đồng** vẫn là chi phí thật. Các số liệu về thanh toán trên trang doanh nghiệp nhỏ của ethereum.org là số liệu của Hoa Kỳ.
+
+## Ở Việt Nam
+
+Khung pháp lý đang được xây dựng:
+
+- Luật Công nghiệp công nghệ số (số 71/2025/QH15, có hiệu lực từ ngày 1 tháng 1 năm 2026) lần đầu định nghĩa tài sản số, trong đó có tài sản mã hóa.
+- Nghị quyết 05/2025/NQ-CP (ngày 9 tháng 9 năm 2025) thí điểm thị trường tài sản mã hóa trong 5 năm.
+
+Việc dùng tài sản mã hóa hay stablecoin để thanh toán, hạch toán và nộp thuế cần được đối chiếu với quy định hiện hành của Ngân hàng Nhà nước và Bộ Tài chính trước khi làm. Wiki không khẳng định điều gì là hợp pháp hay không.
+
+## Tóm tắt
+
+- Token hóa ghi quyền sở hữu tài sản lên chuỗi: chuyển 24/7, thanh toán trong vài phút, kèm quy tắc tự chạy.
+- Trên Ethereum đã có hơn 135 tỷ USD stablecoin, cùng quỹ và trái phiếu dạng token của các tổ chức lớn (số liệu tháng 11 năm 2026).
+- Rủi ro: bên phát hành đóng băng được token, doanh thu có thể bị nhìn thấy, chọn nhầm mạng, giữ khóa, và quy định ở Việt Nam đang thay đổi.
+
+## Đọc tiếp
+
+- [Tuân thủ trên hạ tầng công khai](./tuan-thu.mdx)
+- [Token, stablecoin và NFT](../can-ban/dung-ethereum/token-stablecoin-nft.mdx)
+
+## Nguồn
+
+- ethereum.org: [Token hóa](https://ethereum.org/organizations/enterprise/tokenization/), [Tài chính trên chuỗi](https://ethereum.org/organizations/enterprise/onchain-finance/), [Doanh nghiệp nhỏ](https://ethereum.org/organizations/small-business/), [Tài sản thực](https://ethereum.org/real-world-assets/)
+- Quỹ Ethereum: [Ethereum Basics for Governments and Institutions](https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf) (2026)
+- [Nghị quyết 05/2025/NQ-CP](https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Resolution-05-2025-NQ-CP-pilot-implementation-of-crypto-asset-market-676472.aspx)

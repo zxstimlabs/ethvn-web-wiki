@@ -1,0 +1,80 @@
+---
+title: ETH được đo bằng tiêu chí nào
+description: Một tài sản lưu trữ giá trị trước hết phải tồn tại. Rồi phải giữ được an toàn, giữ được riêng tư, luôn gửi được, và không phụ thuộc hạ tầng của ai. Ethereum đang làm gì cho từng tiêu chí, và việc nào đã xong.
+sources:
+  - https://x.com/VitalikButerin/status/2119401255919604064
+  - https://ethereum.org/roadmap/security/
+  - https://ethereum.org/roadmap/account-abstraction/
+  - https://ethereum.org/roadmap/privacy/
+  - https://ethereum.org/developers/docs/nodes-and-clients/run-a-node/
+  - https://pq.ethereum.org
+  - https://eips.ethereum.org/EIPS/eip-7805
+  - https://eips.ethereum.org/EIPS/eip-8288
+  - https://eips.ethereum.org/EIPS/eip-8081
+  - https://blog.ethereum.org/2025/07/08/partial-history-exp
+---
+
+Nếu bạn giữ ETH để chạy theo xu hướng, bạn sẽ đo nó bằng doanh thu và tốc độ tăng trưởng. Nếu bạn giữ ETH như **tài sản lưu trữ giá trị**, bạn sẽ đo nó bằng những tiêu chí khác. Dưới đây là các tiêu chí Vitalik nêu, cùng những gì Ethereum đang làm cho từng tiêu chí, tính tới tháng 11 năm 2026.
+
+Nhãn trạng thái: **Đã có** (chạy trên mạng chính), **Đã xếp lịch** (đã chọn cho một đợt nâng cấp, chưa có ngày), **Đang làm** (nghiên cứu hoặc mạng thử nghiệm).
+
+## 1. Tồn tại
+
+Tiêu chí đầu tiên và quan trọng nhất: sống sót. Theo Vitalik, Devcon gần nhất bàn rất nhiều về điều này, dưới chủ đề "hậu lượng tử và hậu trí tuệ nhân tạo".
+
+- **An toàn trước máy tính lượng tử.** Máy tính lượng tử đủ mạnh có thể phá các loại chữ ký Ethereum đang dùng. Từ tháng 1 năm 2026, Quỹ Ethereum có một nhóm riêng cho việc này. Chữ ký mới chỉ dựa trên hàm băm đang được thử trên các mạng phát triển hằng tuần, với hơn 10 nhóm phần mềm tham gia. Mục tiêu khoảng năm 2029. ethereum.org đánh giá nguy cơ chưa cận kề. **Đang làm.**
+- **Chọn hướng thận trọng.** Vitalik muốn một chuỗi chỉ dựa vào hàm băm để bảo mật, được **kiểm chứng hình thức** (formal verification, chứng minh bằng toán học rằng mã chạy đúng), và dùng số vòng tính nhiều hơn ít nhất 3 lần mức đã biết là đủ an toàn. Các dự án kiểm chứng hình thức đang được tài trợ. **Đang làm.**
+- **Hướng tới cố định giao thức** (ossification). Khi phần lõi đã hoàn thiện, phần lớn việc phát triển chuyển lên các tầng bên trên, và giao thức hiếm khi thay đổi nữa. Theo một bài trình bày đăng trên ethereum.org, Ethereum chỉ có thể cố định khi đã an toàn trước máy tính lượng tử. **Mới là định hướng.**
+- **Ít chính trị trong giao thức.** Đặt ngưỡng rất cao trước khi thêm vào giao thức những thứ làm nó phình to, hay những khoản thưởng mới có thể bị một nhóm chiếm lấy.
+
+## 2. Giữ an toàn dễ dàng
+
+- **Ví nhiều chữ ký và ví thông minh.** Tiêu chuẩn ERC-4337 chạy từ tháng 3 năm 2023, và EIP-7702 cho tài khoản thường thêm tính năng của ví thông minh từ tháng 5 năm 2025. Xem [Ví thông minh](../can-ban/dung-ethereum/vi-thong-minh.mdx). **Đã có.**
+- **Giao dịch dạng khung** (EIP-8141): đưa các tính năng như khôi phục và nhờ trả phí vào thẳng giao thức, và cho phép đổi sang chữ ký an toàn trước máy tính lượng tử. **Đã xếp lịch** cho đợt nâng cấp Hegotá.
+
+## 3. Giữ riêng tư
+
+- **Kohaku:** bộ công cụ mã nguồn mở để các ví thêm tính năng riêng tư. Xem [Quyền riêng tư](../can-ban/dung-ethereum/quyen-rieng-tu.mdx). **Đang làm.**
+
+## 4. Vừa riêng tư vừa an toàn
+
+Hai thứ này hay kéo ngược nhau: công cụ riêng tư thường khó dùng cùng ví nhiều chữ ký hay ví khôi phục được.
+
+- **EIP-8288** (bản nháp, tháng 6 năm 2026): gộp chữ ký và bằng chứng của nhiều giao dịch thành một bằng chứng duy nhất cho mỗi khối. Nhờ đó, chữ ký an toàn trước máy tính lượng tử và bằng chứng riêng tư trở nên đủ rẻ để dùng hằng ngày. **Đang làm.**
+- Các hướng "trừu tượng hóa tài khoản riêng tư" cũng đã bắt đầu. **Đang làm.**
+
+## 5. Có coin là gửi được
+
+Nếu bạn có ETH, bạn phải gửi được, và không bên xây khối nào chặn được bạn.
+
+- Hôm nay: khi một số bên lọc giao dịch, giao dịch vẫn vào chuỗi qua các bên không lọc, chỉ chậm hơn. Xem [Hạ tầng trung lập](../chinh-phu/trung-lap-toan-cau.mdx).
+- **FOCIL** (EIP-7805) đưa bảo đảm này vào chính giao thức: một nhóm trình xác thực chọn ngẫu nhiên công bố các giao dịch đang chờ, và khối nào bỏ qua chúng sẽ bị từ chối. **Đã xếp lịch** cho Hegotá, chưa có ngày.
+
+## 6. Ít phụ thuộc hạ tầng
+
+Bạn không nên phải tin một công ty để biết số dư của mình.
+
+- **Tự chạy nút trên máy phổ thông.**
+  - Theo ethereum.org, cấu hình tối thiểu là 2 nhân, 16 GB RAM, ổ NVMe 2 TB và mạng 25 Mbit/s.
+  - Từ tháng 7 năm 2025, các nút không phải giữ lịch sử cũ nữa, tiết kiệm 300 tới 500 GB.
+  - Vitalik cho biết nút trên máy tính xách tay của ông đồng bộ xong trong chưa tới 6 giờ và chỉ chiếm một phần tám ổ cứng, tốt hơn cả năm 2019.
+  - Xem [Nút](../can-ban/cach-hoat-dong/nut.mdx). **Đã có.**
+- **Nút không cần giữ toàn bộ trạng thái** (statelessness), để cả điện thoại cũng tự kiểm tra được. **Đang làm.**
+
+## Tóm tắt
+
+- Tiêu chí số một của tài sản lưu trữ giá trị là tồn tại: an toàn trước máy tính lượng tử, chọn hướng thận trọng, hướng tới cố định giao thức, ít chính trị.
+- Tiếp theo: giữ an toàn, giữ riêng tư, vừa riêng tư vừa an toàn, luôn gửi được, và không phụ thuộc hạ tầng của ai.
+- Một phần đã có (ví thông minh, tự chạy nút trên máy phổ thông). Phần lớn đã xếp lịch hoặc đang làm.
+
+## Đọc tiếp
+
+- [Nguồn cung và an ninh của ETH](./nguon-cung-va-an-ninh.mdx)
+- [Giữ ETH để làm gì](./giu-eth-de-lam-gi.mdx)
+
+## Nguồn
+
+- Vitalik Buterin: [bài đăng trên X](https://x.com/VitalikButerin/status/2119401255919604064), ngày 8 tháng 11 năm 2026
+- ethereum.org: [lộ trình an ninh](https://ethereum.org/roadmap/security/), [trừu tượng hóa tài khoản](https://ethereum.org/roadmap/account-abstraction/), [quyền riêng tư](https://ethereum.org/roadmap/privacy/), [chạy một nút](https://ethereum.org/developers/docs/nodes-and-clients/run-a-node/)
+- Quỹ Ethereum: [nhóm hậu lượng tử](https://pq.ethereum.org), [hết hạn lịch sử một phần](https://blog.ethereum.org/2025/07/08/partial-history-exp) (tháng 7 năm 2025)
+- [EIP-7805: FOCIL](https://eips.ethereum.org/EIPS/eip-7805), [EIP-8288](https://eips.ethereum.org/EIPS/eip-8288), [EIP-8081: Hegotá](https://eips.ethereum.org/EIPS/eip-8081)

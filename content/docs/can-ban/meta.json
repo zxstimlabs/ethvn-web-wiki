@@ -1,0 +1,12 @@
+{
+  "title": "Căn bản",
+  "description": "Ethereum cho mọi người, giải thích dễ hiểu",
+  "icon": "BookOpen",
+  "root": true,
+  "pages": [
+    "index",
+    "bat-dau",
+    "cach-hoat-dong",
+    "dung-ethereum"
+  ]
+}

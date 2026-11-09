@@ -1,0 +1,80 @@
+---
+title: Ethereum nâng cấp thế nào
+description: Không có công ty hay giám đốc nào quyết định thay đổi Ethereum. Mỗi thay đổi bắt đầu từ một đề xuất công khai (EIP), được nhiều nhóm cùng làm, rồi cả mạng lưới nâng cấp cùng một lúc.
+sources:
+  - https://ethereum.org/governance/
+  - https://ethereum.org/eips/
+  - https://ethereum.org/ethereum-forks/
+  - https://ethereum.org/roadmap/
+  - https://ethereum.org/roadmap/glamsterdam/
+  - https://ethereum.org/roadmap/hegota/
+---
+
+Ethereum đã nâng cấp hơn hai mươi lần kể từ khi ra mắt năm 2015: đổi cách tính phí, chuyển sang bằng chứng cổ phần, làm Layer 2 rẻ hơn. Nhưng không có công ty, giám đốc hay cuộc bỏ phiếu bằng token nào quyết định những thay đổi đó.
+
+## Mọi thay đổi bắt đầu từ một EIP
+
+**EIP** (Ethereum Improvement Proposal, đề xuất cải tiến Ethereum) là một văn bản mô tả một thay đổi. Ai cũng có thể viết EIP và đưa ra thảo luận công khai.
+
+- **EIP lõi** thay đổi chính giao thức, như EIP-1559 đổi cách tính phí. Loại này cần cả mạng lưới nâng cấp.
+- **ERC** là các tiêu chuẩn cho ứng dụng, như ERC-20 cho token hay ERC-721 cho NFT. Loại này không cần nâng cấp mạng lưới.
+
+<UpgradeScene />
+
+## Từ đề xuất tới mạng chính
+
+1. **Viết đề xuất.** Tác giả viết EIP theo mẫu chung.
+2. **Trình bày công khai.** EIP được đưa ra trong các cuộc họp mở của các nhóm phát triển (All Core Devs), ai cũng xem được.
+3. **Sửa và hoàn thiện** theo góp ý.
+4. **Gom vào một đợt nâng cấp.** Các nhóm chọn những EIP đủ chín cho đợt tới.
+5. **Chạy thử rồi kích hoạt.** Mỗi nhóm phần mềm tự làm thay đổi trong phần mềm của mình. Đợt nâng cấp chạy thử trên các mạng thử nghiệm (như Sepolia, Hoodi), rồi kích hoạt trên mạng chính ở một mốc định trước.
+
+## Ai quyết định?
+
+Ethereum được quản trị ngoài chuỗi: không có cuộc bỏ phiếu bằng ETH nào. Quyết định hình thành từ thảo luận giữa nhiều bên: nhà phát triển, người chạy nút, trình xác thực, nhà phát triển ứng dụng và người dùng.
+
+Các nhà phát triển không thể ép ai nâng cấp. Mỗi người chạy nút tự chọn phần mềm của mình. Nếu đa số không đồng ý một thay đổi, họ không cài bản mới và thay đổi đó không có hiệu lực.
+
+Đến mốc nâng cấp, nút đã cập nhật chuyển sang luật mới. Nút không cập nhật không kiểm tra được các khối mới và bị tách khỏi mạng lưới. Năm 2016, sau vụ The DAO, một nhóm không đồng ý với đợt nâng cấp đã ở lại chuỗi cũ, và chuỗi đó trở thành Ethereum Classic.
+
+<Callout type="warn" title="Cảnh báo">
+Người dùng bình thường không phải làm gì khi Ethereum nâng cấp: ETH và token của bạn vẫn nguyên. Ai bảo bạn phải "nâng cấp" hay "đổi" ETH là lừa đảo.
+</Callout>
+
+## Các đợt nâng cấp quan trọng
+
+| Thời gian | Nâng cấp | Thay đổi chính |
+|---|---|---|
+| 7/2015 | Frontier | Ethereum ra mắt |
+| 7/2016 | DAO fork | Lấy lại tiền bị rút khỏi The DAO; Ethereum Classic tách ra |
+| 12/2020 | Beacon Chain | Chuỗi bằng chứng cổ phần ra mắt, chạy song song |
+| 8/2021 | London | EIP-1559: phí cơ sở bị đốt |
+| 9/2022 | The Merge | Chuyển hẳn sang bằng chứng cổ phần |
+| 4/2023 | Shapella | Trình xác thực rút được tiền cọc |
+| 3/2024 | Dencun | Blob: Layer 2 rẻ hơn nhiều |
+| 5/2025 | Pectra | Nâng cấp tài khoản thường thành [ví thông minh](../dung-ethereum/vi-thong-minh.mdx) (EIP-7702); một trình xác thực giữ tới 2.048 ETH |
+| 12/2025 | Fusaka | PeerDAS cho nhiều blob hơn; giới hạn gas mặc định 60 triệu; hỗ trợ passkey |
+
+Tên các đợt nâng cấp ghép từ tên thành phố tổ chức hội nghị Devcon (cho lớp thực thi) và tên một ngôi sao (cho lớp đồng thuận). Ví dụ Glamsterdam là Amsterdam ghép với Gloas.
+
+## Sắp tới
+
+Lộ trình có thể thay đổi. Tính tới tháng 11 năm 2026, đây vẫn là kế hoạch, chưa có trên mạng chính:
+
+- **Glamsterdam**, nhắm tới cuối năm 2026. Hai thay đổi chính:
+  - Đưa việc tách người đề xuất và người xây khối vào chính giao thức (ePBS, EIP-7732), để không còn phụ thuộc vào các nút relay của MEV-Boost.
+  - Danh sách truy cập cấp khối (BALs, EIP-7928), giúp nút chạy giao dịch song song.
+- **Hegotá**, đang lên kế hoạch, chưa có ngày. Thay đổi chính được bàn là FOCIL (EIP-7805), giúp chống kiểm duyệt giao dịch.
+
+Về lâu dài, lộ trình của Ethereum hướng tới phí rẻ hơn, an toàn hơn, dễ dùng hơn và riêng tư mặc định.
+
+## Tóm tắt
+
+- Mọi thay đổi bắt đầu từ một EIP công khai, được bàn trong các cuộc họp mở.
+- Nhiều nhóm phần mềm cùng làm, chạy thử trên mạng thử nghiệm, rồi cả mạng lưới nâng cấp tại một mốc định trước.
+- Không ai ép được người chạy nút nâng cấp. Người dùng bình thường không phải làm gì.
+
+## Đọc tiếp
+
+- [Nút](./nut.mdx): người chạy nút chọn phần mềm của mình
+- [Layer 2](./layer-2.mdx): vì sao Dencun làm Layer 2 rẻ hơn

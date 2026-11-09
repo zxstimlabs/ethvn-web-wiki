@@ -1,0 +1,99 @@
+---
+title: Đồng thuận
+description: Làm sao hàng nghìn máy tính không quen biết, không tin nhau, vẫn thống nhất được một cuốn sổ chung. Từ bài toán các vị tướng Byzantine tới bằng chứng công việc và bằng chứng cổ phần.
+sources:
+  - https://ethereum.org/developers/docs/consensus-mechanisms/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pow/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/pos-vs-pow/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/attack-and-defense/
+  - https://ethereum.org/roadmap/merge/
+  - https://ethereum.org/videos/blockchain-eth-build/
+---
+
+[Chuỗi khối](./chuoi-khoi.mdx) chỉ có ý nghĩa khi mọi nút giữ cùng một bản. Nhưng không có máy chủ trung tâm nào quyết định bản nào đúng. Các nút nhận giao dịch theo thứ tự khác nhau, mạng có lúc chậm, và một số nút có thể cố tình nói dối.
+
+Cách để cả mạng lưới đi đến thống nhất gọi là **cơ chế đồng thuận** (consensus mechanism): toàn bộ luật lệ, phần thưởng và hình phạt giúp các nút đồng ý với nhau về trạng thái của chuỗi khối.
+
+## Bài toán các vị tướng Byzantine
+
+Năm 1982, ba nhà khoa học máy tính Leslie Lamport, Robert Shostak và Marshall Pease mô tả vấn đề này bằng một câu chuyện, gọi là [bài toán các vị tướng Byzantine](https://lamport.azurewebsites.net/pubs/byz.pdf) (Byzantine Generals Problem):
+
+- Nhiều cánh quân bao vây một thành. Cùng tấn công thì thắng, đánh lẻ tẻ thì thua.
+- Các tướng chỉ liên lạc được bằng người đưa tin.
+- Trong số họ có kẻ phản bội. Kẻ đó có thể nói với người này một đằng, với người kia một nẻo.
+
+Làm sao để các tướng trung thành vẫn cùng chọn một kế hoạch?
+
+<ByzantineScene />
+
+Lời giải có ba ý chính, và chuỗi khối dùng đúng ba ý này:
+
+1. **Gửi cho tất cả.** Mỗi phiếu được gửi tới mọi người, không chuyền tay qua trung gian.
+2. **Ký tên vào từng phiếu.** Với [chữ ký số](./chu-ky-so.mdx), không ai giả được lời người khác, và ai nói hai lời trái nhau sẽ bị bắt quả tang.
+3. **Đủ đa số áp đảo thì quyết.** Trên một mạng như internet, nơi tin nhắn có thể đến chậm, nhóm chỉ đồng thuận an toàn được khi hơn 2/3 thành viên trung thực. Đó là lý do Ethereum cần 2/3 số phiếu.
+
+Một hệ thống vẫn chạy đúng dù có thành viên gian dối gọi là có **khả năng chịu lỗi Byzantine** (Byzantine fault tolerance).
+
+## Ai được bỏ phiếu?
+
+Trong câu chuyện, số tướng là cố định. Trên một mạng mở như Ethereum, ai cũng tham gia được, và một người có thể tạo ra hàng nghìn danh tính giả để bỏ phiếu thay cho cả đám đông. Kiểu gian lận này gọi là **tấn công Sybil** (Sybil attack).
+
+Vì vậy không thể đếm phiếu theo đầu người. Mỗi lá phiếu phải tốn một thứ khó làm giả. Theo ethereum.org, đó là việc của bằng chứng công việc và bằng chứng cổ phần: chúng chống tấn công Sybil và chọn ai được viết khối tiếp theo. Một luật chọn nhánh đi kèm để các nút cùng chọn một chuỗi.
+
+## Bằng chứng công việc
+
+Năm 2009, Bitcoin đưa ra lời giải thực tế đầu tiên: **bằng chứng công việc** (proof of work).
+
+- Các **thợ đào** (miner) cho máy tính đoán hàng tỷ con số mỗi giây, tìm một con số làm mã băm của khối nhỏ hơn một ngưỡng cho trước. Tìm ra rất khó, nhưng kiểm tra thì rất dễ.
+- Ai tìm ra trước được thêm khối và nhận thưởng. Các nút đi theo chuỗi có nhiều công sức tính toán nhất.
+- Lá phiếu ở đây là sức mạnh tính toán. Muốn gian lận phải nắm hơn một nửa sức mạnh tính toán của cả mạng, gọi là **tấn công 51%**.
+
+Ethereum dùng bằng chứng công việc từ khi ra mắt tháng 7 năm 2015. Cái giá phải trả là điện năng: các ước tính trước năm 2022 cho thấy Ethereum dùng hàng chục terawatt giờ điện mỗi năm. Bitcoin đến nay vẫn dùng bằng chứng công việc.
+
+<ConsensusScene />
+
+## Bằng chứng cổ phần
+
+Ý tưởng **bằng chứng cổ phần** (proof of stake) có từ sớm, nhưng phải mất nhiều năm nghiên cứu mới đủ an toàn để dùng thật:
+
+- **Ngày 1 tháng 12 năm 2020:** Beacon Chain ra mắt, chạy bằng chứng cổ phần song song với Ethereum.
+- **Ngày 15 tháng 9 năm 2022:** sự kiện **The Merge** chuyển hẳn Ethereum sang bằng chứng cổ phần. Không mất lịch sử nào, và người giữ ETH không phải làm gì.
+
+Thay cho thợ đào là các [trình xác thực](./trinh-xac-thuc.mdx), những người khóa ETH làm tiền cọc. Mỗi khe 12 giây, một trình xác thực được chọn ngẫu nhiên để đề xuất khối, các trình xác thực khác kiểm tra và bỏ phiếu. Lá phiếu tính theo số ETH đặt cọc. Khi hai mốc liên tiếp nhận phiếu từ 2/3 tổng số ETH đặt cọc, khối đạt **tính cuối cùng** (finality).
+
+Điều gì xảy ra nếu có kẻ tấn công nắm nhiều tiền cọc?
+
+| Kẻ tấn công nắm | Có thể làm gì |
+|---|---|
+| Hơn 1/3 tiền cọc | Làm chậm tính cuối cùng |
+| Hơn 1/2 tiền cọc | Kiểm duyệt giao dịch, điều khiển các khối sắp tới |
+| Hơn 2/3 tiền cọc | Đảo ngược cả những khối đã đạt tính cuối cùng |
+
+Nhưng mỗi lần tấn công bị phát hiện, kẻ tấn công bị cắt tiền cọc và bị loại. Muốn thử lại phải mua lại ETH và xếp hàng từ đầu. Với bằng chứng công việc, kẻ tấn công vẫn giữ máy đào để dùng tiếp. Và nếu mọi cách khác đều thất bại, cộng đồng vẫn có thể phối hợp tách chuỗi để loại kẻ tấn công.
+
+## So sánh nhanh
+
+| | Bằng chứng công việc | Bằng chứng cổ phần |
+|---|---|---|
+| Ai tạo khối | Thợ đào giải đố nhanh nhất | Trình xác thực được chọn ngẫu nhiên |
+| Thứ phải bỏ ra | Máy đào và tiền điện | ETH khóa làm tiền cọc |
+| Thời gian ra khối | Ngẫu nhiên (Ethereum trước đây khoảng 13 giây) | Đúng 12 giây mỗi khe |
+| Tính cuối cùng | Chỉ chắc chắn dần theo số khối chồng lên | Rõ ràng, sau khoảng 13 tới 19 phút |
+| Điện năng của Ethereum | Rất lớn | Giảm khoảng 99,95% sau The Merge |
+| Gian lận bị gì | Tốn tiền điện, giữ được máy | Bị cắt tiền cọc và loại khỏi mạng lưới |
+
+<Callout type="warn" title="Cảnh báo">
+Không có đồng "ETH2" nào. The Merge không đổi ETH của bạn thành thứ gì khác. Ai mời bạn "nâng cấp" hay "đổi" ETH sang ETH2 là lừa đảo.
+</Callout>
+
+## Tóm tắt
+
+- Bài toán các vị tướng Byzantine: làm sao cả nhóm thống nhất khi có kẻ nói dối. Lời giải: gửi cho tất cả, ký từng phiếu, cần hơn 2/3 trung thực.
+- Trên mạng mở, phiếu phải tốn một thứ khó làm giả. Bằng chứng công việc dùng điện năng, bằng chứng cổ phần dùng tiền cọc.
+- Ethereum dùng bằng chứng công việc từ 2015 tới 2022, rồi chuyển sang bằng chứng cổ phần, giảm khoảng 99,95% điện năng.
+
+## Đọc tiếp
+
+- [Trình xác thực](./trinh-xac-thuc.mdx): ai đang giữ an toàn cho Ethereum, và họ ở đâu
+- [Chuỗi khối là gì?](./chuoi-khoi.mdx)

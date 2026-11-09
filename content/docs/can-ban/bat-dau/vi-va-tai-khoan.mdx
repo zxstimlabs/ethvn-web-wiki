@@ -1,0 +1,99 @@
+---
+title: Ví, tài khoản và cụm từ khôi phục
+description: Ví không giữ tiền của bạn. Hiểu đúng về ví, tài khoản, khóa và cụm từ khôi phục, rồi tạo tài khoản Ethereum đầu tiên.
+sources:
+  - https://ethereum.org/wallets/
+  - https://ethereum.org/guides/how-to-create-an-ethereum-account/
+  - https://ethereum.org/guides/how-to-use-a-wallet/
+---
+
+Để dùng Ethereum, bạn cần một **ví**. Nhưng ví trên Ethereum khác chiếc ví trong túi bạn ở một điểm quan trọng: **ví không chứa tiền**. Tài sản của bạn nằm trên mạng lưới Ethereum. Ví chỉ là công cụ giúp bạn xem và sử dụng tài sản đó.
+
+## Bốn khái niệm cần phân biệt
+
+Hãy so sánh với email:
+
+| Khái niệm | Giống như | Giải thích |
+|---|---|---|
+| **Địa chỉ** | Địa chỉ email | Chuỗi bắt đầu bằng `0x`, dài 42 ký tự. Bạn đưa cho người khác để nhận tiền. Chia sẻ thoải mái. |
+| **Khóa riêng tư** | Mật khẩu email | Dùng để **ký** giao dịch, chứng minh bạn là chủ tài khoản. Tuyệt đối giữ bí mật. |
+| **Tài khoản** | Hộp thư | Một cặp khóa: khóa công khai (tạo ra địa chỉ) và khóa riêng tư. Tài sản gắn với tài khoản. |
+| **Ví** | Ứng dụng đọc email | Ứng dụng dùng khóa của bạn để xem số dư, gửi giao dịch, đăng nhập ứng dụng. |
+
+Một địa chỉ Ethereum trông như thế này (địa chỉ minh họa, đừng gửi tiền vào):
+
+```
+0x5859c049b26bd3882f00a3bbedebba5113abaaf2
+```
+
+Vì ví chỉ là "ứng dụng đọc", bạn có thể đổi sang ví khác bất cứ lúc nào mà vẫn giữ nguyên tài khoản và tài sản. Một ví cũng có thể quản lý nhiều tài khoản.
+
+## Cụm từ khôi phục
+
+Khi tạo ví mới, ví sẽ cho bạn một **cụm từ khôi phục** (recovery phrase, còn gọi là seed phrase): 12 hoặc 24 từ tiếng Anh theo một thứ tự nhất định. Ví dụ:
+
+```
+there aeroplane curve vent formation doge possible product distinct under spirit lamp
+```
+
+Từ cụm từ này, ví tạo ra khóa riêng tư cho mọi tài khoản của bạn. Điều đó có nghĩa là:
+
+- **Ai có cụm từ khôi phục, người đó có toàn bộ tài sản của bạn.** Không cần mật khẩu, không cần điện thoại của bạn.
+- **Mất cụm từ khôi phục và mất thiết bị, bạn mất tài sản vĩnh viễn.** Không ai khôi phục giúp bạn được.
+- **Có cụm từ khôi phục, bạn lấy lại được tài sản** trên bất kỳ ví nào hỗ trợ, kể cả khi điện thoại bị mất hay hỏng.
+
+<Callout type="warn" title="Cảnh báo">
+Cách giữ cụm từ khôi phục:
+- Viết ra giấy (hoặc khắc lên kim loại) và cất ở nơi an toàn. Có thể giữ hai bản ở hai nơi khác nhau.
+- **Không** chụp màn hình, **không** lưu trong ghi chú điện thoại, email, Google Drive, iCloud hay gửi qua Zalo, Messenger, Telegram.
+- **Không bao giờ** nhập cụm từ khôi phục vào trang web hay đưa cho bất kỳ ai, kể cả người tự xưng là "hỗ trợ kỹ thuật".
+</Callout>
+
+## Các loại ví
+
+| Loại ví | Ưu điểm | Lưu ý |
+|---|---|---|
+| **Ví di động** | Tiện, mang theo mọi lúc, quét mã QR dễ | Điện thoại mất hoặc nhiễm mã độc thì có rủi ro |
+| **Ví tiện ích trình duyệt** | Kết nối nhanh với ứng dụng trên web | Cài đúng tiện ích chính thức, cẩn thận với tiện ích giả |
+| **Ví web** | Không cần cài đặt, mở trình duyệt là dùng | Luôn vào đúng địa chỉ trang, nên lưu dấu trang (bookmark) |
+| **Ví máy tính** | Phù hợp nếu bạn hay dùng máy tính | Máy tính cần sạch mã độc |
+| **Ví cứng** | An toàn nhất: khóa nằm trong thiết bị riêng, không bao giờ lên mạng | Tốn tiền mua thiết bị, chỉ mua từ nhà sản xuất chính hãng |
+
+Với số tiền lớn, ví cứng là lựa chọn an toàn nhất.
+
+## Tự giữ hay để trên sàn?
+
+Khi bạn mua tiền mã hóa trên sàn giao dịch, sàn thường giữ tài sản giúp bạn. Bạn đăng nhập bằng tên và mật khẩu, quên thì sàn khôi phục được. Đổi lại, bạn phải tin tưởng sàn: nếu sàn bị hack, gặp khó khăn tài chính hay khóa tài khoản, tài sản của bạn gặp rủi ro.
+
+Khi dùng ví của riêng mình, bạn **tự lưu ký**: chỉ bạn kiểm soát tài sản, không ai đóng băng được. Nhưng bạn cũng phải tự chịu trách nhiệm giữ cụm từ khôi phục.
+
+## Tạo tài khoản Ethereum đầu tiên
+
+Bạn không cần đăng ký ở đâu cả. Ví sẽ tạo tài khoản cho bạn.
+
+1. **Chọn ví.** Xem bảng ở trên để chọn loại phù hợp.
+2. **Tải ví từ nguồn chính thức:** trang web của ví, App Store hoặc Google Play. Kiểm tra kỹ tên nhà phát triển, vì có rất nhiều ứng dụng giả.
+3. **Mở ví và chọn "Tạo ví mới"** (Create new wallet). Ví sẽ yêu cầu bạn đặt một mật khẩu. Mật khẩu này chỉ để mở ví trên thiết bị đó, khác với cụm từ khôi phục.
+4. **Chép lại cụm từ khôi phục ra giấy**, đúng thứ tự. Nhiều ví sẽ yêu cầu bạn nhập lại vài từ để chắc chắn bạn đã chép đúng.
+5. **Thử trước với số tiền nhỏ.** Nhận một ít ETH và gửi thử trước khi dùng số tiền lớn.
+
+Xong. Ví sẽ hiển thị địa chỉ của bạn. Đây chính là tài khoản Ethereum của bạn.
+
+## Câu hỏi thường gặp
+
+**Địa chỉ Ethereum của tôi có dùng được trên các mạng khác không?**
+Có, với các mạng tương thích Ethereum như Arbitrum, Optimism, Base hay BNB Chain: bạn có cùng một địa chỉ trên tất cả. Nhưng tài sản trên mỗi mạng là riêng biệt. 10 USDC trên Base không hiện ra trên Ethereum. Khi gửi tiền, hãy chắc chắn người gửi và người nhận dùng cùng một mạng.
+
+**Tôi có thể gửi bitcoin tới địa chỉ Ethereum không?**
+Không. Bitcoin và Ethereum là hai mạng lưới riêng biệt với định dạng địa chỉ khác nhau. Gửi nhầm sẽ mất tiền.
+
+**Tôi mất điện thoại. Có cần cài lại đúng ví cũ không?**
+Không bắt buộc. Phần lớn ví dùng chung một chuẩn cụm từ khôi phục (BIP-39), nên bạn có thể nhập cụm từ khôi phục vào một ví khác và lấy lại tài khoản.
+
+**Tôi có thể dùng một tài khoản trên nhiều thiết bị không?**
+Có, bằng cách nhập cùng cụm từ khôi phục vào ví trên từng thiết bị. Nhưng càng nhiều thiết bị giữ khóa, rủi ro càng cao.
+
+## Đọc tiếp
+
+- [Phí gas](./phi-gas.mdx)
+- [Giữ an toàn](./giu-an-toan.mdx)

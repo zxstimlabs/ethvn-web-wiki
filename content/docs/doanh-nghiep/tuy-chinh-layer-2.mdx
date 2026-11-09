@@ -1,0 +1,105 @@
+---
+title: Tùy chỉnh một Layer 2
+description: Một Layer 2 riêng chọn được token trả phí, tốc độ khối, ai được tham gia, dữ liệu để đâu và ai được nâng cấp. Mỗi lựa chọn đổi một phần an toàn của Ethereum lấy sự kiểm soát. Bốn bộ công cụ phổ biến và danh sách kiểm tra.
+sources:
+  - https://docs.optimism.io/chain-operators/guides/features/custom-gas-token-guide
+  - https://docs.optimism.io/op-stack/features/experimental/alt-da-mode
+  - https://docs.optimism.io/op-stack/protocol/privileged-roles
+  - https://docs.arbitrum.io/launch-arbitrum-chain/overview/introduction
+  - https://docs.arbitrum.io/launch-arbitrum-chain/chain-config/data-availability/anytrust-trust-model
+  - https://docs.arbitrum.io/launch-arbitrum-chain/operate/ownership-and-access
+  - https://docs.zksync.io/zk-stack/zk-chains
+  - https://docs.zksync.io/zk-stack/customizations/validium
+  - https://docs.zksync.io/zk-stack/prividium/overview
+  - https://docs.polygon.technology/chain-development/cdk/get-started/overview
+  - https://docs.polygon.technology/chain-development/cdk/privacy
+---
+
+Một Layer 2 riêng giống một tòa nhà xây trên nền móng là Ethereum. Bạn tự thiết kế phần nhà: ai được vào, trả tiền bằng gì, giấy tờ cất ở đâu. Nhưng càng tự làm nhiều, người dùng càng phải tin bạn nhiều hơn tin nền móng.
+
+## Những gì tùy chỉnh được, và cái giá của nó
+
+- **Token trả phí riêng** (custom gas token). Người dùng trả phí bằng một token bạn chọn thay vì ETH. Đổi lại, họ phải có token đó trước khi dùng mạng.
+- **Thời gian khối.** Khối nhanh hơn, xác nhận gần như tức thì. Xác nhận nhanh là lời hứa của bộ sắp xếp; tính cuối cùng vẫn đến từ Ethereum, sau khi dữ liệu và bằng chứng được ghi lên đó.
+- **Ai được tham gia** (danh sách cho phép, allow-list): ai được gửi giao dịch, ai được triển khai hợp đồng. Bên vận hành có quyền từ chối, nên mạng kém trung lập hơn.
+- **Dữ liệu để đâu.**
+  - Đăng lên Ethereum (rollup): ai cũng dựng lại được trạng thái. Đây là lựa chọn an toàn nhất.
+  - Giữ ở nơi khác (validium, ủy ban dữ liệu): rẻ hơn và giữ kín được, nhưng nếu dữ liệu không được công bố, người dùng có thể bị kẹt tiền.
+- **Quyền riêng tư.** Giữ dữ liệu giao dịch kín với người ngoài, chỉ gửi bằng chứng lên Ethereum, và mở cho kiểm toán viên hay cơ quan quản lý xem khi cần.
+- **Ai được nâng cấp.** Người giữ khóa nâng cấp có thể đổi luật của mạng. Đây là điểm chính quyết định [mức Stage](./layer-2-cho-doanh-nghiep.mdx) của một rollup.
+
+## Bốn bộ công cụ phổ biến
+
+Theo tài liệu chính thức của từng bên, đọc ngày 8 và 9 tháng 11 năm 2026.
+
+### OP Stack (Optimism)
+
+- **Token trả phí riêng:** có, dùng được token có sẵn hoặc token tạo mới.
+- **Thời gian khối:** tính bằng số giây nguyên, thường 1 hoặc 2 giây.
+- **Bộ sắp xếp:** một bộ sắp xếp mỗi mạng, có cơ chế dự phòng khi hỏng.
+- **Danh sách cho phép:** tài liệu không mô tả tính năng có sẵn.
+- **Dữ liệu:** mặc định đăng lên Ethereum. Chế độ để dữ liệu nơi khác (Alt-DA) mới ở bản thử. Theo chính tài liệu của OP Stack, chế độ này hiện tin hoàn toàn vào bên vận hành.
+- **Nâng cấp:** chủ của hợp đồng quản trị trên Ethereum. Các mạng theo quản trị của Optimism dùng ví nhiều chữ ký của Quỹ Optimism cùng một hội đồng bảo an.
+- **Ví dụ:** Base, Ink, Unichain, World Chain, Soneium.
+
+### Arbitrum (chuỗi Orbit)
+
+- **Token trả phí riêng:** có, với token ERC-20 thông thường.
+- **Thời gian khối:** mặc định 250 mili giây, có thể xuống 100 mili giây.
+- **Danh sách cho phép:** có, ở bộ sắp xếp và ở hộp thư nhận giao dịch từ Ethereum. Người không có trong danh sách cũng không tự đưa giao dịch qua Ethereum được.
+- **Lọc tuân thủ:** từ bản ArbOS 61 (năm 2026), bên vận hành có thể bật lọc theo danh sách địa chỉ bị hạn chế. Tính năng này mặc định tắt. Xem [Tuân thủ](./tuan-thu.mdx).
+- **Dữ liệu:**
+  - Chế độ Rollup đăng dữ liệu lên Ethereum.
+  - Chế độ AnyTrust giao dữ liệu cho một ủy ban do bạn chọn. Tài liệu Arbitrum lưu ý rằng chủ mạng mới là gốc của lòng tin, vì có thể thay cả ủy ban trong một giao dịch.
+- **Nâng cấp:** chủ mạng.
+- **Ví dụ:** Robinhood Chain.
+
+### ZK Stack và Prividium (ZKsync)
+
+- **Token trả phí riêng:** có. Chọn rồi thì không đổi lại được.
+- **Bộ sắp xếp:** tập trung hoặc phi tập trung. Luôn có một hàng đợi ưu tiên qua Ethereum làm lối thoát.
+- **Danh sách cho phép:** có bộ lọc giao dịch. Tài liệu cảnh báo: người dùng bị đưa vào danh sách chặn sau này có thể bị khóa tiền.
+- **Dữ liệu:** khuyên dùng chế độ rollup. Ở chế độ validium, tiền không bị lấy cắp được, nhưng có thể bị đóng băng nếu dữ liệu không được công bố.
+- **Prividium:** một chuỗi riêng kiểu validium.
+  - Dữ liệu nằm trong cơ sở dữ liệu của bên vận hành; Ethereum chỉ nhận gốc trạng thái và bằng chứng.
+  - Chỉ người được cấp quyền mới triển khai hợp đồng. Mỗi hàm được phân quyền riêng, và người dùng đăng nhập bằng tài khoản công ty.
+  - Kiểm toán viên và cơ quan quản lý được xem có chọn lọc.
+  - Dùng cho sản phẩm thật cần giấy phép thương mại.
+- **Nâng cấp:** nâng cấp giao thức qua quản trị chung của hệ sinh thái ZKsync; bên vận hành chọn thời điểm áp dụng.
+
+### Polygon CDK
+
+- **Nền tảng:** hiện dựng trên OP Stack, hoặc trên Hyperledger Besu.
+- **Chế độ:**
+  - "Sovereign" là mặc định. Bằng chứng của chế độ này chỉ chứng minh mạng không rút ra nhiều hơn số đã gửi vào, không chứng minh mọi giao dịch đều đúng.
+  - Validium đã có.
+  - Rollup kèm bằng chứng không kiến thức đang phát triển.
+- **Riêng tư:** dữ liệu nằm trên máy chủ do chính tổ chức vận hành. Theo tài liệu Polygon, nếu máy chủ đó mất dữ liệu thì không tạo được bằng chứng nữa.
+- **Danh sách cho phép:** chính sách cho bộ sắp xếp, như chỉ nhận giao dịch đã KYC, cùng đăng nhập bằng tài khoản công ty cho RPC. Một số phần phải tự làm thêm.
+
+## Danh sách kiểm tra trước khi chọn
+
+1. **Dữ liệu có được đăng lên Ethereum không?** Nếu không, ai giữ, và chuyện gì xảy ra khi họ ngừng công bố?
+2. **Có lối thoát không?** Người dùng rút được tài sản về Ethereum khi bên vận hành ngừng hoặc từ chối không, và sau bao lâu?
+3. **Ai giữ khóa nâng cấp,** và người dùng có bao nhiêu ngày để rút trước một nâng cấp?
+4. **Danh sách cho phép áp vào đâu:** chỉ giao dịch thường, hay cả đường tự đưa giao dịch qua Ethereum?
+5. **Mạng đạt Stage nào** trên ETHBEAT, và có kế hoạch lên mức cao hơn không?
+6. **Nếu dừng vận hành,** người dùng rút tài sản bằng cách nào?
+
+## Tóm tắt
+
+- Layer 2 riêng tùy chỉnh được token trả phí, tốc độ khối, quyền tham gia, nơi để dữ liệu, quyền riêng tư và quyền nâng cấp.
+- Mỗi tùy chỉnh chuyển một phần lòng tin từ Ethereum sang bên vận hành. Để dữ liệu ngoài Ethereum là đánh đổi lớn nhất.
+- Hỏi sáu câu trước khi chọn: dữ liệu, lối thoát, khóa nâng cấp, danh sách cho phép, Stage, và kế hoạch khi dừng.
+
+## Đọc tiếp
+
+- [Tuân thủ trên hạ tầng công khai](./tuan-thu.mdx)
+- [Kiểm chứng thay vì tin](./kiem-chung.mdx)
+
+## Nguồn
+
+- OP Stack: [token trả phí riêng](https://docs.optimism.io/chain-operators/guides/features/custom-gas-token-guide), [Alt-DA](https://docs.optimism.io/op-stack/features/experimental/alt-da-mode), [các vai trò có đặc quyền](https://docs.optimism.io/op-stack/protocol/privileged-roles)
+- Arbitrum: [giới thiệu chuỗi Arbitrum](https://docs.arbitrum.io/launch-arbitrum-chain/overview/introduction), [mô hình tin cậy AnyTrust](https://docs.arbitrum.io/launch-arbitrum-chain/chain-config/data-availability/anytrust-trust-model), [quyền sở hữu và truy cập](https://docs.arbitrum.io/launch-arbitrum-chain/operate/ownership-and-access)
+- ZKsync: [ZK chains](https://docs.zksync.io/zk-stack/zk-chains), [validium](https://docs.zksync.io/zk-stack/customizations/validium), [Prividium](https://docs.zksync.io/zk-stack/prividium/overview)
+- Polygon: [CDK](https://docs.polygon.technology/chain-development/cdk/get-started/overview), [quyền riêng tư trong CDK](https://docs.polygon.technology/chain-development/cdk/privacy)

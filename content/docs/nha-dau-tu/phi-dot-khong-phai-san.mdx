@@ -1,0 +1,75 @@
+---
+title: Phí bị đốt chưa bao giờ là sàn giá
+description: Lý thuyết định giá ETH bằng phí bị đốt, vì sao nó không tạo ra một mức sàn thật, và lượng ETH bị đốt đã thay đổi thế nào từ 2021 tới 2026.
+sources:
+  - https://x.com/VitalikButerin/status/2119401255919604064
+  - https://ethereum.org/developers/docs/gas/
+  - https://ethereum.org/roadmap/merge/issuance/
+  - https://ultrasound.money
+---
+
+## Cơ chế đốt phí
+
+Từ nâng cấp London (tháng 8 năm 2021), mỗi giao dịch trả hai phần phí. **Phí cơ sở** bị **đốt**, tức là xóa khỏi tổng cung. **Phí ưu tiên** trả cho trình xác thực. Mạng càng đông, phí cơ sở càng cao, và càng nhiều ETH bị đốt. Xem [Gas](../can-ban/cach-hoat-dong/gas.mdx).
+
+Tính tới ngày 8 tháng 11 năm 2026, tổng cộng khoảng 4,64 triệu ETH đã bị đốt (ultrasound.money).
+
+## Lý thuyết: định giá bằng phí bị đốt
+
+Lý thuyết này coi phí bị đốt như dòng tiền trả cho người giữ token, và định giá theo **giá trị hiện tại ròng** (net present value, NPV):
+
+**Vốn hóa = phí bị đốt mỗi năm ÷ lãi suất chiết khấu**
+
+Ví dụ của Vitalik: một token mỗi năm bị đốt 1 tỷ USD, ổn định lâu dài, và người ta coi 1 tỷ USD hôm nay ngang 1,04 tỷ USD sau một năm (lãi suất chiết khấu 4%). Khi đó 1 tỷ ÷ 4% = 25 tỷ USD được coi là một "sàn" tự nhiên.
+
+Lý do: nếu vốn hóa rơi xuống dưới 25 tỷ, ai đó có thể mua token rồi mỗi năm bán ra hơn 4% số đang giữ mà phần sở hữu vẫn giữ nguyên, vì tổng cung cũng giảm đúng chừng đó. Như vậy là mua được một dòng 1 USD mỗi năm mãi mãi với giá dưới 25 USD, một món hời mà thị trường sẽ không để tồn tại lâu.
+
+## Vì sao đó chưa bao giờ là sàn thật
+
+Lập luận "sàn" chỉ đúng khi dòng tiền đến từ **bên ngoài**: nó không giảm khi giá token giảm.
+
+Những năm 2021 tới 2023, Ethereum đốt hàng triệu ETH mỗi năm. Nhưng phần lớn đến từ hoạt động **bên trong** thế giới tiền mã hóa: mua bán NFT, cho vay, giao dịch token. Nếu ETH giảm 10 lần, những người mua trong các hoạt động đó cũng nghèo đi 10 lần, nên phí họ trả cũng giảm theo. Dòng tiền co lại đúng lúc giá cần nó nhất.
+
+Ví dụ nổi tiếng: đợt bán đất ảo Otherside của Yuga Labs (công ty đứng sau bộ NFT hình khỉ Bored Ape), ngày 30 tháng 4 tới 1 tháng 5 năm 2022.
+
+- Theo Decrypt, khoảng 55.843 ETH (khoảng 157 triệu USD) đã bị đốt cho đợt bán này.
+- Theo Etherscan, cả cuối tuần có 64.219 ETH bị đốt, được báo chí gọi là "180 triệu USD tiền phí".
+
+## Lượng đốt đã thay đổi thế nào
+
+| Năm | ETH bị đốt (ước tính) | ETH phát hành mới (ước tính) |
+|---|---|---|
+| 2021 (từ tháng 8) | khoảng 1,32 triệu | |
+| 2022 | khoảng 1,47 triệu | |
+| 2023 | khoảng 1,09 triệu | khoảng 0,75 triệu |
+| 2024 | khoảng 0,65 triệu | khoảng 0,93 triệu |
+| 2025 | khoảng 97 nghìn | khoảng 962 nghìn |
+| 2026 (tới 7 tháng 11) | khoảng 20 nghìn | khoảng 884 nghìn |
+
+Số liệu tính từ dữ liệu của Coin Metrics, khớp với tổng của ultrasound.money trong khoảng 0,4%. Hai năm 2021 và 2022 bỏ trống cột phát hành, vì trước The Merge (tháng 9 năm 2022) ETH còn được phát hành cho thợ đào theo cơ chế khác.
+
+Lượng đốt giảm mạnh từ 2024 vì phần lớn giao dịch đã chuyển sang [Layer 2](../can-ban/cach-hoat-dong/layer-2.mdx), nơi phí rẻ hơn nhiều, và vì blob làm phí đăng dữ liệu của Layer 2 rất rẻ. Năm 2025, lượng đốt chỉ bằng khoảng 10% lượng phát hành mới. Trong 30 ngày tính tới 8 tháng 11 năm 2026, con số đó là khoảng 3%.
+
+## Hôm nay thì sao?
+
+Vitalik thừa nhận hôm nay Ethereum có chỗ dựa bên ngoài tốt hơn: nền kinh tế tài sản thực được token hóa (khoảng 15,1 tỷ USD trên Ethereum, theo rwa.xyz ngày 8 tháng 11 năm 2026) và stablecoin. Nhưng chính vì đó là một hoạt động kinh doanh bình thường, ổn định, nó sẽ không bất ngờ đốt 180 triệu USD trong một ngày như đợt bán đất ảo năm 2022.
+
+Kết luận: EIP-1559 vẫn tốt và nên giữ, vì nó làm phí dễ đoán và trả lại một phần giá trị cho mọi người giữ ETH. Nhưng không nên coi phí bị đốt là nền móng cho giá trị của ETH.
+
+## Tóm tắt
+
+- Lý thuyết NPV coi phí bị đốt như dòng tiền và cho rằng nó tạo ra một mức sàn cho giá.
+- Mức sàn đó không thật, vì phần lớn phí bị đốt đến từ hoạt động bên trong tiền mã hóa, co lại khi giá ETH giảm.
+- Lượng đốt đã giảm từ khoảng 1,47 triệu ETH (2022) xuống khoảng 97 nghìn ETH (2025), chủ yếu vì giao dịch chuyển sang Layer 2.
+
+## Đọc tiếp
+
+- [Cái giá của việc tối đa hóa phí](./cai-gia-cua-toi-da-hoa-phi.mdx)
+- [Nguồn cung và an ninh của ETH](./nguon-cung-va-an-ninh.mdx)
+
+## Nguồn
+
+- Vitalik Buterin: [bài đăng trên X](https://x.com/VitalikButerin/status/2119401255919604064), ngày 8 tháng 11 năm 2026
+- ethereum.org: [Gas và phí](https://ethereum.org/developers/docs/gas/), [Phát hành ETH sau The Merge](https://ethereum.org/roadmap/merge/issuance/)
+- [ultrasound.money](https://ultrasound.money), số liệu ngày 8 tháng 11 năm 2026; [Coin Metrics](https://coinmetrics.io/community-network-data/); [rwa.xyz](https://app.rwa.xyz)
+- Decrypt, bài về đợt bán Otherside, ngày 2 tháng 5 năm 2022; Vice, dẫn số liệu Etherscan, cùng thời điểm

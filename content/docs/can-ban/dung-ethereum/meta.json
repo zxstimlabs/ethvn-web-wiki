@@ -1,0 +1,11 @@
+{
+  "title": "Dùng Ethereum",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "doc-giao-dich",
+    "token-stablecoin-nft",
+    "vi-thong-minh",
+    "quyen-rieng-tu"
+  ]
+}

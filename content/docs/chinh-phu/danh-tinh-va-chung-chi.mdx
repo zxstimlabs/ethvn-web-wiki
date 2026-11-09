@@ -1,0 +1,68 @@
+---
+title: Danh tính số và chứng chỉ
+description: Người dân giữ giấy tờ số trong ví của mình, chuỗi khối chỉ giữ danh sách bên cấp và trạng thái thu hồi. Bhutan, Singapore, và những gì học được.
+sources:
+  - https://publicsector.ethereum.foundation/case-studies/bhutan-national-digital-identity/
+  - https://publicsector.ethereum.foundation/case-studies/opencerts/
+  - https://publicsector.ethereum.foundation/case-studies/
+  - https://publicsector.ethereum.foundation/articles/issuer-hiding-credentials/
+  - https://publicsector.ethereum.foundation/articles/mobile-zk-benchmarks/
+  - https://ethereum.org/decentralized-identity/
+---
+
+Một tấm bằng giấy có thể bị làm giả, và muốn kiểm tra thì phải hỏi nơi cấp. Một **chứng chỉ số kiểm chứng được** (verifiable credential) là giấy tờ số mang chữ ký của bên cấp: ai nhận được cũng tự kiểm tra ngay, không cần gọi điện hỏi.
+
+## Ba vai: bên cấp, người giữ, bên kiểm tra
+
+- **Bên cấp** (issuer): trường học, cơ quan cấp phép. Bên cấp ký chứng chỉ bằng khóa của mình.
+- **Người giữ** (holder): người dân, giữ chứng chỉ trong ví trên điện thoại.
+- **Bên kiểm tra** (verifier): ngân hàng, nhà tuyển dụng. Bên kiểm tra kiểm tra chữ ký, không cần liên hệ bên cấp.
+
+Ethereum đóng vai cuốn sổ đăng ký chung mà ai cũng tra được: bên cấp nào được công nhận, mỗi loại chứng chỉ gồm những gì, chứng chỉ nào đã bị thu hồi. Dữ liệu cá nhân không lên chuỗi. Xem [Chữ ký số](../can-ban/cach-hoat-dong/chu-ky-so.mdx) để hiểu vì sao chữ ký kiểm tra được mà không cần biết khóa.
+
+## Chỉ cho xem đúng điều cần
+
+- **Tiết lộ có chọn lọc** (selective disclosure): chỉ đưa phần cần thiết. Ví dụ: chứng minh mình trên 18 tuổi mà không đưa ngày sinh.
+- **Bằng chứng không kiến thức** (zero-knowledge proof): chứng minh một điều là đúng mà không lộ dữ liệu đằng sau. Một bản thử nghiệm của EF (tháng 11 năm 2026) chứng minh được rằng chứng chỉ do một bên cấp được công nhận và chưa bị thu hồi, mà không cần nói bên cấp là ai.
+
+Điện thoại rẻ có chạy nổi không? Một nhóm của EF đo trên 10 điện thoại Android (tháng 11 năm 2026). Một bằng chứng gộp 8 phép kiểm tra mất khoảng 8 tới 10 giây trên máy cấp thấp, so với 1,4 tới 1,9 giây trên máy cao cấp. Trên một máy 4 GB RAM, bước chuẩn bị ban đầu bị Android tắt giữa chừng vì tốn bộ nhớ. Các bản này mới chạy trên mạng thử nghiệm và chưa được kiểm toán độc lập.
+
+## Bhutan: danh tính số quốc gia
+
+- Hệ thống danh tính số quốc gia của Bhutan (NDI) chạy từ năm 2023, ban đầu trên mạng Polygon. Ngày 13 tháng 10 năm 2025, Bhutan công bố chuyển NDI sang mạng chính Ethereum. Trang của EF cho khu vực công nói việc chuyển rộng hơn được dự kiến vào đầu năm 2026, nhưng chưa nói đã hoàn tất hay chưa.
+- Trên Ethereum: danh sách bên cấp được công nhận, định nghĩa các loại chứng chỉ, và **định danh phi tập trung** (DID). Chứng chỉ và dữ liệu cá nhân nằm trong ví NDI của người dân.
+- Cuối năm 2025, NDI có 449.549 người dùng (cuối năm 2024: 172.922). Theo báo cáo thường niên ngày 19 tháng 8 năm 2026, hơn 70 dịch vụ công, cả 5 ngân hàng và cả 2 nhà mạng của Bhutan đã kết nối.
+
+## Singapore: văn bằng OpenCerts, và vì sao đã đổi
+
+- Từ năm 2018, các trường ở Singapore ghi việc cấp và thu hồi văn bằng lên Ethereum công khai. Dữ liệu của người học không lên chuỗi. Tháng 12 năm 2019 đã có 18 cơ sở tham gia.
+- Ngày 1 tháng 10 năm 2025, OpenCerts bỏ mô hình dựa trên Ethereum và chuyển sang TrustVC: tệp có chữ ký số, cộng một danh sách trạng thái trực tuyến. Văn bằng cũ vẫn kiểm tra được.
+- Bài học: một hệ thống chạy tốt nhiều năm vẫn có thể đổi kiến trúc. Ngay từ đầu, cần tính tới việc giấy tờ đã cấp vẫn kiểm tra được khi hệ thống thay đổi.
+
+## Chứng chỉ đào tạo của Liên Hợp Quốc
+
+Trung tâm Đào tạo Quốc tế của Tổ chức Lao động Quốc tế (ITCILO) đã cấp hơn 208.000 chứng chỉ số tính tới tháng 10 năm 2025. Trang của EF không nói hệ thống chạy trên mạng nào.
+
+## Những điều cần tính
+
+- **Mất điện thoại.** Người dân cần một cách lấy lại giấy tờ, ví dụ [khôi phục qua người thân hoặc thiết bị khác](../can-ban/dung-ethereum/vi-thong-minh.mdx). Trang về Bhutan cũng nêu vấn đề này.
+- **Người không có điện thoại**, hoặc dùng chung một máy với gia đình.
+- **Thu hồi có độ trễ.** Trong bản thử nghiệm của EF, một chứng chỉ đã thu hồi vẫn có thể qua kiểm tra trong tối đa một giờ.
+- **Giá trị pháp lý.** Giấy tờ số có giá trị như bản giấy hay không là do luật quy định.
+
+## Tóm tắt
+
+- Chứng chỉ số mang chữ ký của bên cấp; ai nhận cũng tự kiểm tra được.
+- Ethereum giữ phần công khai: bên cấp nào được công nhận, chứng chỉ nào đã bị thu hồi. Dữ liệu cá nhân nằm trong ví của người dân.
+- Bhutan đang đưa danh tính số quốc gia lên Ethereum. Singapore đã dùng Ethereum cho văn bằng từ 2018 tới 2025, rồi chuyển sang cách khác.
+
+## Đọc tiếp
+
+- [Minh bạch tài chính và dữ liệu công](./minh-bach-tai-chinh-va-du-lieu.mdx)
+- [Ví thông minh](../can-ban/dung-ethereum/vi-thong-minh.mdx)
+
+## Nguồn
+
+- ethereum.org: [Danh tính phi tập trung](https://ethereum.org/decentralized-identity/), mục về Bhutan
+- Quỹ Ethereum, nghiên cứu điển hình: [Bhutan](https://publicsector.ethereum.foundation/case-studies/bhutan-national-digital-identity/), [OpenCerts](https://publicsector.ethereum.foundation/case-studies/opencerts/), [danh sách đầy đủ](https://publicsector.ethereum.foundation/case-studies/)
+- Quỹ Ethereum, bài kỹ thuật (tháng 11 năm 2026): [ẩn bên cấp và thu hồi](https://publicsector.ethereum.foundation/articles/issuer-hiding-credentials/), [đo trên điện thoại cấp thấp](https://publicsector.ethereum.foundation/articles/mobile-zk-benchmarks/)

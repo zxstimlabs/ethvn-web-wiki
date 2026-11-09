@@ -1,0 +1,76 @@
+---
+title: Hạ tầng trung lập, không thuộc về cường quốc nào
+description: Mỗi khối Ethereum có chỗ cho giao dịch của bất kỳ ai, ở bất kỳ nước nào. Không chính phủ, công ty hay quỹ nào một mình tắt được mạng, đổi được luật hay chặn được một quốc gia. Vì sao, và giới hạn ở đâu.
+sources:
+  - https://ethereum.org/latest/why-build-on-ethereum/
+  - https://publicsector.ethereum.foundation/evaluating-ethereum/
+  - https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf
+  - https://eips.ethereum.org/EIPS/eip-7805
+  - https://ethernodes.org
+---
+
+Cứ 12 giây, Ethereum tạo một khối mới. Chỗ trong mỗi khối dành cho giao dịch gọi là **không gian khối** (block space). Ai trả phí thì được dùng. Một cơ quan ở Hà Nội, một công ty ở São Paulo hay một người dân ở Nairobi đều theo cùng một luật và cùng một bảng giá. Không ai được ưu tiên hay bị loại vì quốc tịch.
+
+Với khu vực công, đây là điểm khác biệt lớn nhất: hạ tầng chung này không thuộc về một cường quốc, một tập đoàn hay một quỹ nào.
+
+## Vì sao không một bên nào kiểm soát được
+
+- **Nút ở khắp nơi.** Theo Ethernodes (tháng 11 năm 2026), có 8.717 nút lớp thực thi ở 95 quốc gia và vùng lãnh thổ, trong đó 24 nút ở Việt Nam. Ai cũng chạy được một nút, không cần xin phép. Xem [Nút](../can-ban/cach-hoat-dong/nut.mdx).
+- **Người tạo khối thay nhau theo lượt ngẫu nhiên.** Mỗi khe 12 giây, giao thức chọn ngẫu nhiên một [trình xác thực](../can-ban/cach-hoat-dong/trinh-xac-thuc.mdx) đề xuất khối. Các trình xác thực chạy máy ở gần trăm quốc gia.
+- **Không có một phần mềm duy nhất.** Lớp thực thi có năm phần mềm chính do các nhóm khác nhau viết: Geth khoảng 50%, Nethermind khoảng 25%, Besu khoảng 9%, Reth khoảng 8%, Erigon khoảng 7% (theo ethereum.org, tháng 5 năm 2026). Không nhóm nào lén đưa được luật mới vào mạng.
+- **Luật chỉ đổi khi mạng lưới chấp nhận.** Mỗi đợt [nâng cấp](../can-ban/cach-hoat-dong/nang-cap.mdx) được bàn công khai, và mỗi người vận hành nút tự quyết có cài phiên bản mới hay không.
+- **Không có "nút tắt".** Theo hướng dẫn của Quỹ Ethereum (EF), giao thức không có giao diện quản trị nào để đóng băng tài khoản hay đảo ngược giao dịch. EF cũng tự ghi rõ họ không vận hành hay kiểm soát Ethereum.
+- **Chưa từng ngừng tạo khối** kể từ ngày 30 tháng 7 năm 2015.
+
+So sánh: một hệ thống do một công ty hay một quốc gia vận hành, như mạng thanh toán, dịch vụ đám mây hay một chuỗi riêng, có thể bị chính bên đó tắt, đổi điều khoản, hoặc buộc chặn người dùng theo luật của họ. Với Ethereum, muốn làm vậy thì phải thuyết phục được phần lớn những người vận hành ở rất nhiều nước khác nhau.
+
+## Thử thách thật: lệnh trừng phạt năm 2022
+
+Đây là lần thử lớn nhất cho tính trung lập của Ethereum, theo ethereum.org:
+
+1. Tháng 8 năm 2022, Văn phòng Kiểm soát Tài sản Nước ngoài của Hoa Kỳ (OFAC) đưa Tornado Cash, một hợp đồng trộn tiền để giữ riêng tư, vào danh sách trừng phạt.
+2. Nhiều **relay** MEV-Boost, những nút do bên thứ ba vận hành để chuyển khối từ người xây khối tới trình xác thực, bắt đầu lọc bỏ giao dịch liên quan. Lúc cao điểm (tháng 11 năm 2022), khoảng 79% khối được xây qua các relay có lọc.
+3. Nhưng 21% còn lại không lọc, nên các giao dịch đó vẫn vào chuỗi, chỉ chậm hơn: thời gian chờ trung bình tăng từ khoảng 12 giây lên khoảng một phút.
+4. Các relay mới không lọc ra đời, và không ai ép được mọi trình xác thực dùng relay có lọc. Đầu năm 2023, tỷ lệ khối qua relay có lọc xuống dưới 50%. Suốt phần còn lại của năm 2023, nó dao động từ 27% tới 47%. Tháng 3 năm 2025, Tornado Cash được đưa ra khỏi danh sách trừng phạt.
+
+Bài học: một cường quốc có thể làm chậm giao dịch qua những công ty chịu luật của mình, nhưng không chặn hẳn được, khi còn trình xác thực ở nơi khác không làm theo.
+
+Relay có lọc vẫn còn. Theo MEV Watch, ngày 7 tháng 11 năm 2026, khoảng 16,7% lượt giao khối qua các relay MEV-Boost đến từ relay có lọc. Con số này đếm theo lượt giao của relay chứ không theo số khối, nên không so trực tiếp được với con số 79% ở trên.
+
+Ethereum đang đưa bảo đảm này vào chính giao thức. Nâng cấp **FOCIL** (EIP-7805) thêm **danh sách bắt buộc đưa vào** (inclusion list): một nhóm trình xác thực chọn ngẫu nhiên công bố các giao dịch đang chờ, và khối tiếp theo phải chứa chúng, nếu không mạng lưới sẽ từ chối khối đó. FOCIL đã được xếp vào đợt nâng cấp Hegotá (theo EIP-8081, còn là bản nháp). Tính tới tháng 11 năm 2026, đây vẫn là kế hoạch, chưa có ngày.
+
+## Giới hạn của sự trung lập
+
+- **Nút tập trung ở vài nước.** Hoa Kỳ chiếm khoảng 30% số nút, Đức khoảng 14% (Ethernodes, tháng 11 năm 2026). Một nước có nhiều nút không tự đổi được luật, nhưng có tiếng nói lớn hơn. Nhiều nút cũng thuê máy của một vài công ty đám mây lớn.
+- **Một phần mềm chiếm gần nửa mạng.** ethereum.org thừa nhận tỷ lệ gần 50% của Geth là điểm yếu thật: một lỗi nặng ở đó ảnh hưởng tới nhiều nút cùng lúc.
+- **Các tầng bên trên có chủ.** Stablecoin do công ty phát hành và có thể bị đóng băng theo luật nơi công ty đăng ký. Layer 2 thường do một công ty vận hành bộ sắp xếp. Sàn giao dịch, dịch vụ lưu ký và oracle cũng vậy. Ethereum trung lập ở tầng giao thức; điều đó không tự động đúng với các tầng này.
+- **Ảnh hưởng mềm vẫn tồn tại.** Các đợt nâng cấp do cộng đồng nhà phát triển bàn bạc, và người có tiếng nói lớn vẫn có sức ảnh hưởng, dù không ai ra lệnh được.
+
+<Callout type="info" title="Lưu ý">
+Trung lập không có nghĩa là đứng ngoài pháp luật. Một cơ quan dùng Ethereum vẫn tuân theo luật của mình. Điều Ethereum mang lại là không bên ngoài nào tắt được, sửa được hay chặn được hạ tầng chung mà cơ quan dựa vào.
+</Callout>
+
+## Ý nghĩa với một quốc gia
+
+- **Dùng chung mà không phụ thuộc.** Một quốc gia có thể dựa vào Ethereum mà không cần thiện chí của một nước khác hay của một nhà cung cấp.
+- **Tự kiểm tra trong nước.** Cơ quan có thể tự chạy nút đặt tại Việt Nam để tự đối chiếu mọi bản ghi, không phải hỏi ai.
+- **Chọn kỹ các tầng bên trên.** Phần nào nằm trên chính giao thức thì trung lập. Phần nào phụ thuộc một công ty, như stablecoin, Layer 2 hay oracle, thì cần xét xem công ty đó chịu luật của nước nào.
+
+## Tóm tắt
+
+- Không gian khối của Ethereum mở cho mọi người ở mọi nước, theo cùng một luật.
+- Không bên nào một mình tắt được mạng, đổi được luật hay chặn hẳn được một giao dịch hợp lệ. Năm 2022, lệnh trừng phạt chỉ làm giao dịch chậm đi chứ không chặn được.
+- Giới hạn: nút tập trung ở Mỹ và Đức, một phần mềm chiếm gần nửa mạng, và các tầng bên trên như stablecoin hay Layer 2 vẫn có chủ.
+
+## Đọc tiếp
+
+- [Đưa gì lên chuỗi, giữ gì ngoài chuỗi](./dua-gi-len-chuoi.mdx)
+- [Trình xác thực](../can-ban/cach-hoat-dong/trinh-xac-thuc.mdx): mạng lưới trải rộng tới đâu
+
+## Nguồn
+
+- ethereum.org: [Why build on Ethereum](https://ethereum.org/latest/why-build-on-ethereum/) (tháng 5 năm 2026), phần về chống kiểm duyệt và đa dạng phần mềm
+- Quỹ Ethereum: [Đánh giá Ethereum](https://publicsector.ethereum.foundation/evaluating-ethereum/), [Ethereum Basics for Governments and Institutions](https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf)
+- [EIP-7805: FOCIL](https://eips.ethereum.org/EIPS/eip-7805), [EIP-8081: Hegotá](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-8081.md)
+- [MEV Watch](https://www.mevwatch.info/), số liệu ngày 7 tháng 11 năm 2026
+- [Ethernodes](https://ethernodes.org), số liệu đọc ngày 8 tháng 11 năm 2026

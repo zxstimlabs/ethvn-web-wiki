@@ -1,0 +1,90 @@
+---
+title: Ether (ETH) là gì?
+description: ETH là tiền mã hóa gốc của Ethereum, dùng để trả phí giao dịch, bảo vệ mạng lưới và thanh toán.
+sources:
+  - https://ethereum.org/what-is-ether/
+  - https://ethereum.org/eth/
+  - https://ethereum.org/wrapped-eth/
+---
+
+**Ether**, viết tắt **ETH**, là tiền mã hóa gốc của Ethereum. Nếu Ethereum là một cỗ máy khổng lồ, thì ETH là nhiên liệu giúp cỗ máy đó chạy.
+
+ETH ra đời cùng Ethereum năm 2015. Không công ty, tổ chức hay chính phủ nào kiểm soát ETH.
+
+## ETH dùng để làm gì?
+
+| Công dụng | Giải thích |
+|---|---|
+| **Trả phí giao dịch** | Mỗi lần gửi tiền hay dùng ứng dụng trên Ethereum, bạn trả một khoản phí nhỏ bằng ETH, gọi là [phí gas](./phi-gas.mdx). |
+| **Bảo vệ mạng lưới** | Trình xác thực khóa ETH làm tiền đặt cọc để được quyền xử lý giao dịch. Làm đúng thì được thưởng, gian lận thì bị phạt. |
+| **Thanh toán** | Bạn có thể gửi ETH cho bất kỳ ai, ở bất kỳ đâu, vào bất kỳ lúc nào, thường chỉ mất vài giây. |
+| **Tài sản thế chấp** | Nhiều ứng dụng tài chính phi tập trung (DeFi) cho phép dùng ETH để vay hoặc cho vay. |
+
+<Callout type="warn" title="Quan trọng">
+Muốn gửi bất kỳ thứ gì trên Ethereum, kể cả stablecoin như USDT hay USDC, ví của bạn phải có một ít ETH để trả phí. Ví có 100 USDT nhưng không có ETH thì không chuyển USDT đi được.
+</Callout>
+
+## Đơn vị của ETH
+
+ETH có thể chia rất nhỏ. Hai đơn vị bạn hay gặp:
+
+| Đơn vị | Bằng | Thường gặp ở đâu |
+|---|---|---|
+| **gwei** | 0,000000001 ETH (một phần tỷ ETH) | Giá gas trong ví |
+| **wei** | 0,000000000000000001 ETH (đơn vị nhỏ nhất) | Mã nguồn, công cụ cho lập trình viên |
+
+Ví dụ: 1 ETH = 1.000.000.000 gwei.
+
+## Gửi và nhận ETH
+
+**Để nhận ETH**, bạn đưa cho người gửi **địa chỉ** của mình: một chuỗi bắt đầu bằng `0x`, dài 42 ký tự, hoặc mã QR của địa chỉ đó.
+
+**Để gửi ETH**, bạn mở ví, nhập địa chỉ người nhận và số tiền, xem lại phí rồi xác nhận.
+
+- Cứ 12 giây Ethereum tạo một khối mới, nên giao dịch thường được ghi nhận trong vòng 30 giây.
+- Sau khoảng 15 phút, giao dịch đạt **tính cuối cùng** (finality) và không thể bị đảo ngược nữa.
+- Khi mạng lưới đông, bạn có thể trả phí cao hơn để được xử lý sớm hơn.
+
+<Callout type="warn" title="Cảnh báo">
+Giao dịch đã gửi thì không thể hủy hay đòi lại. Gửi nhầm địa chỉ là mất. Hãy kiểm tra kỹ địa chỉ trước khi bấm gửi, và thử gửi một khoản nhỏ trước nếu là lần đầu gửi tới địa chỉ đó.
+</Callout>
+
+<Callout type="info" title="Lưu ý">
+Ethereum là sổ cái công khai. Ai biết địa chỉ của bạn đều có thể xem số dư và lịch sử giao dịch của bạn. Họ không lấy được tiền, nhưng bạn nên cân nhắc trước khi chia sẻ địa chỉ.
+</Callout>
+
+## Nguồn cung ETH
+
+Bitcoin có tối đa 21 triệu đồng. ETH thì không có giới hạn cố định, mà thay đổi theo hai cơ chế ngược chiều nhau:
+
+- **Phát hành:** ETH mới được tạo ra để thưởng cho trình xác thực, với tốc độ do giao thức quy định.
+- **Đốt:** từ năm 2021, phần lớn phí của mỗi giao dịch (phí cơ sở) bị **đốt**, tức là bị xóa vĩnh viễn khỏi nguồn cung.
+
+Khi mạng lưới bận rộn, lượng ETH bị đốt có thể nhiều hơn lượng được phát hành, khiến tổng cung giảm. Khi mạng lưới vắng, tổng cung tăng nhẹ.
+
+Tổng cung và lượng ETH bị đốt được công khai, bạn có thể theo dõi trên các trang như [Etherscan](https://etherscan.io) hay [ultrasound.money](https://ultrasound.money).
+
+## Wrapped ETH (WETH) là gì?
+
+Nhiều ứng dụng chỉ làm việc với token theo chuẩn **ERC-20**, nhưng ETH lại không phải token ERC-20. **WETH** (wrapped ETH, "ETH được bọc") giải quyết chuyện này: bạn gửi ETH vào một hợp đồng thông minh và nhận lại đúng số WETH tương ứng, theo tỷ lệ 1:1.
+
+Bạn có thể đổi WETH về ETH bất cứ lúc nào. Phần lớn ứng dụng tự làm việc này cho bạn.
+
+## Làm sao để có ETH?
+
+- **Nhận từ người khác:** người quen gửi cho bạn, hoặc bạn nhận thanh toán bằng ETH.
+- **Mua:** qua sàn giao dịch hoặc ngay trong một số ứng dụng ví.
+- **Kiếm được:** ví dụ đặt cọc ETH để nhận thưởng khi đã có sẵn ETH.
+
+<Callout type="error" title="Thận trọng">
+Quy định về tài sản số ở Việt Nam đang thay đổi. Trước khi mua bán, hãy tìm hiểu quy định hiện hành và chỉ dùng nền tảng đáng tin cậy. Trang này chỉ nhằm giải thích, không phải lời khuyên đầu tư.
+</Callout>
+
+<Callout type="warn" title="Cảnh báo">
+Không có "ETH2", "ETH 2.0" hay bất kỳ phiên bản ETH mới nào để mua hoặc đổi. Ai hứa "gửi ETH để nhận lại gấp đôi" đều là lừa đảo. Xem thêm: [Giữ an toàn](./giu-an-toan.mdx).
+</Callout>
+
+## Đọc tiếp
+
+- [Ví, tài khoản và cụm từ khôi phục](./vi-va-tai-khoan.mdx)
+- [Phí gas](./phi-gas.mdx)

@@ -1,0 +1,76 @@
+---
+title: Token, stablecoin và NFT
+description: Token là những dòng ghi trong một hợp đồng thông minh, không phải đồng xu trong ví. Stablecoin giữ giá nhờ tài sản bảo đảm; NFT ghi ai sở hữu một mã số duy nhất.
+sources:
+  - https://ethereum.org/developers/docs/standards/tokens/
+  - https://ethereum.org/developers/docs/standards/tokens/erc-20/
+  - https://ethereum.org/developers/docs/standards/tokens/erc-721/
+  - https://ethereum.org/stablecoins/
+  - https://ethereum.org/nft/
+  - https://ethereum.org/wrapped-eth/
+  - https://ethereum.org/guides/how-to-revoke-token-access/
+  - https://ethereum.org/guides/how-to-id-scam-tokens/
+---
+
+Ngoài ETH, trên Ethereum có hàng nghìn loại **token**: đô la số, điểm thưởng, vật phẩm trong game, cổ phần, chứng nhận sở hữu. Tất cả đều do [hợp đồng thông minh](../cach-hoat-dong/hop-dong-thong-minh.mdx) tạo ra và theo dõi.
+
+<TokenScene />
+
+## Token nằm ở đâu?
+
+Một token là một hợp đồng thông minh giữ **sổ số dư**: địa chỉ nào có bao nhiêu. Tiêu chuẩn phổ biến nhất là **ERC-20**, có từ năm 2015, quy định các chức năng chung như xem số dư, chuyển token, cho phép người khác chi tiêu.
+
+- Token không nằm trong ví. Ví đọc sổ số dư của hợp đồng rồi hiển thị cho bạn. Thứ ví giữ là khóa riêng tư, thứ cho phép bạn ra lệnh cho hợp đồng.
+- Chuyển token là gửi một giao dịch tới hợp đồng token, nhờ nó trừ số dư của bạn và cộng cho người nhận. Phí giao dịch vẫn trả bằng ETH.
+- Gửi token tới địa chỉ của chính hợp đồng token, hay một hợp đồng không biết xử lý token, thường là mất luôn. Theo ethereum.org, tính tới giữa năm 2024 đã có hơn 83 triệu USD token mất theo cách này.
+
+### Quyền chi tiêu
+
+Để một ứng dụng (như sàn đổi token) dùng token của bạn, bạn phải ký một lệnh **cho phép chi tiêu** (approve), kèm một hạn mức. Nếu bạn cho phép không giới hạn, ứng dụng đó dùng được toàn bộ token loại đó, kể cả khi bạn đã thôi dùng ứng dụng. Nếu ứng dụng bị hack, token của bạn có thể bị rút.
+
+Chỉ cho phép đúng số cần dùng, và định kỳ thu hồi quyền cũ. Xem [Đọc một giao dịch](./doc-giao-dich.mdx#dùng-trình-khám-phá-khối-để-tự-bảo-vệ).
+
+## Stablecoin
+
+**Stablecoin** là token được thiết kế để giữ giá ổn định, thường bằng 1 USD. Mỗi loại giữ giá theo một cách, với rủi ro khác nhau:
+
+| Loại | Giữ giá nhờ | Phải tin vào |
+|---|---|---|
+| Bảo đảm bằng tiền pháp định (như USDC, USDT) | Bên phát hành giữ tiền thật hoặc tài sản tương đương làm dự trữ, đổi 1:1 | Bên phát hành có giữ đủ dự trữ, có kiểm toán |
+| Bảo đảm bằng tài sản mã hóa (như DAI, USDS) | Thế chấp tài sản mã hóa nhiều hơn giá trị phát hành, ví dụ 2 USD tài sản cho 1 USD stablecoin | Hợp đồng thông minh và giá của tài sản thế chấp |
+| Bảo đảm bằng kim loại quý | Vàng hoặc bạc do bên phát hành cất giữ | Bên phát hành và kho dự trữ |
+| Thuật toán | Một cơ chế tự điều chỉnh cung, không có tài sản bảo đảm | Thuật toán, và thị trường không mất niềm tin |
+
+Những điều cần biết:
+
+- **Giá có thể lệch.** Khi người ta nghi ngờ dự trữ hoặc thị trường hoảng loạn, stablecoin có thể rơi khỏi mức 1 USD.
+- **Bên phát hành có quyền lớn.** Với stablecoin bảo đảm bằng tiền pháp định, như USDC và USDT, bên phát hành có thể đóng băng token ở một địa chỉ.
+- **Chọn đúng mạng.** Cùng tên USDT hay USDC nhưng mỗi mạng (Ethereum, các Layer 2, các chuỗi khác) là token riêng. Gửi nhầm mạng có thể mất tiền.
+
+## NFT
+
+**NFT** (non-fungible token, token không thể thay thế) là token mà mỗi đơn vị là duy nhất. Hợp đồng NFT (theo tiêu chuẩn ERC-721, có từ năm 2018, hoặc ERC-1155) ghi lại mỗi mã số thuộc về ai. Ai cũng kiểm tra được quyền sở hữu đó.
+
+- **Ảnh thường không nằm trên chuỗi.** Hợp đồng thường chỉ giữ một đường dẫn tới thông tin mô tả và ảnh, lưu ở một máy chủ hay trên mạng lưu trữ như IPFS. Nơi lưu ngừng hoạt động thì ảnh có thể mất, dù bạn vẫn sở hữu NFT.
+- **Sở hữu NFT không có nghĩa là sở hữu bản quyền** của tác phẩm, trừ khi bên bán cam kết như vậy.
+- **Tiền bản quyền cho tác giả** khi NFT được bán lại có thể được ghi trong hợp đồng, nhưng giao thức Ethereum không bắt buộc: tùy sàn có trả hay không.
+
+## Token bọc: WETH
+
+ETH có trước tiêu chuẩn ERC-20, nên không theo tiêu chuẩn này. **WETH** (wrapped ETH, ETH được bọc) là ETH được gửi vào một hợp đồng để đổi lấy token ERC-20 tương ứng 1:1. Trả WETH thì nhận lại ETH. Xem thêm ở [Ether (ETH) là gì?](../bat-dau/ether-la-gi.mdx#wrapped-eth-weth-là-gì).
+
+<Callout type="warn" title="Cảnh báo">
+Ai cũng tạo được token với tên và ký hiệu bất kỳ, kể cả trùng tên token nổi tiếng. Kẻ gian còn tự gửi token giả vào ví của bạn để dụ bạn vào trang lừa đảo. Đừng tương tác với token lạ tự xuất hiện trong ví. Xem [Giữ an toàn](../bat-dau/giu-an-toan.mdx).
+</Callout>
+
+## Tóm tắt
+
+- Token là sổ số dư trong một hợp đồng thông minh. Ví chỉ hiển thị, khóa riêng tư mới là thứ bạn giữ.
+- Chỉ cho phép ứng dụng chi tiêu đúng số cần, và thu hồi quyền cũ.
+- Stablecoin giữ giá nhờ tài sản bảo đảm, nhưng bạn vẫn phải tin bên phát hành hoặc cơ chế của nó.
+- NFT ghi quyền sở hữu một mã số; ảnh thường nằm ngoài chuỗi.
+
+## Đọc tiếp
+
+- [Ví thông minh](./vi-thong-minh.mdx)
+- [Đọc một giao dịch](./doc-giao-dich.mdx)

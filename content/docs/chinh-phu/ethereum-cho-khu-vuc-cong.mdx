@@ -1,0 +1,61 @@
+---
+title: Ethereum nhìn từ khu vực công
+description: Một sổ ghi chép công khai không do cơ quan hay công ty nào vận hành. Ai cũng tự kiểm tra được, không ai sửa lén được. Những gì nó làm tốt, và những gì nó không làm được.
+sources:
+  - https://publicsector.ethereum.foundation/evaluating-ethereum/
+  - https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf
+  - https://blog.ethereum.org/2026/07/01/ethereum-for-institutions
+  - https://ethereum.org/energy-consumption/
+  - https://prysm.offchainlabs.com/docs/misc/mainnet-postmortems/
+---
+
+Hãy hình dung một tờ công báo mà ai cũng đọc được, không ai sửa được bài đã đăng, và không cơ quan nào giữ nhà in. Mỗi bài ghi rõ ai đăng, đăng lúc nào, kèm một chữ ký mà ai cũng kiểm tra được. Nhìn từ khu vực công, đó là cách gần nhất để hiểu Ethereum.
+
+## Ai vận hành Ethereum?
+
+Không có đơn vị chủ quản. Ethereum chạy nhờ nhiều bên độc lập:
+
+- **Các nút** (node): máy tính chạy phần mềm Ethereum, mỗi máy giữ một bản sao và tự kiểm tra mọi khối. Theo Ethernodes, tháng 11 năm 2026 có 8.717 nút lớp thực thi ở 95 quốc gia và vùng lãnh thổ. Xem [Nút](../can-ban/cach-hoat-dong/nut.mdx).
+- **Các trình xác thực** (validator): khóa ETH làm tiền cọc để được tham gia tạo khối. Làm sai thì mất cọc. Xem [Trình xác thực](../can-ban/cach-hoat-dong/trinh-xac-thuc.mdx).
+- **Quy tắc** chỉ thay đổi qua các đợt nâng cấp được bàn công khai, và mỗi bên tự quyết có chạy phiên bản mới hay không. Xem [Ethereum nâng cấp thế nào](../can-ban/cach-hoat-dong/nang-cap.mdx).
+
+**Quỹ Ethereum** (Ethereum Foundation, EF) là tổ chức phi lợi nhuận tài trợ nghiên cứu và hỗ trợ hệ sinh thái. Chính EF ghi rõ trên trang dành cho khu vực công rằng họ không vận hành hay kiểm soát Ethereum.
+
+## Những điểm khu vực công quan tâm
+
+- **Không sửa lén được lịch sử.** Mỗi khối mang mã băm ("dấu vân tay") của khối trước. Sửa một bản ghi cũ là làm hỏng mọi khối sau nó. Sau khoảng 15 phút, một giao dịch đạt **tính cuối cùng** (finality): muốn đảo ngược thì kẻ tấn công phải chịu mất một phần rất lớn số ETH đang đặt cọc. Xem [Đồng thuận](../can-ban/cach-hoat-dong/dong-thuan.mdx).
+- **Ai cũng tự kiểm tra được.** Người dân, kiểm toán viên, nhà báo, cơ quan nước khác đều đọc cùng một dữ liệu, không cần xin phép hay tin vào một bên trung gian. Ai muốn chắc chắn hơn có thể tự chạy nút.
+- **Trung lập, không thuộc về cường quốc nào.** Không chính phủ, công ty hay quỹ nào một mình tắt được mạng, đổi được luật hay chặn được một quốc gia. Điều này có ích khi nhiều bên cần một nguồn chung nhưng không muốn giao nó cho một bên: các bộ ngành, các địa phương, các quốc gia. Xem [Hạ tầng trung lập](./trung-lap-toan-cau.mdx).
+- **Chạy liên tục.** Mạng chính chạy từ năm 2015, không có giờ đóng cửa. Như vậy không có nghĩa là chưa từng có sự cố: tháng 5 năm 2023, mạng hai lần tạm ngừng đạt tính cuối cùng (khoảng 25 phút và khoảng một giờ), dù khối mới vẫn được tạo bình thường.
+- **Quy tắc thành mã.** [Hợp đồng thông minh](../can-ban/cach-hoat-dong/hop-dong-thong-minh.mdx) tự chạy theo quy tắc công khai, ví dụ tự giải ngân khi một điều kiện được đáp ứng.
+- **Tốn ít điện.** Từ năm 2022, Ethereum dùng bằng chứng cổ phần thay cho đào, và lượng điện tiêu thụ giảm khoảng 99,95%.
+
+## Những gì Ethereum không làm được
+
+- **Không kiểm tra sự thật.** Chuỗi khối chỉ bảo đảm dữ liệu không bị sửa sau khi ghi. Dữ liệu sai từ đầu thì vẫn sai.
+- **Không phải nơi chứa dữ liệu cá nhân.** Mọi thứ trên mạng chính đều công khai và tồn tại mãi. Xem [Đưa gì lên chuỗi, giữ gì ngoài chuỗi](./dua-gi-len-chuoi.mdx).
+- **Không tự có giá trị pháp lý.** Một bản ghi trên chuỗi có giá trị pháp lý hay không là do luật quy định, không do công nghệ.
+- **Không miễn phí.** Mỗi lần ghi tốn [phí gas](../can-ban/cach-hoat-dong/gas.mdx), trả bằng ETH.
+- **Không thay được quy chế.** Ai giữ khóa, ai được ghi, ghi sai thì đính chính thế nào: những câu hỏi đó vẫn cần quy trình của chính cơ quan.
+
+<Callout type="info" title="Lưu ý">
+Phần lớn tài liệu về Ethereum cho khu vực công do Quỹ Ethereum viết, với mục đích vận động các tổ chức dùng Ethereum. Mục này dựa trên các tài liệu đó nhưng giữ giọng trung lập: nêu cả những dự án đã dừng, và những điều tài liệu gốc ít nhắc tới. Đây không phải tư vấn pháp lý.
+</Callout>
+
+## Tóm tắt
+
+- Ethereum là một sổ ghi chép công khai do hàng nghìn bên độc lập cùng giữ, không có đơn vị chủ quản.
+- Điểm mạnh với khu vực công: trung lập trên phạm vi toàn cầu, lịch sử không sửa lén được, ai cũng tự kiểm tra được, chạy liên tục.
+- Giới hạn: không kiểm tra sự thật của dữ liệu đầu vào, không hợp để chứa dữ liệu cá nhân, không tự có giá trị pháp lý, và mỗi lần ghi đều tốn phí.
+
+## Đọc tiếp
+
+- [Hạ tầng trung lập, không thuộc về cường quốc nào](./trung-lap-toan-cau.mdx)
+- [Chuỗi khối là gì?](../can-ban/cach-hoat-dong/chuoi-khoi.mdx)
+
+## Nguồn
+
+- Quỹ Ethereum: [Đánh giá Ethereum](https://publicsector.ethereum.foundation/evaluating-ethereum/) và [Ethereum Basics for Governments and Institutions](https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf) (2026)
+- [Ethernodes](https://ethernodes.org), số liệu đọc ngày 8 tháng 11 năm 2026
+- ethereum.org: [Mức tiêu thụ năng lượng](https://ethereum.org/energy-consumption/)
+- Prysm: [báo cáo sự cố mạng chính](https://prysm.offchainlabs.com/docs/misc/mainnet-postmortems/) tháng 5 năm 2023

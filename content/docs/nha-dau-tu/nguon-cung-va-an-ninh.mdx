@@ -1,0 +1,81 @@
+---
+title: Nguồn cung và an ninh của ETH
+description: Bao nhiêu ETH đang lưu hành, mỗi năm phát hành thêm bao nhiêu, bao nhiêu bị đốt, và bao nhiêu ETH đang đặt cọc để giữ an ninh cho mạng lưới. Số liệu tháng 11 năm 2026.
+sources:
+  - https://ethereum.org/roadmap/merge/issuance/
+  - https://ethereum.org/ethereum-vs-bitcoin/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/attack-and-defense/
+  - https://ethereum.org/reports/trillion-dollar-security/
+  - https://ultrasound.money
+  - https://www.validatorqueue.com
+---
+
+## Nguồn cung
+
+- **Đang lưu hành:** 122.200.838 ETH (ultrasound.money, ngày 8 tháng 11 năm 2026).
+- **Không có giới hạn cố định.** ethereum.org viết rõ Ethereum không có mức trần cung, khác với bitcoin. Theo ethereum.org, thiết kế này bảo đảm mạng lưới luôn có ngân sách để trả cho an ninh.
+
+## Phát hành mới
+
+- **Trước The Merge** (tháng 9 năm 2022): khoảng 13.000 ETH mỗi ngày cho thợ đào và trình xác thực, khoảng 4,6% tổng cung mỗi năm.
+- **Sau The Merge:** chỉ trình xác thực được nhận ETH mới. Lượng phát hành tăng theo căn bậc hai của tổng số ETH đặt cọc: đặt cọc gấp bốn thì phát hành chỉ gấp đôi.
+- **Hiện nay:** khoảng 2.990 ETH mỗi ngày, tức khoảng 1,09 triệu ETH mỗi năm, hay khoảng 0,89% tổng cung (ultrasound.money, ngày 8 tháng 11 năm 2026).
+
+## ETH bị đốt
+
+- Từ tháng 8 năm 2021, phí cơ sở của mọi giao dịch bị đốt. Tổng cộng khoảng 4,64 triệu ETH đã bị đốt, trong đó 2,02 triệu từ sau The Merge (ultrasound.money, ngày 8 tháng 11 năm 2026).
+- Lượng đốt mỗi năm đã giảm mạnh từ 2024, khi giao dịch chuyển sang Layer 2. Xem [Phí bị đốt chưa bao giờ là sàn giá](./phi-dot-khong-phai-san.mdx).
+
+## Cộng lại: tổng cung thay đổi thế nào
+
+Từ The Merge tới ngày 8 tháng 11 năm 2026, tổng cung tăng từ 120.521.141 lên 122.200.838 ETH: thêm khoảng 1,68 triệu ETH, tức 1,39%, hay khoảng 0,33% mỗi năm.
+
+- Năm 2023, nhiều ETH bị đốt hơn được phát hành, nên tổng cung giảm. Đó là thời của khẩu hiệu "**tiền siêu âm**" (ultrasound money), mà ethereum.org gọi là một meme của cộng đồng về khả năng tổng cung ETH giảm dần.
+- Từ 2024, phát hành vượt đốt, nên tổng cung tăng chậm trở lại.
+
+Theo cách nhìn [lưu trữ giá trị](./eth-luu-tru-gia-tri.mdx), điều quan trọng không phải tổng cung giảm hay tăng nhẹ, mà là luật phát hành ổn định, công khai, và không ai đổi được theo ý mình.
+
+## An ninh: ETH đặt cọc
+
+- **Đang đặt cọc:** khoảng 44,5 triệu ETH, tức 36,39% tổng cung, với 814.340 trình xác thực đang hoạt động (validatorqueue.com, ngày 9 tháng 11 năm 2026). Xem [Trình xác thực](../can-ban/cach-hoat-dong/trinh-xac-thuc.mdx).
+- **Tính cuối cùng:** sau khoảng 15 phút, một giao dịch không thể bị đảo ngược nếu kẻ tấn công không chịu mất rất nhiều tiền. Xem [Đồng thuận](../can-ban/cach-hoat-dong/dong-thuan.mdx).
+
+Kẻ tấn công cần bao nhiêu phần ETH đặt cọc, theo ethereum.org:
+
+| Phần ETH đặt cọc | Làm được gì |
+|---|---|
+| 33% | Làm chậm tính cuối cùng |
+| 34% | Làm hai khối cạnh tranh cùng đạt tính cuối cùng |
+| 51% | Kiểm duyệt giao dịch |
+| 66% | Viết lại lịch sử đã đạt tính cuối cùng |
+
+Đảo ngược một khối đã đạt tính cuối cùng sẽ khiến ít nhất một phần ba tổng số ETH đặt cọc bị đốt, tức gần 15 triệu ETH theo số liệu tháng 11 năm 2026.
+
+**Bị phạt khi gian lận** (slashing): trình xác thực gian lận mất ngay một phần nhỏ tiền cọc, rồi sau 18 ngày chịu thêm một khoản phạt tăng theo số người cùng gian lận. Nếu rất nhiều người cùng gian lận, khoản phạt có thể lên tới toàn bộ tiền cọc.
+
+## Mục tiêu an ninh dài hạn
+
+Báo cáo "Trillion Dollar Security" của Quỹ Ethereum (tháng 5 năm 2025) đặt hai mục tiêu:
+
+- hàng tỷ người, mỗi người yên tâm giữ hơn 1.000 USD trên chuỗi;
+- các tổ chức yên tâm giữ hơn 1.000 tỷ USD trong một hợp đồng duy nhất.
+
+Báo cáo chia việc thành sáu mảng: trải nghiệm người dùng, hợp đồng thông minh, hạ tầng và đám mây, đồng thuận, ứng phó sự cố, và quản trị. Nó cũng nêu thẳng các điểm yếu, như sự thống trị của vài nhóm đặt cọc lớn và nguy cơ từ máy tính lượng tử.
+
+## Tóm tắt
+
+- Khoảng 122,2 triệu ETH đang lưu hành, không có trần cố định. Phát hành mới khoảng 0,89% mỗi năm, đốt hiện chỉ bằng vài phần trăm lượng đó.
+- Từ The Merge, tổng cung tăng khoảng 0,33% mỗi năm.
+- Khoảng 44,5 triệu ETH (36%) đang đặt cọc. Muốn đảo ngược lịch sử đã đạt tính cuối cùng, kẻ tấn công phải chịu mất ít nhất một phần ba số đó.
+
+## Đọc tiếp
+
+- [Giữ ETH để làm gì](./giu-eth-de-lam-gi.mdx)
+- [Rủi ro và quan điểm khác](./rui-ro-va-quan-diem-khac.mdx)
+
+## Nguồn
+
+- ethereum.org: [Phát hành ETH sau The Merge](https://ethereum.org/roadmap/merge/issuance/), [Ethereum và Bitcoin](https://ethereum.org/ethereum-vs-bitcoin/), [Bằng chứng cổ phần](https://ethereum.org/developers/docs/consensus-mechanisms/pos/), [Tấn công và phòng thủ](https://ethereum.org/developers/docs/consensus-mechanisms/pos/attack-and-defense/), [Trillion Dollar Security](https://ethereum.org/reports/trillion-dollar-security/)
+- [ultrasound.money](https://ultrasound.money), số liệu ngày 8 tháng 11 năm 2026
+- [validatorqueue.com](https://www.validatorqueue.com), số liệu ngày 9 tháng 11 năm 2026

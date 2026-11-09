@@ -1,0 +1,17 @@
+{
+  "title": "Nhà đầu tư",
+  "description": "ETH như tài sản lưu trữ giá trị: nguồn cung, an ninh, công dụng và rủi ro",
+  "icon": "ChartLine",
+  "root": true,
+  "pages": [
+    "index",
+    "eth-luu-tru-gia-tri",
+    "phi-dot-khong-phai-san",
+    "cai-gia-cua-toi-da-hoa-phi",
+    "crops-va-su-on-dinh",
+    "tieu-chi-luu-tru-gia-tri",
+    "nguon-cung-va-an-ninh",
+    "giu-eth-de-lam-gi",
+    "rui-ro-va-quan-diem-khac"
+  ]
+}

@@ -1,7 +1,10 @@
-import { docsLlms } from '@/lib/source';
+import { llmsIndex } from '@/lib/source';
 
 export const revalidate = false;
 
 export async function GET() {
-  return new Response(await docsLlms.index());
+  // charset spelled out: without it, browsers can decode the Vietnamese as Latin-1
+  return new Response(await llmsIndex(), {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
 }

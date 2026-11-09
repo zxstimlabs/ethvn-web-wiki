@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Wiki ETH.vn: an isometric block, like the ones in the home animation -->
+  <g stroke="#a78bfa" stroke-width="1.6" stroke-linejoin="round">
+    <polygon points="3.6,9.5 16,16.5 16,30 3.6,23" fill="#5b3fc4"/>
+    <polygon points="16,16.5 28.4,9.5 28.4,23 16,30" fill="#3b2a85"/>
+    <polygon points="16,2.5 28.4,9.5 16,16.5 3.6,9.5" fill="#a78bfa"/>
+  </g>
+</svg>

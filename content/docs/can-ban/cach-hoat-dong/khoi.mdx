@@ -1,0 +1,67 @@
+---
+title: Khối
+description: Cứ 12 giây, một khối mới gom các giao dịch lại, ghi mã băm của khối trước và được mọi nút kiểm tra trước khi nối vào chuỗi.
+sources:
+  - https://ethereum.org/developers/docs/blocks/
+  - https://ethereum.org/developers/docs/gas/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/
+---
+
+**Khối** (block) là một lô giao dịch, kèm mã băm của khối liền trước. Các khối nối lại thành [chuỗi khối](./chuoi-khoi.mdx).
+
+## Vì sao phải gom thành khối?
+
+Hàng nghìn nút trên khắp thế giới cần giữ cùng một dữ liệu. Nếu mỗi giao dịch được ghi ngay khi tới, các nút sẽ nhận theo thứ tự khác nhau và không bao giờ khớp với nhau. Gom giao dịch thành khối, cách nhau một khoảng thời gian cố định, cho cả mạng lưới đủ thời gian để thống nhất. Thứ tự các khối, và thứ tự giao dịch trong mỗi khối, đều rõ ràng.
+
+## Cứ 12 giây một khe
+
+Thời gian trên Ethereum chia thành các **khe** (slot) dài 12 giây. Cứ 32 khe làm thành một **kỷ nguyên** (epoch), dài 6,4 phút.
+
+- Mỗi khe, một trình xác thực được chọn ngẫu nhiên làm **người đề xuất** (proposer) khối.
+- Nếu người đề xuất vắng mặt, khe đó trống, không có khối.
+- Vì vậy thời gian giữa hai khối là 12 giây, hoặc bội số của 12 giây. Với cơ chế "đào" (bằng chứng công việc) mà Bitcoin vẫn dùng và Ethereum đã dùng tới năm 2022, thời gian ra khối là ngẫu nhiên. Với bằng chứng cổ phần, nó cố định.
+
+## Một khối ra đời thế nào
+
+<BlockAnatomy />
+
+1. **Gom giao dịch.** Giao dịch được chọn từ **mempool** (hàng chờ giao dịch) và xếp vào khối. Ngày nay phần lớn khối do các **người xây khối** (block builder) chuyên nghiệp xây rồi bán cho người đề xuất qua MEV-Boost. Hình động ở [trang chủ](/) cho thấy quá trình này.
+2. **Chạy giao dịch.** Các giao dịch được chạy theo thứ tự, ra trạng thái mới của Ethereum: số dư mới, dữ liệu hợp đồng mới.
+3. **Ghi phần đầu khối.** Phần đầu khối ghi lại các thông tin chính, như bảng dưới đây.
+4. **Công bố và kiểm tra.** Các nút khác tự chạy lại mọi giao dịch trong khối. Nếu kết quả khớp với gốc trạng thái ghi trong khối, khối hợp lệ. Các trình xác thực bỏ phiếu cho khối, và khối được nối vào chuỗi.
+
+## Trong một khối có gì?
+
+| Phần | Nghĩa |
+|---|---|
+| Khe | Khối thuộc khe nào |
+| Người đề xuất | Trình xác thực được chọn cho khe này |
+| Mã băm khối cha | Sợi dây nối với khối trước |
+| Gốc trạng thái | Một mã băm tóm tắt toàn bộ số dư và dữ liệu của Ethereum sau khối này |
+| Thời gian | Lúc khối được tạo |
+| Giới hạn gas, gas đã dùng, phí cơ sở | Khối lớn cỡ nào và phí đang ở mức nào |
+| Giao dịch | Danh sách giao dịch, theo đúng thứ tự đã chạy |
+| Chứng thực | Phiếu bầu của các trình xác thực cho những khối trước |
+
+Một khối của Ethereum thường chứa từ vài chục tới vài trăm giao dịch.
+
+## Khối lớn cỡ nào?
+
+Kích thước khối không đo bằng byte mà bằng **gas**, đơn vị đo lượng tính toán. Mỗi khối có một **giới hạn gas**, và một mức mục tiêu bằng một nửa giới hạn.
+
+- Khối dùng nhiều gas hơn mục tiêu thì phí cơ sở của khối sau tăng, tối đa 12,5%. Dùng ít hơn thì phí giảm. Xem [Phí gas](../bat-dau/phi-gas.mdx).
+- Các trình xác thực có thể nâng hoặc hạ giới hạn gas từng chút một qua mỗi khối. Theo ethereum.org, cuối năm 2025 giới hạn là 60 triệu gas. Con số này đang được nâng dần, nên hãy xem số liệu trực tiếp nếu bạn cần chính xác.
+
+Vì sao không làm khối thật lớn cho rẻ? Khối càng lớn thì máy chạy nút càng phải mạnh. Khi chỉ những máy rất mạnh mới chạy nổi, ít người tự chạy nút hơn, và mạng lưới dần tập trung vào tay một số ít. [Layer 2](./layer-2.mdx) là cách Ethereum mở rộng mà không phải đánh đổi điều đó.
+
+## Tóm tắt
+
+- Khối là một lô giao dịch kèm mã băm của khối cha.
+- Mỗi khe 12 giây có tối đa một khối, do một trình xác thực được chọn ngẫu nhiên đề xuất.
+- Mọi nút tự chạy lại giao dịch để kiểm tra khối trước khi nối vào chuỗi.
+- Kích thước khối được giới hạn bằng gas, để người bình thường vẫn chạy được nút.
+
+## Đọc tiếp
+
+- [Layer 2](./layer-2.mdx)
+- [Chuỗi khối là gì?](./chuoi-khoi.mdx)

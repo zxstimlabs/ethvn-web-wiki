@@ -1,0 +1,71 @@
+---
+title: "Đánh giá Ethereum: chuỗi công khai, chuỗi riêng hay Layer 2"
+description: Mười một câu hỏi Quỹ Ethereum đề xuất để đánh giá Ethereum, so với các chuỗi công khai khác và với chuỗi riêng. Kèm những điểm mà tài liệu của Quỹ nói ít.
+sources:
+  - https://publicsector.ethereum.foundation/evaluating-ethereum/
+  - https://publicsector.ethereum.foundation/docs/openzeppelin-technical-risk-assessment.pdf
+  - https://ethereum.org/energy-consumption/
+---
+
+Trang "Đánh giá Ethereum" của Quỹ Ethereum (EF) đặt 11 câu hỏi, chia làm ba nhóm. Dưới đây là các câu hỏi và câu trả lời của EF, tóm tắt lại, kèm nhận xét của wiki khi cần. Cuối trang là những điểm EF ít nhắc tới.
+
+## Dùng Ethereum nghĩa là gì trong thực tế
+
+1. **Có giữ kín được thông tin nhạy cảm không?** EF: được. Dữ liệu ở lại hệ thống hiện có, và các phương pháp bảo vệ quyền riêng tư cho phép kiểm tra một điều mà không lộ dữ liệu. Xem [Đưa gì lên chuỗi](./dua-gi-len-chuoi.mdx).
+2. **Tốn bao nhiêu?** Đọc là miễn phí, chỉ ghi mới tốn phí. EF khuyên tính cả chi phí của toàn bộ vòng đời, gồm cả việc phụ thuộc vào nhà cung cấp.
+3. **Ảnh hưởng tới môi trường?** Từ năm 2022, lượng điện tiêu thụ giảm khoảng 99,95%. Trung tâm Tài chính Thay thế Cambridge (CCAF) ước tính năm 2026 khoảng 7,87 GWh mỗi năm, tương đương khoảng 2.900 hộ gia đình ở Anh, cho hơn 524 triệu giao dịch trong năm 2025.
+   - Nhận xét: hướng dẫn của chính EF đưa ra một con số khác, thấp hơn khoảng ba lần. Các ước tính còn chênh nhau đáng kể.
+4. **Có phải giao quyền kiểm soát không?** EF: không. Cơ quan vẫn quyết định chính sách, điều kiện, tuân thủ, quyền truy cập và vận hành.
+   - Nhận xét: đúng với phần ứng dụng của cơ quan. Nhưng quy tắc của chính mạng lưới (qua các đợt [nâng cấp](../can-ban/cach-hoat-dong/nang-cap.mdx)) và mức phí thì không cơ quan nào quyết định được.
+
+## So với các chuỗi công khai khác
+
+EF chỉ dựa vào một nguồn cho nhóm câu hỏi này: báo cáo đánh giá rủi ro kỹ thuật của OpenZeppelin (2026), so sánh sáu mạng.
+
+5. **Một lỗi phần mềm lan rộng tới đâu?** Ethereum có nhiều phần mềm nút độc lập do các nhóm khác nhau viết, nên lỗi ở một phần mềm không làm hỏng cả mạng. Một số mạng khác chỉ có một phần mềm chiếm ưu thế. Xem [Nút](../can-ban/cach-hoat-dong/nut.mdx).
+6. **Ai được tham gia vận hành mạng?** Ethereum mở cho bất kỳ ai. Một số mạng khác chỉ có nhóm trình xác thực định sẵn, được bầu hoặc bị giới hạn.
+7. **Ai thay đổi được quy tắc?** Ethereum dùng quy trình đề xuất công khai. Một số mạng khác do một quỹ hoặc một ủy ban quyết định.
+   - EF thừa nhận: mạng ít trình xác thực, hoặc do một quỹ điều hành, có thể phối hợp và ra quyết định nhanh hơn. Quy trình mở của Ethereum có thể chậm hơn.
+
+## So với chuỗi riêng
+
+**Chuỗi riêng** (còn gọi là chuỗi cấp phép, permissioned) là chuỗi khối chỉ những bên được duyệt mới được vận hành, thường do một cơ quan hoặc một liên minh lập ra.
+
+8. **Ai được tham gia vận hành?** Ethereum: không cần xin phép. Chuỗi riêng: chỉ bên được duyệt.
+9. **Ai tự kiểm tra được sổ?** Ethereum: bất kỳ ai. Chuỗi riêng: chỉ các thành viên, hoặc qua hạ tầng của liên minh.
+10. **Ai kiểm soát mạng?** Ethereum: không một cơ quan nào. Chuỗi riêng: bên vận hành hoặc ban quản trị.
+11. **Điều gì giữ cho mạng chạy lâu dài?** Ethereum: nhiều bên độc lập cùng duy trì. Chuỗi riêng: cần đầu tư liên tục; nếu không, cơ quan có thể phải tự vận hành hoặc chuyển đi nơi khác.
+
+## Những gì tài liệu của EF ít nói
+
+- **Chuỗi riêng cũng có điểm mạnh.** Kiểm soát được ai tham gia, chi phí ổn định và dự toán được, không phải giữ ETH để trả phí, dữ liệu không công khai cho cả thế giới, và quyết định nhanh. Phần so sánh với chuỗi riêng của EF chỉ nêu điểm yếu của chuỗi riêng.
+- **Layer 2 là một lựa chọn ở giữa.** [Layer 2](../can-ban/cach-hoat-dong/layer-2.mdx) có phí thấp hơn, tùy chỉnh được, và ghi dữ liệu về Ethereum. Nhưng phần lớn Layer 2 vẫn có một bộ sắp xếp do một bên vận hành và hợp đồng có thể bị nâng cấp. Trang của EF cho khu vực công không bàn tới các giả định tin cậy này. Kiểm tra từng mạng trên [ETHBEAT](https://ethbeat.org) (trước đây là L2BEAT).
+- **Câu hỏi đầu tiên vẫn là có cần chuỗi khối không.** Xem [Ý tưởng ứng dụng](./y-tuong-ung-dung.mdx).
+
+## So sánh nhanh
+
+| | Ethereum (mạng chính) | Layer 2 | Chuỗi riêng |
+|---|---|---|---|
+| Ai tự kiểm tra được | Bất kỳ ai | Bất kỳ ai, nếu dữ liệu được đăng lên Ethereum | Thành viên |
+| Ai vận hành | Hàng nghìn bên độc lập | Thường một công ty vận hành bộ sắp xếp | Bên được duyệt |
+| Ai đổi quy tắc | Quy trình công khai | Bên vận hành, trong giới hạn hợp đồng cho phép | Ban quản trị |
+| Phí | Trả bằng ETH, thay đổi theo độ đông | Thấp hơn nhiều | Do bên vận hành định |
+| Dữ liệu | Công khai | Thường công khai | Chỉ thành viên xem |
+| Rủi ro chính | Phí biến động, dữ liệu công khai | Bên vận hành, mức độ chín muồi | Phụ thuộc bên vận hành, khó cho người ngoài kiểm tra |
+
+## Tóm tắt
+
+- EF đề xuất 11 câu hỏi: về thực tế khi dùng, so với các chuỗi công khai khác, và so với chuỗi riêng.
+- Ethereum mạnh ở chỗ ai cũng tự kiểm tra được và không ai một mình kiểm soát. Chuỗi riêng mạnh ở kiểm soát, chi phí ổn định và giữ kín dữ liệu.
+- Layer 2 nằm ở giữa: rẻ và linh hoạt, nhưng cần xem kỹ ai vận hành và ai nâng cấp được hợp đồng.
+
+## Đọc tiếp
+
+- [Rủi ro và trách nhiệm](./rui-ro-va-trach-nhiem.mdx)
+- [Layer 2](../can-ban/cach-hoat-dong/layer-2.mdx)
+
+## Nguồn
+
+- Quỹ Ethereum: [Đánh giá Ethereum](https://publicsector.ethereum.foundation/evaluating-ethereum/)
+- OpenZeppelin: [Technical Risk Assessment on Blockchain Networks](https://publicsector.ethereum.foundation/docs/openzeppelin-technical-risk-assessment.pdf) (2026)
+- ethereum.org: [Mức tiêu thụ năng lượng](https://ethereum.org/energy-consumption/)

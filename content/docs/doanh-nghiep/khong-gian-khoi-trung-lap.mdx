@@ -1,0 +1,64 @@
+---
+title: Không gian khối trung lập
+description: Không công ty hay quốc gia nào sở hữu Ethereum, nên không đối thủ nào đổi được luật chơi hay chặn được giao dịch của bạn. Vì sao điều đó quan trọng khi chọn hạ tầng, và giới hạn của nó.
+sources:
+  - https://ethereum.org/organizations/enterprise/
+  - https://ethereum.org/latest/why-build-on-ethereum/
+  - https://ethereum.org/layer-2/networks/
+  - https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf
+  - https://eips.ethereum.org/EIPS/eip-7805
+---
+
+Nếu hạ tầng thanh toán hay dữ liệu của bạn do một đối thủ vận hành, bạn phụ thuộc vào thiện chí của họ: mức phí, điều khoản, ai được ưu tiên. Ethereum thì khác. Chỗ trong mỗi khối dành cho giao dịch, gọi là **không gian khối** (block space), không thuộc về ai. Ai trả phí thì được dùng, theo cùng một luật, dù là ngân hàng lớn hay cửa hàng nhỏ, ở nước nào.
+
+## Không ai sở hữu
+
+- **Hàng nghìn nút ở khắp nơi.** Theo Ethernodes (tháng 11 năm 2026), có 8.717 nút lớp thực thi ở 95 quốc gia và vùng lãnh thổ. Ai cũng chạy được một nút. Xem [Nút](../can-ban/cach-hoat-dong/nut.mdx).
+- **Người tạo khối thay nhau theo lượt ngẫu nhiên** giữa rất nhiều [trình xác thực](../can-ban/cach-hoat-dong/trinh-xac-thuc.mdx) độc lập.
+- **Nhiều phần mềm độc lập.** Lớp thực thi có năm phần mềm chính do các nhóm khác nhau viết. Không nhóm nào lén đổi được luật.
+- **Không có "nút tắt".** Giao thức không có giao diện quản trị nào để đóng băng tài khoản hay đảo ngược giao dịch. Quỹ Ethereum cũng tự ghi rõ họ không vận hành hay kiểm soát Ethereum.
+- **Chưa từng ngừng tạo khối** kể từ ngày 30 tháng 7 năm 2015.
+
+Người ta gọi tính chất này là **trung lập đáng tin** (credible neutrality): luật không thiên vị ai, và ai cũng tự kiểm tra được rằng luật không thiên vị ai.
+
+## Vì sao doanh nghiệp cần điều này
+
+- **Đối thủ không đổi được luật chơi.** Trên một chuỗi do liên minh vận hành, thành viên lớn thường có tiếng nói lớn. Trên Ethereum, không thành viên nào có quyền đặc biệt.
+- **Cùng hạ tầng với đối tác và khách hàng toàn cầu.** Tài sản và ứng dụng trên Ethereum **ghép nối được** (composability) với nhau. Ngày 8 tháng 11 năm 2026, có khoảng 135,3 tỷ USD stablecoin trên Ethereum (DefiLlama, qua ethereum.org).
+- **Không phụ thuộc chính sách của một quốc gia.** Năm 2022, sau khi Hoa Kỳ trừng phạt một hợp đồng trên Ethereum, phần lớn khối được xây qua các relay có lọc, nhưng giao dịch bị lọc vẫn vào chuỗi, chỉ chậm hơn. Chi tiết ở [Hạ tầng trung lập, không thuộc về cường quốc nào](../chinh-phu/trung-lap-toan-cau.mdx).
+- **Không phụ thuộc một nhà cung cấp.** Hạ tầng vẫn chạy dù một công ty nào đó ngừng kinh doanh hay đổi giá.
+
+## Layer 2 và sự trung lập
+
+[Layer 2](./layer-2-cho-doanh-nghiep.mdx) là cách phổ biến để doanh nghiệp dùng Ethereum với phí thấp và nhiều tùy chỉnh. Nhưng một Layer 2 có **bên vận hành**:
+
+- Layer 2 do bạn vận hành thì khách hàng và đối tác phải tin bạn ở một số điểm, như thứ tự giao dịch và việc nâng cấp hợp đồng.
+- Layer 2 do đối thủ vận hành thì bạn phải tin đối thủ.
+- Điểm cân bằng: một Layer 2 đăng dữ liệu lên Ethereum, có bằng chứng và có **lối thoát** (escape hatch) thì người dùng vẫn rút được tài sản về Ethereum dù bên vận hành không hợp tác. Xem [Kiểm chứng thay vì tin](./kiem-chung.mdx).
+
+Theo trang mạng Layer 2 của ethereum.org (dựa trên ETHBEAT, trước đây là L2BEAT; đọc ngày 9 tháng 11 năm 2026), chưa mạng nào trong danh sách đạt mức chín muồi cao nhất.
+
+## Giới hạn
+
+- **Các tầng bên trên có chủ.** Bên phát hành stablecoin có thể đóng băng token. Bên vận hành Layer 2, sàn giao dịch và dịch vụ lưu ký chịu luật của nước họ đăng ký. Trung lập ở tầng giao thức không tự động đúng với các tầng này.
+- **Nút tập trung ở vài nước:** Hoa Kỳ khoảng 30%, Đức khoảng 14% (Ethernodes, tháng 11 năm 2026).
+- **Một phần mềm chiếm gần nửa mạng:** Geth chạy trên khoảng 50% nút lớp thực thi (ethereum.org, tháng 5 năm 2026). Một lỗi nặng ở đó ảnh hưởng tới nhiều nút cùng lúc.
+- **Relay có lọc vẫn còn.** Theo MEV Watch, ngày 7 tháng 11 năm 2026, khoảng 16,7% lượt giao khối qua relay MEV-Boost đến từ relay có lọc giao dịch theo danh sách trừng phạt của Hoa Kỳ.
+- **Bảo đảm chống kiểm duyệt trong giao thức vẫn đang làm.** Nâng cấp FOCIL (EIP-7805) sẽ buộc mỗi khối chứa các giao dịch đang chờ mà một nhóm trình xác thực đã công bố. FOCIL đã được xếp vào đợt nâng cấp Hegotá, nhưng tính tới tháng 11 năm 2026 chưa có ngày.
+
+## Tóm tắt
+
+- Không gian khối của Ethereum không thuộc về ai: ai trả phí thì được dùng, theo cùng một luật.
+- Doanh nghiệp được hạ tầng mà đối thủ không đổi được luật chơi, và không phụ thuộc một quốc gia hay một nhà cung cấp.
+- Layer 2 và stablecoin có bên vận hành, bên phát hành. Hãy biết rõ bạn đang tin ai ở tầng nào.
+
+## Đọc tiếp
+
+- [Kiểm chứng thay vì tin](./kiem-chung.mdx)
+- [Layer 2 cho doanh nghiệp](./layer-2-cho-doanh-nghiep.mdx)
+
+## Nguồn
+
+- ethereum.org: [Ethereum cho doanh nghiệp](https://ethereum.org/organizations/enterprise/), [Why build on Ethereum](https://ethereum.org/latest/why-build-on-ethereum/) (tháng 5 năm 2026), [các mạng Layer 2](https://ethereum.org/layer-2/networks/)
+- Quỹ Ethereum: [Ethereum Basics for Governments and Institutions](https://publicsector.ethereum.foundation/docs/ethereum-basics-for-governments-and-institutions.pdf) (2026)
+- [EIP-7805: FOCIL](https://eips.ethereum.org/EIPS/eip-7805), [Ethernodes](https://ethernodes.org) (đọc ngày 8 tháng 11 năm 2026)

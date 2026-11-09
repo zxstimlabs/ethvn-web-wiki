@@ -1,0 +1,81 @@
+---
+title: Phí gas
+description: Mỗi giao dịch trên Ethereum tốn một khoản phí nhỏ gọi là gas. Phí được tính thế nào, ai nhận, và làm sao để trả ít hơn.
+sources:
+  - https://ethereum.org/gas/
+---
+
+Mỗi lần bạn gửi tiền hay dùng ứng dụng trên Ethereum, bạn trả một khoản phí nhỏ bằng ETH. Khoản phí này gọi là **phí gas**.
+
+## Tóm tắt
+
+- Mọi giao dịch đều tốn phí gas, trả bằng ETH.
+- Phí không cố định: mạng lưới càng đông, phí càng cao.
+- Giao dịch càng phức tạp, càng tốn nhiều gas.
+- Layer 2 giúp phí rẻ hơn rất nhiều.
+
+## Gas là gì?
+
+Hãy hình dung Ethereum là một chiếc máy tính khổng lồ mà cả thế giới dùng chung. Mỗi việc bạn nhờ nó làm, từ chuyển tiền đến chạy một hợp đồng thông minh, đều tốn một lượng công sức tính toán. **Gas** là đơn vị đo lượng công sức đó, giống như số lít xăng một chuyến xe cần.
+
+Việc càng phức tạp thì càng tốn nhiều gas:
+
+| Loại giao dịch | Lượng gas (ước tính) |
+|---|---|
+| Gửi ETH | 21.000 |
+| Gửi token ERC-20 (như USDT, USDC) | khoảng 65.000 |
+| Chuyển một NFT | khoảng 85.000 |
+| Hoán đổi token trên Uniswap | khoảng 185.000 |
+
+## Phí được tính thế nào?
+
+```
+Phí = Lượng gas dùng × (Phí cơ sở + Phí ưu tiên)
+```
+
+- **Phí cơ sở** (base fee): mức phí tối thiểu do mạng lưới tự đặt, thay đổi sau mỗi khối tùy theo độ đông. Phần này bị **đốt**, tức là bị xóa vĩnh viễn.
+- **Phí ưu tiên** (priority fee): khoản "tiền boa" cho trình xác thực để giao dịch của bạn được xử lý sớm hơn. Phần này trả cho trình xác thực.
+
+Giá gas thường được tính bằng **gwei**. 1 gwei bằng một phần tỷ ETH.
+
+**Ví dụ:** gửi ETH tốn 21.000 gas. Nếu phí cơ sở là 1 gwei và phí ưu tiên là 0,5 gwei:
+
+```
+21.000 × (1 + 0,5) gwei = 31.500 gwei = 0,0000315 ETH
+```
+
+Bạn không cần tự tính. Ví sẽ ước tính phí và hiển thị trước khi bạn xác nhận. Nhiều ví cho bạn chọn mức **Chậm**, **Thường** hoặc **Nhanh**: trả nhiều hơn để được xử lý sớm hơn.
+
+## Vì sao phí lúc cao lúc thấp?
+
+Mỗi khối chỉ chứa được một lượng tính toán giới hạn. Khi nhiều người cùng muốn giao dịch, ví dụ lúc một dự án NFT nổi tiếng mở bán hay thị trường biến động mạnh, mọi người phải cạnh tranh để được vào khối, và phí cơ sở tăng lên. Khi mạng lưới vắng, phí giảm xuống.
+
+Giá gas có thể thay đổi sau mỗi 12 giây.
+
+## Vì sao cần phí gas?
+
+- **Chống spam:** nếu giao dịch miễn phí, kẻ xấu có thể gửi hàng triệu giao dịch rác làm tê liệt mạng lưới.
+- **Giới hạn tải:** mỗi khối có giới hạn gas, nên mạng lưới không bao giờ bị quá tải.
+- **Trả công:** phí ưu tiên trả cho trình xác thực, những người giữ cho mạng lưới hoạt động.
+
+## Làm sao để trả ít phí hơn?
+
+1. **Dùng Layer 2.** Các mạng như Arbitrum, Optimism hay Base thường có phí dưới 0,01 USD cho một giao dịch đơn giản.
+2. **Chờ lúc vắng.** Nếu không gấp, hãy đợi vài phút hoặc vài giờ. Ethereum thường rẻ hơn khi Bắc Mỹ đang đêm, tức khoảng trưa đến chiều theo giờ Việt Nam.
+3. **Không chọn mức "Nhanh" khi không cần.** Mức "Chậm" hoặc "Thường" vẫn được xử lý, chỉ mất thêm chút thời gian.
+
+## Câu hỏi thường gặp
+
+**Có phải trả phí bằng ETH không?**
+Có. Trên Ethereum, phí gas luôn trả bằng ETH, kể cả khi bạn gửi token khác như USDT. Hãy luôn giữ một ít ETH trong ví.
+
+**Giao dịch thất bại có mất phí không?**
+Có. Nếu giao dịch thất bại giữa chừng, ví dụ do đặt giới hạn gas quá thấp hay hợp đồng từ chối, phần gas đã dùng vẫn bị tính phí. Ví thường cảnh báo trước nếu giao dịch có khả năng thất bại.
+
+**Ai nhận phí gas của tôi?**
+Phí cơ sở bị đốt, không ai nhận. Phí ưu tiên được trả cho trình xác thực đã đưa giao dịch của bạn vào khối.
+
+## Đọc tiếp
+
+- [Giữ an toàn](./giu-an-toan.mdx)
+- [Ether (ETH) là gì?](./ether-la-gi.mdx)
