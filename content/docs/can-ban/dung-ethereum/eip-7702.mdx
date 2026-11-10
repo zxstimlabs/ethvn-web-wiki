@@ -1,0 +1,80 @@
+---
+title: "EIP-7702: ủy quyền mã cho tài khoản thường"
+description: Từ nâng cấp Pectra (tháng 5 năm 2025), tài khoản thường giữ nguyên địa chỉ mà vẫn dùng được mã của một hợp đồng thông minh, để gộp lệnh hay nhờ trả phí. Nhưng khóa cũ vẫn có toàn quyền.
+sources:
+  - https://ethereum.org/roadmap/pectra/7702/
+  - https://ethereum.org/roadmap/pectra/
+  - https://eips.ethereum.org/EIPS/eip-7702
+---
+
+**EIP-7702** cho phép một tài khoản thường, loại do khóa riêng tư điều khiển (EOA), **ủy quyền** (delegate) cho mã của một [hợp đồng thông minh](../cach-hoat-dong/hop-dong-thong-minh.mdx). Tài khoản giữ nguyên địa chỉ, số dư và lịch sử, nhưng có thêm những khả năng của [ví thông minh](./vi-thong-minh.mdx): gộp nhiều việc vào một giao dịch, nhờ bên khác trả phí gas, ký bằng passkey.
+
+EIP-7702 chạy trên mạng chính từ nâng cấp Pectra, ngày 7 tháng 5 năm 2025.
+
+## Vì sao cần?
+
+Trước EIP-7702, muốn có ví thông minh, bạn phải tạo một tài khoản hợp đồng mới, ví dụ theo [ERC-4337](./erc-4337.mdx). Tài khoản mới có địa chỉ mới, nên bạn phải chuyển từng tài sản sang, trả phí cho từng lần chuyển, và báo địa chỉ mới cho mọi người. Vì vậy phần lớn người dùng vẫn ở lại với tài khoản thường.
+
+EIP-7702 cho tài khoản thường dùng mã của một hợp đồng ngay tại địa chỉ cũ, không phải chuyển nhà.
+
+## Hoạt động thế nào?
+
+<DelegationScene />
+
+1. **Ký lệnh ủy quyền.** Khóa riêng tư của tài khoản ký một **lệnh ủy quyền** (authorization) gồm ba thứ: địa chỉ của hợp đồng có mã muốn dùng, mã số của mạng (chain ID), và [nonce](../cach-hoat-dong/chu-ky-so.mdx#nonce-mỗi-giao-dịch-chỉ-chạy-một-lần) của tài khoản.
+2. **Gửi trong giao dịch kiểu 4.** Lệnh ủy quyền đi trong một loại giao dịch mới, gọi là giao dịch kiểu 4 (set code transaction). Người gửi giao dịch không nhất thiết là chủ tài khoản: một bên khác có thể gửi và trả phí gas hộ.
+3. **Ghi con trỏ.** Mạng lưới ghi vào tài khoản một **con trỏ** tới hợp đồng: ba byte `0xef0100` nối với địa chỉ của hợp đồng. Mã không bị sao chép, tài khoản chỉ trỏ tới nó.
+4. **Chạy mã trên tài khoản.** Từ đó, khi có ai gọi tới tài khoản, mạng lưới chạy mã của hợp đồng, nhưng trên số dư và dữ liệu của chính tài khoản.
+
+Ủy quyền không tự hết hạn. Nó giữ nguyên cho tới khi bạn ký một lệnh ủy quyền mới cho hợp đồng khác, hoặc ủy quyền cho địa chỉ 0 để gỡ con trỏ.
+
+## Làm được gì?
+
+Tùy vào mã mà ví của bạn dùng:
+
+- **Gộp lệnh.** Cho phép chi tiêu và đổi token trong cùng một giao dịch, thay vì ký hai lần. Ứng dụng xin gộp lệnh qua giao diện chuẩn của ví (`wallet_sendCalls`, ERC-5792), không xin bạn ký lệnh ủy quyền.
+- **Nhờ trả phí.** Ứng dụng hay một dịch vụ trả phí gas thay bạn, hoặc bạn trả phí bằng token khác thay vì ETH.
+- **Khóa phụ có giới hạn.** Cấp cho một ứng dụng một khóa phụ chỉ làm được vài việc, ví dụ chỉ chi token mà không chi ETH, hoặc chỉ tương tác với đúng ứng dụng đó.
+- **Passkey.** Ký bằng vân tay hay khuôn mặt, với khóa nằm trong chip bảo mật của điện thoại, nếu mã của ví hỗ trợ.
+
+## Khóa cũ vẫn có toàn quyền
+
+<Callout type="warn" title="Quan trọng">
+Ủy quyền không thay khóa. Khóa riêng tư ban đầu, và cụm từ khôi phục sinh ra nó, vẫn ký được giao dịch thường và vẫn ủy quyền lại cho hợp đồng khác. Luật trong mã, như hạn mức hay nhiều chữ ký, không chặn được khóa đó. Như ethereum.org viết, ủy quyền cho mã của ví nhiều chữ ký không biến tài khoản thành ví nhiều chữ ký.
+</Callout>
+
+Với tài khoản đã ủy quyền, giữ cụm từ khôi phục vẫn quan trọng như trước. Nếu bạn cần luật ràng buộc thật sự, như khôi phục qua người thân hay nhiều chữ ký, hãy dùng một tài khoản hợp đồng riêng theo [ERC-4337](./erc-4337.mdx): ở đó mọi lệnh đều phải qua luật của hợp đồng.
+
+## Rủi ro cần biết
+
+- **Ủy quyền cho mã độc là trao cả tài khoản.** Mã được ủy quyền chạy với toàn bộ tài sản của tài khoản. Theo chính EIP-7702, ứng dụng không được xin người dùng ký lệnh ủy quyền, và ví không nên có giao diện cho việc đó. Ví lớn chỉ cho ủy quyền tới vài hợp đồng mà họ đã kiểm tra. Trang web nào xin bạn "nâng cấp tài khoản" là dấu hiệu lừa đảo.
+- **Một lệnh ủy quyền có thể dùng trên mọi mạng.** Lệnh ủy quyền ghi chain ID bằng 0 có hiệu lực trên mọi mạng tương thích Ethereum, không chỉ mạng bạn đang dùng.
+- **Đổi hợp đồng không xóa dữ liệu cũ.** Dữ liệu hợp đồng cũ đã ghi trong tài khoản vẫn còn khi bạn ủy quyền cho hợp đồng khác. Ví phải tự xử lý chuyện này, nên chỉ đổi qua chính ứng dụng ví.
+- **Kẻ gian cũng dùng EIP-7702.** Vài tuần sau Pectra, nhóm nghiên cứu của Wintermute cho biết hơn 97% lệnh ủy quyền trỏ tới các bản sao của cùng một hợp đồng "quét tiền" (sweeper), theo [Cointelegraph ngày 2 tháng 6 năm 2025](https://cointelegraph.com/news/wintermute-crimeenjoyor-flags-malicious-ethereum-contracts). Đó là những tài khoản đã lộ khóa từ trước: kẻ gian ủy quyền để tự động rút mọi ETH gửi vào. EIP-7702 không làm lộ khóa, nhưng nếu khóa của bạn đã lộ, đừng gửi thêm gì vào địa chỉ đó.
+
+<Callout type="error" title="Thận trọng">
+Chỉ ủy quyền qua tính năng của chính ứng dụng ví bạn dùng. Không bao giờ ký lệnh "nâng cấp", "kích hoạt" hay "ủy quyền" tài khoản do một trang web, tin nhắn hay đường dẫn lạ yêu cầu.
+</Callout>
+
+## So với ERC-4337
+
+| | EIP-7702 | ERC-4337 |
+|---|---|---|
+| Địa chỉ | Giữ địa chỉ cũ | Địa chỉ mới, phải chuyển tài sản sang |
+| Khóa ban đầu | Vẫn có toàn quyền, bỏ qua được luật trong mã | Không có: mọi lệnh phải qua luật của hợp đồng |
+| Cần nâng cấp mạng lưới? | Có, từ Pectra (2025) | Không, chạy bằng hợp đồng từ năm 2023 |
+
+Hai cách dùng chung được. Tài khoản đã ủy quyền có thể ủy quyền cho mã tương thích ERC-4337, để dùng chung hạ tầng của ERC-4337 như người gom lệnh và hợp đồng trả phí hộ. Hợp đồng cổng vào (EntryPoint) của ERC-4337 hỗ trợ sẵn tài khoản EIP-7702 từ phiên bản 0.8, tháng 3 năm 2025. Xem [ERC-4337](./erc-4337.mdx).
+
+## Tóm tắt
+
+- EIP-7702 (Pectra, tháng 5 năm 2025) cho tài khoản thường ủy quyền cho mã của một hợp đồng, giữ nguyên địa chỉ và số dư.
+- Lệnh ủy quyền được ký bằng khóa của tài khoản, đi trong giao dịch kiểu 4, và giữ nguyên cho tới khi đổi hoặc gỡ.
+- Khóa cũ vẫn có toàn quyền. Luật trong mã không cứu được bạn khi lộ cụm từ khôi phục.
+- Chỉ ủy quyền qua ứng dụng ví của bạn, không bao giờ qua trang web lạ.
+
+## Đọc tiếp
+
+- [ERC-4337: trừu tượng hóa tài khoản](./erc-4337.mdx)
+- [Ví thông minh](./vi-thong-minh.mdx)
+- [Chữ ký số](../cach-hoat-dong/chu-ky-so.mdx)

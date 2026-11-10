@@ -1,0 +1,95 @@
+---
+title: "ERC-4337: trừu tượng hóa tài khoản"
+description: Từ năm 2023, ERC-4337 cho phép tạo ví thông minh hoàn toàn bằng hợp đồng, không cần nâng cấp mạng lưới. Ví gửi UserOperation, người gom lệnh gói lại, và hợp đồng EntryPoint kiểm tra rồi chạy.
+sources:
+  - https://ethereum.org/roadmap/account-abstraction/
+  - https://eips.ethereum.org/EIPS/eip-4337
+  - https://docs.erc4337.io/
+---
+
+Với tài khoản thường, luật là cố định: giao dịch cần chữ ký của một khóa, và phí trả bằng ETH của chính tài khoản đó. **Trừu tượng hóa tài khoản** (account abstraction) là ý tưởng để chính tài khoản quyết định luật: ký bằng gì, cần mấy chữ ký, ai trả phí.
+
+**ERC-4337** là cách phổ biến nhất để làm điều đó trên Ethereum hiện nay. Nó chạy trên mạng chính từ ngày 1 tháng 3 năm 2023, và không cần thay đổi giao thức: mọi thứ là [hợp đồng thông minh](../cach-hoat-dong/hop-dong-thong-minh.mdx), cộng với một mạng lưới riêng của những người gom lệnh. Những [ví thông minh](./vi-thong-minh.mdx) có địa chỉ riêng mà bạn gặp hôm nay phần lớn dựa trên nó.
+
+## Vì sao không sửa thẳng giao thức?
+
+Ở tầng giao thức, một giao dịch chỉ hợp lệ khi có chữ ký từ khóa của một tài khoản thường. Đổi luật này cần một đợt [nâng cấp mạng lưới](../cach-hoat-dong/nang-cap.mdx), mất nhiều năm.
+
+ERC-4337 đi đường vòng. Tài khoản thông minh không tự gửi giao dịch. Một bên khác gửi giao dịch thường thay cho nó, và một hợp đồng dùng chung kiểm tra luật của từng tài khoản trước khi chạy lệnh.
+
+## Các thành phần
+
+| Thành phần | Là gì |
+|---|---|
+| **UserOperation** | Lệnh của người dùng: việc tài khoản muốn làm, kèm chữ ký theo luật của tài khoản. Giống một giao dịch, nhưng không gửi thẳng lên mạng lưới |
+| **Người gom lệnh** (bundler) | Nút nhận UserOperation từ một hàng chờ riêng, gói nhiều cái vào một giao dịch thường và trả phí gas trước. ERC-4337 so vai trò này với người xây khối |
+| **EntryPoint** (hợp đồng cổng vào) | Một hợp đồng dùng chung cho mọi tài khoản. Nó kiểm tra từng UserOperation rồi mới chạy |
+| **Tài khoản thông minh** | Hợp đồng giữ tài sản của bạn và tự đặt luật: chữ ký nào hợp lệ, cần mấy chữ ký, hạn mức bao nhiêu |
+| **Hợp đồng tạo tài khoản** (factory) | Tạo tài khoản thông minh của bạn ở lần dùng đầu tiên |
+| **Paymaster** (hợp đồng trả phí hộ) | Trả phí gas thay bạn, do ứng dụng tài trợ, hoặc nhận phí của bạn bằng token như USDC |
+
+## Một lệnh đi thế nào?
+
+<UserOpScene />
+
+1. **Ví tạo UserOperation** và ký theo luật của tài khoản: bằng passkey, bằng nhiều khóa, hay bằng một khóa phụ có giới hạn. Lệnh được gửi tới hàng chờ riêng của những người gom lệnh, không phải [mempool](../cach-hoat-dong/khoi.mdx) thường.
+2. **Người gom lệnh gói lệnh.** Nó gói nhiều UserOperation vào một giao dịch thường gửi tới EntryPoint, và trả phí gas trước bằng ETH của mình.
+3. **Vòng kiểm tra.** EntryPoint hỏi từng tài khoản xem chữ ký có đúng luật không, và hỏi tài khoản (hoặc paymaster) có trả được phí không. Lệnh nào không qua bị loại.
+4. **Vòng chạy.** EntryPoint chạy từng lệnh, rồi lấy phí từ tài khoản hoặc paymaster để hoàn cho người gom lệnh.
+
+Người gom lệnh chạy thử vòng kiểm tra trước khi gửi, để khỏi trả gas cho lệnh sẽ bị loại. Vì vậy phần kiểm tra của tài khoản chỉ được làm một số việc nhất định, theo bộ luật ERC-7562.
+
+## Địa chỉ có trước khi tài khoản tồn tại
+
+Hợp đồng tạo tài khoản dùng một công thức cố định, nên địa chỉ của tài khoản thông minh tính được trước khi nó được tạo. Bạn nhận tiền vào địa chỉ đó được ngay. Tài khoản chỉ thật sự được triển khai trong UserOperation đầu tiên, và phí triển khai gộp vào lệnh đó.
+
+<Callout type="warn" title="Cảnh báo">
+Tài khoản thông minh là một hợp đồng trên từng mạng. Cùng một địa chỉ trên một mạng khác chỉ là của bạn khi tài khoản được tạo với cùng thiết lập ở mạng đó. Trước khi nhận tiền trên một mạng mới, kiểm tra trong ví rằng tài khoản của bạn dùng được ở đó.
+</Callout>
+
+## Trả phí hộ
+
+Paymaster là lý do nhiều ứng dụng cho bạn giao dịch "miễn phí": ứng dụng nạp ETH vào paymaster để trả phí thay người dùng. Có paymaster nhận USDC hay token khác làm phí, rồi tự trả bằng ETH. Paymaster tự quyết trả cho ai, ví dụ chỉ cho người dùng của một ứng dụng, hay chỉ vài lệnh mỗi ngày.
+
+## Đánh đổi
+
+- **Tốn gas hơn.** Mỗi UserOperation phải qua EntryPoint và mã của tài khoản. Theo bảng đo của nhóm viết EntryPoint ([phiên bản 0.9](https://github.com/eth-infinitism/account-abstraction/blob/v0.9.0/reports/gas-checker.txt), tháng 11 năm 2025), một UserOperation đơn giản đi một mình trong lô tốn khoảng 77.700 gas, và mỗi lệnh thêm trong cùng lô khoảng 41.900 gas. Chuyển ETH bằng tài khoản thường tốn 21.000 gas. Vì vậy ERC-4337 được dùng nhiều nhất ở nơi gas rẻ, như Layer 2.
+- **Địa chỉ mới.** Muốn chuyển từ tài khoản thường sang, bạn phải chuyển tài sản sang địa chỉ mới. [EIP-7702](./eip-7702.mdx) tránh được việc này, đổi lại khóa cũ vẫn có toàn quyền.
+- **Rủi ro của mã.** Tài khoản là một hợp đồng, nên lỗi trong mã có thể làm mất tiền. Nhiều tài khoản cho phép nâng cấp mã, nên cần biết ai giữ quyền đó. Dùng ví có mã đã được kiểm toán và được dùng rộng rãi.
+- **Cần người gom lệnh.** Lệnh của bạn cần ít nhất một người gom lệnh chịu nhận. Ví thường lo việc này, nhưng nếu ví chỉ dùng một bên, bên đó có thể làm chậm hoặc chặn lệnh của bạn.
+
+## Đang được dùng ở đâu?
+
+Theo [BundleBear](https://www.bundlebear.com/erc4337-overview/all) (đọc ngày 9 tháng 11 năm 2026), từ khi ra mắt đã có khoảng 1,36 tỷ UserOperation, từ khoảng 72 triệu tài khoản. Phần lớn nằm ngoài mạng chính: World Chain khoảng 56% và Base khoảng 24% (đều là Layer 2), Polygon khoảng 10%. Mạng chính Ethereum chỉ chiếm khoảng 0,6%, vì phí ở đó cao hơn.
+
+## Hai cách dùng chung được
+
+Tài khoản thường đã nâng cấp bằng [EIP-7702](./eip-7702.mdx) có thể ủy quyền cho mã tương thích ERC-4337, để dùng chung người gom lệnh và paymaster. EntryPoint hỗ trợ sẵn loại tài khoản này từ phiên bản 0.8 (tháng 3 năm 2025).
+
+| | ERC-4337 | EIP-7702 |
+|---|---|---|
+| Địa chỉ | Địa chỉ mới | Giữ địa chỉ cũ |
+| Luật | Mọi lệnh phải qua luật của hợp đồng | Khóa ban đầu bỏ qua được luật |
+| Cần nâng cấp mạng lưới? | Không | Có, từ Pectra (2025) |
+
+## Sắp tới
+
+Hai đề xuất muốn đưa trừu tượng hóa tài khoản vào thẳng giao thức, để không cần EntryPoint và người gom lệnh riêng:
+
+- **RIP-7560**, dành cho rollup. Tính tới tháng 11 năm 2026 vẫn là bản nháp.
+- **Giao dịch dạng khung** (EIP-8141), dành cho mạng chính. Đề xuất đã được xếp lịch cho đợt nâng cấp Hegotá từ tháng 8 năm 2026, nhưng vẫn đang được hoàn thiện. ethereum.org ghi Hegotá dự kiến vào quý 2 năm 2027, chưa chốt ngày.
+
+Cho tới khi đó, ERC-4337 và EIP-7702 vẫn là hai cách chính để có ví thông minh.
+
+## Tóm tắt
+
+- ERC-4337 (tháng 3 năm 2023) mang ví thông minh tới Ethereum mà không cần nâng cấp mạng lưới.
+- Ví gửi UserOperation, người gom lệnh gói nhiều lệnh vào một giao dịch, EntryPoint kiểm tra luật của từng tài khoản rồi mới chạy.
+- Paymaster cho phép ứng dụng trả phí thay bạn, hoặc bạn trả phí bằng token khác.
+- Đổi lại: tốn gas hơn, cần địa chỉ mới, và an toàn phụ thuộc vào mã của tài khoản.
+
+## Đọc tiếp
+
+- [EIP-7702: ủy quyền mã cho tài khoản thường](./eip-7702.mdx)
+- [Ví thông minh](./vi-thong-minh.mdx)
+- [Layer 2](../cach-hoat-dong/layer-2.mdx)

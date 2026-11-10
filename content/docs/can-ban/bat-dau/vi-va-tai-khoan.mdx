@@ -42,6 +42,10 @@ Từ cụm từ này, ví tạo ra khóa riêng tư cho mọi tài khoản của
 - **Mất cụm từ khôi phục và mất thiết bị, bạn mất tài sản vĩnh viễn.** Không ai khôi phục giúp bạn được.
 - **Có cụm từ khôi phục, bạn lấy lại được tài sản** trên bất kỳ ví nào hỗ trợ, kể cả khi điện thoại bị mất hay hỏng.
 
+<RecoveryScene />
+
+Hình trên cho thấy vì sao: số dư không nằm trong điện thoại mà được ghi trên mọi nút của Ethereum. Cụm từ khôi phục cho ra khóa riêng tư, khóa cho ra địa chỉ, nên ai nhập đúng 12 từ cũng có lại đúng địa chỉ đó, dù là bạn hay kẻ gian. Xem [Địa chỉ và khóa](../cach-hoat-dong/dia-chi-va-khoa.mdx).
+
 <Callout type="warn" title="Cảnh báo">
 Cách giữ cụm từ khôi phục:
 - Viết ra giấy (hoặc khắc lên kim loại) và cất ở nơi an toàn. Có thể giữ hai bản ở hai nơi khác nhau.
@@ -79,10 +83,20 @@ Bạn không cần đăng ký ở đâu cả. Ví sẽ tạo tài khoản cho b�
 
 Xong. Ví sẽ hiển thị địa chỉ của bạn. Đây chính là tài khoản Ethereum của bạn.
 
+## Một địa chỉ, nhiều mạng
+
+Ngoài Ethereum còn nhiều mạng tương thích, như các [Layer 2](../cach-hoat-dong/layer-2.mdx) Arbitrum, Optimism, Base, hay các chuỗi khác như BNB Chain. Cùng một khóa cho bạn cùng một địa chỉ trên tất cả, nhưng mỗi mạng giữ sổ số dư riêng.
+
+<NetworksScene />
+
+- **Ví chỉ hiện mạng đang chọn.** 10 USDC trên Base không hiện ra khi ví đang ở Ethereum. Tiền không mất, chỉ là ở mạng khác.
+- **Chuyển giữa các mạng phải qua cầu nối** (bridge). Gửi thường trên một mạng thì tiền chỉ đi trong mạng đó.
+- **Khi gửi, người gửi và người nhận phải dùng cùng một mạng.** Đặc biệt khi nạp vào sàn giao dịch: chọn đúng mạng mà sàn ghi. Gửi nhầm mạng, tiền tới đúng địa chỉ nhưng ở mạng sàn không theo dõi, và có thể mất.
+
 ## Câu hỏi thường gặp
 
 **Địa chỉ Ethereum của tôi có dùng được trên các mạng khác không?**
-Có, với các mạng tương thích Ethereum như Arbitrum, Optimism, Base hay BNB Chain: bạn có cùng một địa chỉ trên tất cả. Nhưng tài sản trên mỗi mạng là riêng biệt. 10 USDC trên Base không hiện ra trên Ethereum. Khi gửi tiền, hãy chắc chắn người gửi và người nhận dùng cùng một mạng.
+Có, với các mạng tương thích Ethereum: bạn có cùng một địa chỉ trên tất cả, nhưng tài sản trên mỗi mạng là riêng biệt. Xem [Một địa chỉ, nhiều mạng](#một-địa-chỉ-nhiều-mạng).
 
 **Tôi có thể gửi bitcoin tới địa chỉ Ethereum không?**
 Không. Bitcoin và Ethereum là hai mạng lưới riêng biệt với định dạng địa chỉ khác nhau. Gửi nhầm sẽ mất tiền.

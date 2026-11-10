@@ -48,9 +48,17 @@ Bạn không cần tự tính. Ví sẽ ước tính phí và hiển thị trư�
 
 ## Vì sao phí lúc cao lúc thấp?
 
-Mỗi khối chỉ chứa được một lượng tính toán giới hạn. Khi nhiều người cùng muốn giao dịch, ví dụ lúc một dự án NFT nổi tiếng mở bán hay thị trường biến động mạnh, mọi người phải cạnh tranh để được vào khối, và phí cơ sở tăng lên. Khi mạng lưới vắng, phí giảm xuống.
+Mỗi khối chỉ chứa được một lượng tính toán giới hạn, gọi là **giới hạn gas** của khối. Mạng lưới đặt mục tiêu là mỗi khối dùng một nửa giới hạn đó, và tự chỉnh phí cơ sở sau mỗi khối để giữ mục tiêu:
 
-Giá gas có thể thay đổi sau mỗi 12 giây.
+<FeeMarketScene />
+
+- Khối dùng **nhiều hơn** mục tiêu thì phí cơ sở của khối sau **tăng**. Khối đầy tới giới hạn làm phí tăng 12,5%, mức tăng lớn nhất.
+- Khối dùng **ít hơn** mục tiêu thì phí cơ sở **giảm**, tối đa 12,5%.
+- Khối dùng đúng mục tiêu thì phí giữ nguyên.
+
+Khi nhiều người cùng muốn giao dịch, ví dụ lúc một dự án NFT nổi tiếng mở bán hay thị trường biến động mạnh, các khối liên tục đầy và phí cơ sở tăng dần qua từng khối. Phí cao khiến người không vội chờ lúc khác, khối bớt đầy, và phí giảm trở lại.
+
+Giá gas có thể thay đổi sau mỗi khối, tức mỗi 12 giây. Vì phí cơ sở của khối sau tính được trước từ khối hiện tại, ví ước tính phí khá sát.
 
 ## Vì sao cần phí gas?
 

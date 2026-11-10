@@ -49,7 +49,11 @@ Ví của bạn bỗng xuất hiện một token lạ, kèm lời mời vào m�
 
 ### Đầu độc địa chỉ
 
-Kẻ lừa đảo tạo một địa chỉ có vài ký tự đầu và cuối giống địa chỉ bạn hay giao dịch, rồi gửi cho bạn một giao dịch giá trị 0 để địa chỉ giả xuất hiện trong lịch sử giao dịch. Lần sau, nếu bạn sao chép địa chỉ từ lịch sử, bạn có thể chép nhầm địa chỉ giả.
+Kẻ lừa đảo tạo một địa chỉ có vài ký tự đầu và cuối giống địa chỉ bạn hay giao dịch, rồi tạo một giao dịch giá trị 0 để địa chỉ giả xuất hiện trong lịch sử giao dịch của bạn. Lần sau, nếu bạn sao chép địa chỉ từ lịch sử, bạn có thể chép nhầm địa chỉ giả.
+
+<PoisoningScene />
+
+Ví thường rút gọn địa chỉ thành vài ký tự đầu và cuối, đúng phần kẻ gian đã làm giống. Phần ở giữa mới khác.
 
 **Cách tránh:** không sao chép địa chỉ từ lịch sử giao dịch. Dùng danh bạ trong ví và đối chiếu toàn bộ địa chỉ.
 
@@ -66,6 +70,10 @@ Mỗi lần Ethereum nâng cấp, kẻ lừa đảo lại mời bạn "đổi ET
 ## Quyền chi tiêu token
 
 Khi dùng một số ứng dụng, ví sẽ hỏi bạn có cho phép ứng dụng đó chi tiêu token của bạn không (approve). Nếu bạn cho phép không giới hạn và ứng dụng đó bị hack hoặc là ứng dụng lừa đảo, token của bạn có thể bị rút.
+
+<ApprovalScene />
+
+Hạn mức được ghi trong hợp đồng token, không phải trong ứng dụng, nên nó vẫn còn khi bạn đã thôi dùng ứng dụng, cho tới khi được dùng hết hoặc bị thu hồi.
 
 - Chỉ cho phép đúng số lượng cần dùng, nếu ví có lựa chọn này.
 - Định kỳ kiểm tra và thu hồi quyền không còn dùng, ví dụ bằng [Revoke.cash](https://revoke.cash).

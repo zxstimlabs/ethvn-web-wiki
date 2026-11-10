@@ -171,6 +171,19 @@ Dùng thống nhất trên toàn wiki (và trong ví ETH.vn). Phần lớn theo 
 | social recovery | khôi phục qua người thân | ethereum.org dùng "khôi phục xã hội" |
 | multisig | nhiều chữ ký | ethereum.org dùng "đa chữ ký" |
 | passkey | passkey | Giữ nguyên |
+| delegation (EIP-7702) | ủy quyền | Tài khoản thường trỏ tới mã của một hợp đồng. Khác "ủy quyền cho dịch vụ" khi đặt cọc |
+| authorization (EIP-7702) | lệnh ủy quyền | |
+| set code transaction (type 4) | giao dịch kiểu 4 | |
+| delegation designator | con trỏ | Giải thích: `0xef0100` nối với địa chỉ hợp đồng |
+| sponsor, relayer | bên trả phí hộ | |
+| sweeper | hợp đồng quét tiền | Tự động rút tiền gửi vào một địa chỉ đã lộ khóa |
+| UserOperation | UserOperation | Giữ nguyên. Giải thích: lệnh của người dùng trong ERC-4337 |
+| bundler | người gom lệnh (bundler) | |
+| EntryPoint | EntryPoint (hợp đồng cổng vào) | |
+| paymaster | paymaster (hợp đồng trả phí hộ) | |
+| factory (ERC-4337) | hợp đồng tạo tài khoản | |
+| frame transaction (EIP-8141) | giao dịch dạng khung | Đã xếp lịch cho Hegotá, chưa ra mắt (tháng 11 năm 2026) |
+| address poisoning | đầu độc địa chỉ | |
 | pseudonymous | công khai dưới bút danh | Không viết "ẩn danh": Ethereum không ẩn danh |
 | stealth address | địa chỉ dùng một lần | ethereum.org dùng "địa chỉ ẩn danh", dễ hiểu nhầm |
 | Layer 1, Layer 2 | Layer 1, Layer 2 | Giữ nguyên |

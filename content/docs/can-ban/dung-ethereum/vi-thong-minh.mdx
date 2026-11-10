@@ -26,8 +26,8 @@ Tài khoản bạn tạo bằng một ví bình thường là tài khoản do kh
 
 ## Hai cách để có ví thông minh
 
-1. **Tài khoản hợp đồng riêng** (theo tiêu chuẩn ERC-4337, chạy trên mạng chính từ tháng 3 năm 2023). Bạn có một địa chỉ mới, chính là một hợp đồng thông minh. Mọi luật nằm trong hợp đồng đó.
-2. **Nâng cấp tài khoản thường** (EIP-7702, từ nâng cấp Pectra tháng 5 năm 2025). Bạn giữ nguyên địa chỉ cũ và gắn thêm mã của một hợp đồng để có gộp lệnh, nhờ trả phí… Điểm quan trọng: **khóa riêng tư ban đầu vẫn có toàn quyền**. Gắn mã ví nhiều chữ ký vào tài khoản không biến nó thành ví nhiều chữ ký thật. Nếu cụm từ khôi phục cũ bị lộ, các luật mới không cứu được bạn.
+1. **Tài khoản hợp đồng riêng** (theo tiêu chuẩn ERC-4337, chạy trên mạng chính từ tháng 3 năm 2023). Bạn có một địa chỉ mới, chính là một hợp đồng thông minh. Mọi luật nằm trong hợp đồng đó. Xem [ERC-4337](./erc-4337.mdx).
+2. **Nâng cấp tài khoản thường** (EIP-7702, từ nâng cấp Pectra tháng 5 năm 2025). Bạn giữ nguyên địa chỉ cũ và gắn thêm mã của một hợp đồng để có gộp lệnh, nhờ trả phí… Điểm quan trọng: **khóa riêng tư ban đầu vẫn có toàn quyền**. Gắn mã ví nhiều chữ ký vào tài khoản không biến nó thành ví nhiều chữ ký thật. Nếu cụm từ khôi phục cũ bị lộ, các luật mới không cứu được bạn. Xem [EIP-7702](./eip-7702.mdx).
 
 <Callout type="error" title="Thận trọng">
 Kẻ gian có thể dụ bạn "nâng cấp tài khoản" bằng cách gắn mã của một hợp đồng do chúng viết. Ký lệnh đó là trao toàn quyền tài khoản cho kẻ gian. Chỉ nâng cấp qua chính ứng dụng ví của bạn, không bao giờ qua một trang web hay đường dẫn lạ.
@@ -35,7 +35,7 @@ Kẻ gian có thể dụ bạn "nâng cấp tài khoản" bằng cách gắn mã
 
 ## Sắp tới
 
-Một đề xuất cho đợt nâng cấp Hegotá (giao dịch dạng khung, EIP-8141) có thể đưa khôi phục, hạn mức và nhờ trả phí vào thẳng giao thức, và mở đường cho chữ ký an toàn trước máy tính lượng tử. Tính tới tháng 11 năm 2026, đây vẫn là kế hoạch.
+Giao dịch dạng khung (EIP-8141) đã được xếp lịch cho đợt nâng cấp Hegotá. Nó có thể đưa khôi phục, hạn mức và nhờ trả phí vào thẳng giao thức, và mở đường cho chữ ký an toàn trước máy tính lượng tử. Tính tới tháng 11 năm 2026, đề xuất vẫn đang được hoàn thiện và Hegotá chưa có ngày ra mắt, nên đây vẫn là kế hoạch.
 
 ## Tóm tắt
 
@@ -45,5 +45,7 @@ Một đề xuất cho đợt nâng cấp Hegotá (giao dịch dạng khung, EIP
 
 ## Đọc tiếp
 
+- [EIP-7702: ủy quyền mã cho tài khoản thường](./eip-7702.mdx)
+- [ERC-4337: trừu tượng hóa tài khoản](./erc-4337.mdx)
 - [Quyền riêng tư](./quyen-rieng-tu.mdx)
 - [Chữ ký số](../cach-hoat-dong/chu-ky-so.mdx)

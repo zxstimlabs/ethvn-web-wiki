@@ -306,6 +306,7 @@ const READ = {
   validators: { href: '/tai-lieu/can-ban/cach-hoat-dong/trinh-xac-thuc', label: 'Trình xác thực' },
   signature: { href: '/tai-lieu/can-ban/cach-hoat-dong/chu-ky-so', label: 'Chữ ký số' },
   block: { href: '/tai-lieu/can-ban/cach-hoat-dong/khoi', label: 'Khối' },
+  finality: { href: '/tai-lieu/can-ban/cach-hoat-dong/khoi#khi-nào-khối-không-thể-đảo-ngược', label: 'Tính cuối cùng' },
   node: { href: '/tai-lieu/can-ban/cach-hoat-dong/nut', label: 'Nút' },
 };
 export const MORE: Record<string, { href: string; label: string }> = {
@@ -325,10 +326,10 @@ export const MORE: Record<string, { href: string; label: string }> = {
   attest: READ.pos,
   chain: READ.chain,
   parent: READ.chain,
-  justified: READ.pos,
-  finalized: READ.pos,
-  finality: READ.pos,
-  gauge: READ.pos,
+  justified: READ.finality,
+  finalized: READ.finality,
+  finality: READ.finality,
+  gauge: READ.finality,
 };
 
 /** Per-viewer convenience: which "+" this browser has opened. Shared by both versions. */

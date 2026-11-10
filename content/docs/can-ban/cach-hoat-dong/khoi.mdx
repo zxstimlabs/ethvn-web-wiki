@@ -30,6 +30,21 @@ Thời gian trên Ethereum chia thành các **khe** (slot) dài 12 giây. Cứ 3
 3. **Ghi phần đầu khối.** Phần đầu khối ghi lại các thông tin chính, như bảng dưới đây.
 4. **Công bố và kiểm tra.** Các nút khác tự chạy lại mọi giao dịch trong khối. Nếu kết quả khớp với gốc trạng thái ghi trong khối, khối hợp lệ. Các trình xác thực bỏ phiếu cho khối, và khối được nối vào chuỗi.
 
+## Khi nào khối không thể đảo ngược?
+
+Khối vừa được nối vào chuỗi thì giao dịch của bạn đã "thành công", nhưng về lý thuyết khối đó vẫn có thể bị thay, dù rất hiếm. Khối chỉ chắc chắn khi đạt **tính cuối cùng** (finality).
+
+<FinalityScene />
+
+1. **Mốc.** Khối đầu tiên của mỗi kỷ nguyên là một **mốc** (checkpoint). Nếu khe đầu kỷ nguyên trống, khối gần nhất trước nó làm mốc.
+2. **Bỏ phiếu.** Trong mỗi kỷ nguyên, mọi trình xác thực đang hoạt động bỏ một phiếu cho mốc của kỷ nguyên đó. Phiếu tính theo số ETH đặt cọc.
+3. **Được chứng minh.** Khi phiếu cho một mốc đạt 2/3 tổng số ETH đặt cọc, mốc đó **được chứng minh** (justified).
+4. **Tính cuối cùng.** Khi mốc kế tiếp cũng được chứng minh, mốc trước đạt tính cuối cùng, kéo theo mọi khối trước nó.
+
+Vì vậy, từ lúc vào khối, giao dịch của bạn chờ 2 tới 3 kỷ nguyên, tức khoảng 13 tới 19 phút, tùy nó nằm ở đầu hay cuối kỷ nguyên. Không có quy tắc 2/3 cho từng khối: phiếu được tính theo từng kỷ nguyên.
+
+Muốn đảo ngược một khối đã đạt tính cuối cùng, ít nhất 1/3 tổng số ETH đặt cọc phải ký cho hai nhánh mâu thuẫn. Việc đó bị phát hiện và bị cắt tiền cọc, nên đảo ngược tốn ít nhất 1/3 số ETH đang bảo vệ mạng lưới. Nếu các trình xác thực nắm hơn 1/3 tiền cọc ngừng hoạt động, chuỗi vẫn ra khối nhưng tạm thời không đạt tính cuối cùng, cho tới khi đủ 2/3 trở lại. Xem [Đồng thuận](./dong-thuan.mdx#bằng-chứng-cổ-phần).
+
 ## Trong một khối có gì?
 
 | Phần | Nghĩa |
@@ -59,6 +74,7 @@ Vì sao không làm khối thật lớn cho rẻ? Khối càng lớn thì máy c
 - Khối là một lô giao dịch kèm mã băm của khối cha.
 - Mỗi khe 12 giây có tối đa một khối, do một trình xác thực được chọn ngẫu nhiên đề xuất.
 - Mọi nút tự chạy lại giao dịch để kiểm tra khối trước khi nối vào chuỗi.
+- Sau 2 tới 3 kỷ nguyên (khoảng 13 tới 19 phút), khối đạt tính cuối cùng và không thể đảo ngược nếu không mất ít nhất 1/3 tổng số ETH đặt cọc.
 - Kích thước khối được giới hạn bằng gas, để người bình thường vẫn chạy được nút.
 
 ## Đọc tiếp

@@ -17,6 +17,15 @@ import { ExplorerScene } from '@/components/iso/explorer-scene';
 import { TokenScene } from '@/components/iso/token-scene';
 import { SmartWalletScene } from '@/components/iso/smart-wallet-scene';
 import { PrivacyScene } from '@/components/iso/privacy-scene';
+import { FinalityScene } from '@/components/iso/finality-scene';
+import { FeeMarketScene } from '@/components/iso/fee-market-scene';
+import { RecoveryScene } from '@/components/iso/recovery-scene';
+import { ApprovalScene } from '@/components/iso/approval-scene';
+import { PoisoningScene } from '@/components/iso/poisoning-scene';
+import { DelegationScene } from '@/components/iso/delegation-scene';
+import { UserOpScene } from '@/components/iso/user-op-scene';
+import { NetworksScene } from '@/components/iso/networks-scene';
+import { SupplyScene } from '@/components/iso/supply-scene';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -39,6 +48,15 @@ export function getMDXComponents(components?: MDXComponents) {
     TokenScene,
     SmartWalletScene,
     PrivacyScene,
+    FinalityScene,
+    FeeMarketScene,
+    RecoveryScene,
+    ApprovalScene,
+    PoisoningScene,
+    DelegationScene,
+    UserOpScene,
+    NetworksScene,
+    SupplyScene,
     ...components,
   } satisfies MDXComponents;
 }
