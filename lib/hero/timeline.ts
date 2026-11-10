@@ -1,11 +1,14 @@
 /**
- * Timeline for the home hero: one Ethereum slot (12 s), driven by the real
- * mainnet slot clock. Every visual is a pure function of `t` (seconds into the
- * current slot), so the loop never drifts, can start mid-slot, and survives
- * throttled or hidden tabs without bookkeeping.
+ * Timeline for the home hero: one block's story, from the transaction to
+ * finality. Every visual is a pure function of a slot number and `t` (seconds
+ * into that slot), so any frame can be drawn on its own.
  *
- * Story inside one slot, as drawn (a home staker's node whose validator is
- * this slot's proposer):
+ * The story runs on its own clock, starting at step 1 whenever the hero
+ * appears; it is not synced to the timing of mainnet's slots. Only the slot
+ * numbers come from mainnet, read when each loop starts.
+ *
+ * Schedule inside a slot (a home staker's node whose validator is the
+ * proposer of the next slot):
  *   0.0  the beacon node asks MEV-Boost for a block; MEV-Boost asks the relay
  *   0.5  the relay returns the highest bid's header
  *   1.3  the validator signs the (blinded) header
@@ -16,8 +19,9 @@
  *   7.9  it propagates over P2P to peers and on to the builders
  *   9.2  builders stack transactions into candidate blocks and bid via the relay
  *
- * The loop alternates real slots: the story above plays in real time on even
- * slots; odd slots fast-forward until the story's block is finalized.
+ * One loop (see `STORY`): from 6.4 s into slot S (steps 1–3: send, spread,
+ * auction) to 6.4 s into slot S + 1 (steps 4–5: propose, attest), then a
+ * fast-forward until the block of S + 1 is finalized (step 6).
  *
  * The 2/3 rule is not per block. Each epoch every validator votes once; when
  * the votes reach 2/3 of all staked ETH, that epoch's checkpoint is justified,
@@ -46,15 +50,14 @@ export interface SlotClock {
   slotInEpoch: number;
 }
 
-export function slotClock(ms: number): SlotClock {
-  const s = ms / 1000 - GENESIS_TIME;
-  const slot = Math.floor(s / SLOT_SECONDS);
-  return {
-    slot,
-    t: s - slot * SLOT_SECONDS,
-    epoch: Math.floor(slot / SLOTS_PER_EPOCH),
-    slotInEpoch: slot % SLOTS_PER_EPOCH,
-  };
+/** `t` seconds into `slot`. */
+export function at(slot: number, t: number): SlotClock {
+  return { slot, t, epoch: Math.floor(slot / SLOTS_PER_EPOCH), slotInEpoch: slot % SLOTS_PER_EPOCH };
+}
+
+/** Mainnet's current slot: only used to label the story with realistic slot numbers. */
+export function mainnetSlot(ms = Date.now()): number {
+  return Math.floor((ms / 1000 - GENESIS_TIME) / SLOT_SECONDS);
 }
 
 /** Checkpoints in a healthy network: justified = start of epoch − 1, finalized = start of epoch − 2. */
@@ -108,7 +111,7 @@ export const T = {
   /** the block is on the chain; nodes drop its transactions from their mempools */
   landed: 3.4,
   linkDraw: 0.35,
-  votes: { start: 4.0, stagger: 0.25, dur: 0.8 },
+  votes: { start: 4.0, stagger: 0.15, dur: 0.7 },
   tx: {
     send: [6.6, 0.6],
     toMempool: [7.25, 0.3],
@@ -147,24 +150,38 @@ export function epochVotes(slotInEpoch: number, votesLanded: number): number {
   return (PARTICIPATION / SLOTS_PER_EPOCH) * (slotInEpoch + votesLanded / VOTERS);
 }
 
-// ── loop: a real-time slot, then a fast-forward to finality ──────────────
+// ── loop: the story in real time, then a fast-forward to finality ───────
 
 /**
- * The loop alternates real slots: even slots play the 12 s story in real time,
- * odd slots fast-forward from the story's block until it is finalized, then
- * the next even slot is live again.
+ * The story: from `start` s into slot S, just before the wallet sends (step 1),
+ * to `end` s into slot S + 1, once the committee has attested to the new block
+ * (step 5). It is one continuous stretch of time, so the transaction sent in
+ * slot S is the one the block of S + 1 carries.
  */
-export const isStorySlot = (slot: number) => slot % 2 === 0;
+export const STORY = { start: 6.4, end: 6.4 } as const;
+export const STORY_LEN = SLOT_SECONDS - STORY.start + STORY.end;
 
 export const FF = {
   /** network dims, overlay appears */
   dim: 0.6,
   /** simulated slots advance over this window (eased) */
   run: [0.6, 10.0],
-  /** chain row fades out, then back in showing the present */
+  /** chain row fades out, then back in showing the next story's opening */
   out: 11.4,
   back: 11.6,
+  len: 12,
 } as const;
+
+/** One loop: the story, then the fast-forward. */
+export const CYCLE = STORY_LEN + FF.len;
+/** From here the fast-forward shows the next loop's opening, so its slot number must be known. */
+export const HANDBACK = STORY_LEN + FF.back;
+
+/** Slot and time inside the story for `tau` seconds into the loop (tau < STORY_LEN). */
+export function storyClock(base: number, tau: number): SlotClock {
+  const u = STORY.start + tau;
+  return u < SLOT_SECONDS ? at(base, u) : at(base + 1, u - SLOT_SECONDS);
+}
 
 /**
  * First slot at whose start `slot` is finalized in a healthy network: the
@@ -174,8 +191,8 @@ export function finalitySlot(slot: number): number {
   return (Math.ceil(slot / SLOTS_PER_EPOCH) + 2) * SLOTS_PER_EPOCH;
 }
 
-/** Which of the six story steps are active at `t` of a story slot. */
+/** Which of the six story steps are active at `t` of a slot. */
 export function activeSteps(t: number): boolean[] {
-  return [t >= 6.5 && t < 7.9, t >= 7.9 && t < 9.2, t >= 9.2, t < 3.9, t >= 3.9 && t < 6.5, false];
+  return [t >= STORY.start && t < 7.9, t >= 7.9 && t < 9.2, t >= 9.2, t < 3.9, t >= 3.9 && t < STORY.start, false];
 }
 export const FF_STEPS = [false, false, false, false, false, true];

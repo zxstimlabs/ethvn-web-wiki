@@ -42,7 +42,7 @@ export const STEPS = [
 export const STILL_STEPS = activeSteps(T.still);
 
 export const CAPTION =
-  'Ví dụ minh hoạ: nút của một người tự đặt cọc, có trình xác thực được chọn làm người đề xuất ở khe này. Thực tế mỗi khe chọn ngẫu nhiên trong toàn bộ trình xác thực, và phần lớn khối được xây qua MEV-Boost như trên. Mỗi khối được kể trong 12 giây thật, rồi tua nhanh tới khi khối đạt tính cuối cùng. Số khe và kỷ nguyên theo đồng hồ mainnet; thanh 2/3 giả định 99% trình xác thực bỏ phiếu đúng hạn; giao dịch và giá thầu là minh hoạ.';
+  'Ví dụ minh hoạ: nút của một người tự đặt cọc, có trình xác thực được chọn làm người đề xuất ở khe này. Thực tế mỗi khe chọn ngẫu nhiên trong toàn bộ trình xác thực, và phần lớn khối được xây qua MEV-Boost như trên. Câu chuyện chạy với tốc độ thật (12 giây một khe), từ lúc gửi giao dịch tới khi khối được chứng thực, rồi tua nhanh tới khi khối đạt tính cuối cùng. Số khe và kỷ nguyên lấy theo mainnet lúc bắt đầu kể, nhưng nhịp kể không khớp với khe thật; thanh 2/3 giả định 99% trình xác thực bỏ phiếu đúng hạn; giao dịch và giá thầu là minh hoạ.';
 
 export const SCENE_TITLE = 'Một khối Ethereum được tạo ra, đấu giá, ký, nối vào chuỗi và đạt tính cuối cùng';
 export const SCENE_DESC =

@@ -1,14 +1,16 @@
 /**
  * Animation engine of the home hero. Every frame is a pure function of the
- * mainnet slot clock: it mutates attributes of the static SVG (found through
- * `data-k`) and never re-renders React. Positions come from a `Layout`, so the
- * wide and the tall versions run the same story.
+ * loop's position (`Frame`): it mutates attributes of the static SVG (found
+ * through `data-k`) and never re-renders React. Positions come from a
+ * `Layout`, so the wide and the tall versions run the same story.
  */
 
 import type { Pt } from '@/lib/hero/iso';
 import {
   BUILDERS as BUILDER_COUNT,
   FF,
+  STORY,
+  STORY_LEN,
   FF_STEPS,
   LAYERS,
   SLOTS_PER_EPOCH,
@@ -28,11 +30,12 @@ import {
   easeOut,
   end,
   epochVotes,
+  at,
   finalitySlot,
-  isStorySlot,
   lerp,
   prog,
   slabTime,
+  storyClock,
   voteWindow,
 } from '@/lib/hero/timeline';
 import { STEPS } from './content';
@@ -249,7 +252,7 @@ function renderHud(dom: Dom, slot: number, t: number, steps: boolean[]) {
   steps.forEach((on, i) => setAttr(dom.steps[i], 'data-active', String(on)));
 }
 
-/** One real slot, in real time. */
+/** One moment of a slot. The story shows the second half of slot S and the first half of S + 1. */
 export function renderStory(dom: Dom, clock: SlotClock) {
   const { L } = dom;
   const { slot: S, t, slotInEpoch } = clock;
@@ -430,24 +433,24 @@ export function renderStory(dom: Dom, clock: SlotClock) {
 }
 
 /**
- * The slot after a story: fast-forward from the story's block until it is
- * finalized, with every validator's votes filling the 2/3 gauge epoch by epoch.
+ * After the story: fast-forward from the story's block `S` until it is
+ * finalized, with every validator's votes filling the 2/3 gauge epoch by
+ * epoch. `t` is seconds into the fast-forward; `next` is the slot the next
+ * loop starts in, shown during the hand-back.
  */
-function renderFF(dom: Dom, clock: SlotClock) {
+function renderFF(dom: Dom, S: number, t: number, next: number) {
   const { L } = dom;
-  const t = clock.t;
-  const S = clock.slot - 1; // the block from the story
   const lanes: Record<string, LaneState> = Object.fromEntries(L.lanes.map((l) => [l.id, l.initial]));
 
   // Everything not drawn here rests in the story's final state (or, during the
   // hand-back, in the next story's opening state).
   if (t >= FF.back) {
-    renderStory(dom, { ...clock, slot: clock.slot + 1, t: 0, slotInEpoch: (clock.slot + 1) % SLOTS_PER_EPOCH });
+    renderStory(dom, at(next, STORY.start));
     fade(dom.chainRow, prog(t, FF.back, 0.4));
     fade(dom.net, lerp(0.18, 1, easeInOut(prog(t, FF.out, 0.6))));
     return;
   }
-  renderStory(dom, { ...clock, slot: S, t: T.still, slotInEpoch: S % SLOTS_PER_EPOCH });
+  renderStory(dom, at(S, STORY.end));
   setAttr(dom.root, 'data-mode', 'ff');
   fade(dom.msg, 0);
   fade(dom.ptag, 0);
@@ -508,7 +511,17 @@ function renderFF(dom: Dom, clock: SlotClock) {
   renderHud(dom, n, t, FF_STEPS);
 }
 
-export function render(dom: Dom, clock: SlotClock) {
-  if (isStorySlot(clock.slot)) renderStory(dom, clock);
-  else renderFF(dom, clock);
+/**
+ * A moment of the loop: `tau` seconds in, telling the transaction sent in slot
+ * `base` and the block of `base + 1`; `next` is the next loop's `base`.
+ */
+export interface Frame {
+  base: number;
+  next: number;
+  tau: number;
+}
+
+export function render(dom: Dom, { base, next, tau }: Frame) {
+  if (tau < STORY_LEN) renderStory(dom, storyClock(base, tau));
+  else renderFF(dom, base + 1, tau - STORY_LEN, next);
 }

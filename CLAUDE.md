@@ -84,15 +84,17 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
   - `NOTICE.md` is at the repo root, with its path changed to `content/docs/`.
   - The markdown served to AI tools (`.md` routes, `llms-full.txt`) is the processed MDX, so callouts appear there as `<Callout …>` tags.
   - The `sources` frontmatter field is kept in the files but isn't validated or shown on the page.
-- Home hero (`app/(home)/page.tsx` → `components/hero/hero.tsx`): an isometric SVG on the real mainnet slot clock. The page has no visible title; the "Đọc wiki" button is in the header (`app/(home)/layout.tsx`). Isometric helpers are in `lib/hero/iso.ts` and the schedule in `lib/hero/timeline.ts`; every frame is a pure function of `t`.
+- Home hero (`app/(home)/page.tsx` → `components/hero/hero.tsx`): an isometric SVG telling one block's story on its own clock. The page has no visible title; the "Đọc wiki" button is in the header (`app/(home)/layout.tsx`). Isometric helpers are in `lib/hero/iso.ts` and the schedule in `lib/hero/timeline.ts`; every frame is a pure function of `t`.
   - Two components, one story (user's request, 2026-11-08): `BlockScene` (landscape, `block-scene.tsx`) and `BlockSceneMobile` (portrait, `block-scene-mobile.tsx`, read bottom to top: wallet and node, network, chain). `hero.tsx` picks one with shadcn's `useIsMobile` (`hooks/use-mobile.ts`, below 768 px).
     - Until the hook has run, the static HTML holds `HeroSkeleton` (`hero-skeleton.tsx`, built on shadcn's `components/ui/skeleton.tsx`; user's request, 2026-11-08). CSS breakpoints give it the phone or landscape shape, with the scene box at the real scene's size, so nothing jumps when the scene mounts. Inside the box it is plain Skeleton blocks loosely standing for the chain, gauge, node, builders, relay and committee (user: no SVG, representative rather than exact). The blocks are tinted `bg-muted-foreground/15` because `muted` is too faint in light mode. Only one version is ever mounted. If the frames or the figure chrome change, keep the skeleton's boxes in step.
     - Shared files: `content.ts` (steps, "+" texts, tour, wiki links), `layout.ts` (all positions: `WIDE` and `TALL`, built by `makeLayout`), `scene.tsx` (drawing), `engine.ts` (animation), `hero-parts.tsx` (`useHero` hook, HUD, popup, tour chip).
     - The tall layout draws about 1:1 on a phone, so its text is larger (`[data-layout='tall']` rules in `block-scene.css`; keep them in step with `TALL.font`). It drops the English sub-labels (the popups carry them) and shows slot numbers only on the head and checkpoints.
     - There is no camera any more: the old panning viewBox for narrow screens was replaced by the tall layout.
-  - The loop alternates real slots:
-    - Even slots play the 12 s story in real time: wallet → node RPC → mempool → P2P → peers → 3 builders, which bid via the relay; then MEV-Boost takes the best bid, the validator signs, the relay publishes, and the committee attests.
-    - Odd slots fast-forward: the network dims, simulated slots run until the story's block is finalized (64–96 slots), and the 2/3 gauge fills each epoch.
+  - The loop (`STORY`, `CYCLE` in `timeline.ts`) always starts at step 1 and plays the steps in order. It is **not synced to mainnet's slot timing** (user's request, 2026-11-10). Before that, each real slot opened with the proposal, so viewers saw steps 4, 5, 1, 2, 3, 6 and joined wherever mainnet was. Only the slot numbers come from mainnet, read when each loop starts.
+    - Story, 12 s in real time: from 6.4 s into slot S (wallet → node RPC → mempool → P2P → peers → 3 builders, which bid via the relay) to 6.4 s into slot S + 1 (MEV-Boost takes the best bid, the validator signs, the relay publishes, the committee attests). The HUD bar therefore starts about half full.
+    - Then a 12 s fast-forward: the network dims, simulated slots run until the block of S + 1 is finalized (64–96 slots), and the 2/3 gauge fills each epoch. Its hand-back shows the next loop's opening frame.
+    - The loop's clock pauses while a popup is open or the hero is off screen, and the first frame is drawn in a layout effect, before paint (the static markup is the step-3 still frame, used for reduced motion).
+    - Committee votes were tightened (stagger 0.15 s, 0.7 s each) so they finish before the story's end.
   - The node is drawn as a home staker's node (EL: RPC, mempool, P2P; CL: validator, beacon; plus MEV-Boost) whose validator is the proposer. The caption says this is an example.
   - Facts the user had wrong and agreed to correct (2026-11-08):
     - There is no 2/3 rule per block; 2/3 of staked ETH per epoch justifies a checkpoint, and two consecutive justified checkpoints finalize the earlier one.
@@ -104,7 +106,7 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
     - Visited buttons are remembered in localStorage (`eth-hero-seen`, per viewer). A chip shows "x/27".
     - When adding wiki pages (e.g. MEV, finality), link them from `MORE`.
     - Button positions are computed in `makeLayout` from each layout's parts and labels (midpoints of lines, after labels, module corners); `nudge` moves one that collides. Check both layouts after moving anything.
-  - Dev only: `window.__ethHeroT = 2.8` freezes the story at that second; `window.__ethHeroFF = 5` freezes the fast-forward. After hot reloads that change element structure, reload the page: transforms set by the engine survive HMR.
+  - Dev only: `window.__ethHeroT = 2` freezes the story 2 s after it starts (0 = step 1, 12 = end); `window.__ethHeroFF = 5` freezes the fast-forward. After hot reloads that change element structure, reload the page: transforms set by the engine survive HMR.
   - It shows builder → relay → MEV-Boost; change the relay steps once ePBS (Glamsterdam) is on mainnet.
   - The relay is drawn as a node (user's request, 2026-11-08): a small platform with a "Relay" module (MEV-Boost relay software, amber) and a "Beacon" module (the full node it uses to check and publish blocks).
     - It is titled "Nút khác" with the description "chạy relay MEV-Boost".

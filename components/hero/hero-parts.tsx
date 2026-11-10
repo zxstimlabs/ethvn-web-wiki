@@ -1,11 +1,11 @@
 'use client';
 
-import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import NextLink from 'next/link';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
-import { SLOTS_PER_EPOCH, T, slotClock } from '@/lib/hero/timeline';
+import { CYCLE, HANDBACK, STORY_LEN, T, at, mainnetSlot } from '@/lib/hero/timeline';
 import { CAPTION, INFO_BY_ID, MORE, SEEN_KEY, TOUR } from './content';
 import { collect, render, renderStory } from './engine';
 import type { Layout } from './layout';
@@ -22,8 +22,8 @@ export interface OpenInfo {
 }
 
 /**
- * Everything the two versions share: the animation loop on the mainnet slot
- * clock, the "+" popups with their guided tour, and the per-viewer record of
+ * Everything the two versions share: the animation loop (its own clock, from
+ * step 1), the "+" popups with their guided tour, and the per-viewer record of
  * which "+" have been opened.
  */
 export function useHero(L: Layout) {
@@ -139,8 +139,11 @@ export function useHero(L: Layout) {
     };
   }, [open, close, go]);
 
-  // the animation loop
-  useEffect(() => {
+  // The animation loop. The story runs on its own clock and always starts at
+  // step 1; it pauses while a popup is open or the hero is off screen. Only the
+  // slot numbers come from mainnet, read when each loop starts.
+  // A layout effect, so the first frame is drawn before the browser paints.
+  useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     const dom = collect(root, L);
@@ -148,25 +151,38 @@ export function useHero(L: Layout) {
     let raf = 0;
     let timer = 0;
     let visible = true;
+    let tau = 0;
+    let base = mainnetSlot();
+    let next: number | null = null;
+    let last = 0;
 
     const still = () => {
-      if (!frozenRef.current) renderStory(dom, { ...slotClock(Date.now()), t: T.still });
+      if (!frozenRef.current) renderStory(dom, at(mainnetSlot(), T.still));
     };
-    const tick = () => {
-      raf = 0;
-      const clock = slotClock(Date.now());
-      // Dev only: set `window.__ethHeroT = 2.8` to freeze the story at that second,
-      // or `window.__ethHeroFF = 5` to freeze the fast-forward.
+    const frame = (now: number) => {
+      const dt = last ? Math.min(now - last, 100) / 1000 : 0;
+      last = now;
+      if (frozenRef.current) return;
+      tau += dt;
+      if (tau >= CYCLE) {
+        tau %= CYCLE;
+        base = next ?? mainnetSlot();
+        next = null;
+      }
+      if (next === null && tau >= HANDBACK) next = mainnetSlot();
+      let pos = tau;
+      // Dev only: set `window.__ethHeroT = 2` to freeze the story 2 s after it
+      // starts (step 1), or `window.__ethHeroFF = 5` to freeze the fast-forward.
       if (process.env.NODE_ENV !== 'production') {
         const w = window as { __ethHeroT?: number; __ethHeroFF?: number };
-        if (typeof w.__ethHeroT === 'number' || typeof w.__ethHeroFF === 'number') {
-          const ff = typeof w.__ethHeroFF === 'number';
-          clock.slot = clock.slot - (clock.slot % 2) + (ff ? 1 : 0);
-          clock.slotInEpoch = clock.slot % SLOTS_PER_EPOCH;
-          clock.t = (ff ? w.__ethHeroFF : w.__ethHeroT) as number;
-        }
+        if (typeof w.__ethHeroFF === 'number') pos = STORY_LEN + w.__ethHeroFF;
+        else if (typeof w.__ethHeroT === 'number') pos = w.__ethHeroT;
       }
-      if (!frozenRef.current) render(dom, clock);
+      render(dom, { base, next: next ?? base + 2, tau: pos });
+    };
+    const tick = (now: number) => {
+      raf = 0;
+      frame(now);
       if (visible) raf = requestAnimationFrame(tick);
     };
     const stop = () => {
@@ -177,11 +193,15 @@ export function useHero(L: Layout) {
     };
     const start = () => {
       stop();
+      last = 0;
       if (reduce.matches) {
         // no motion: a still frame whose slot numbers stay current
         still();
         timer = window.setInterval(still, 1000);
-      } else if (visible) raf = requestAnimationFrame(tick);
+      } else if (visible) {
+        frame(performance.now());
+        raf = requestAnimationFrame(tick);
+      }
     };
 
     const io = new IntersectionObserver(([entry]) => {
@@ -216,7 +236,7 @@ export function Hud({ compact = false }: { compact?: boolean }) {
         <span className="flex shrink-0 items-center gap-3 tabular-nums">
           <span className="hud-live flex items-center gap-1.5">
             <span className="eth-live-dot size-1.5 rounded-full" aria-hidden />
-            {!compact && <span>Giờ mainnet</span>}
+            {!compact && <span>Tốc độ thật</span>}
           </span>
           <span className="hud-ff">⏩ Tua nhanh</span>
           <span className="hud-paused">⏸ Tạm dừng</span>
