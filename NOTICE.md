@@ -1,8 +1,18 @@
 # Ghi công
 
-Một phần nội dung trong `content/docs/` được biên soạn lại từ [ethereum.org](https://ethereum.org) ([mã nguồn](https://github.com/ethereum/ethereum-org-website)). Mỗi trang ghi các trang nguồn trong trường `sources` của frontmatter, và các trang trong mục Chính phủ, Doanh nghiệp còn liệt kê nguồn ở cuối trang.
+Nội dung chữ của Wiki ETH.vn dùng giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), còn mã nguồn dùng giấy phép MIT (xem [LICENSE.md](./LICENSE.md)). Một phần nội dung trong `content/docs/` được phỏng theo hai nguồn dưới đây. Mỗi trang ghi các trang nguồn trong trường `sources` của frontmatter. Các trang ở mục Chính phủ, Doanh nghiệp, Nhà đầu tư và Lập trình viên còn liệt kê nguồn ở cuối trang.
 
-## Giấy phép của nội dung gốc
+Wiki ETH.vn không được ethereum.org, Quỹ Ethereum hay chương trình Ethereum Protocol Fellowship bảo trợ.
+
+## EPF wiki
+
+Các bài trong `content/docs/lap-trinh-vien/giao-thuc/` phỏng theo [EPF wiki](https://epf.wiki) của nhóm học Ethereum Protocol Fellowship ([mã nguồn](https://github.com/eth-protocol-fellows/protocol-studies)).
+
+- **Tác giả gốc:** những người đóng góp cho kho `eth-protocol-fellows/protocol-studies`.
+- **Giấy phép:** [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/). Vì điều khoản "chia sẻ tương tự" (ShareAlike), nội dung chữ của wiki cũng dùng CC BY-SA 4.0.
+- **Thay đổi:** nội dung được dịch sang tiếng Việt, rút gọn cho lập trình viên ứng dụng, sắp xếp lại, bổ sung từ ethereum.org và các EIP, và cập nhật tới tháng 11 năm 2026 (EPF wiki dùng bản tháng 5 năm 2026). Mỗi bài liệt kê các trang EPF đã dùng trong phần "Nguồn".
+
+## ethereum.org
 
 Theo [điều khoản sử dụng của ethereum.org](https://ethereum.org/terms-of-use/), trừ khi ghi khác:
 
@@ -13,7 +23,9 @@ Theo [điều khoản sử dụng của ethereum.org](https://ethereum.org/terms
 
 - **Tác giả gốc:** những người đóng góp cho ethereum.org.
 - **Liên kết tới giấy phép:** như trên.
-- **Thay đổi:** nội dung được dịch sang tiếng Việt, rút gọn, sắp xếp lại và bổ sung; số liệu được cập nhật và ghi ngày. Wiki ETH.vn không được ethereum.org hay Quỹ Ethereum bảo trợ.
+- **Thay đổi:** nội dung được dịch sang tiếng Việt, rút gọn, sắp xếp lại và bổ sung; số liệu được cập nhật và ghi ngày.
+
+CC BY 4.0 cho phép phát hành bản phỏng theo dưới CC BY-SA 4.0.
 
 ## Nguồn khác
 

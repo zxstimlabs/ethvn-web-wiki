@@ -12,6 +12,12 @@ export const homeDescription =
  */
 export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3123').replace(/\/$/, '');
 export const docsRoute = '/tai-lieu';
+
+/** The wiki's text licence (code is MIT): see LICENSE.md and NOTICE.md. */
+export const contentLicense = {
+  name: 'CC BY-SA 4.0',
+  url: 'https://creativecommons.org/licenses/by-sa/4.0/',
+} as const;
 /** Where "Đọc wiki" and /tai-lieu lead: the Căn bản section. */
 export const docsHome = '/tai-lieu/can-ban';
 export const docsImageRoute = '/og/tai-lieu';

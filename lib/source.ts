@@ -1,6 +1,6 @@
 import { llms, loader } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
-import { docsRoute, siteUrl } from './shared';
+import { appName, contentLicense, docsRoute, siteUrl } from './shared';
 import { defineDocs } from 'fumadocs-mdx/macro';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
 
@@ -55,7 +55,11 @@ export function absoluteLinks(markdown: string, dir = '') {
 export const docsLlms = llms(source, {
   renderPage: async (page) => `# ${page.data.title} (${siteUrl}${page.url})
 
-${absoluteLinks(await page.data.getText('processed'), page.path.split('/').slice(0, -1).join('/'))}`,
+${absoluteLinks(await page.data.getText('processed'), page.path.split('/').slice(0, -1).join('/'))}
+
+---
+
+${appName}, giấy phép ${contentLicense.name} (${contentLicense.url}).`,
 });
 
 /** llms.txt: every page with its description, linking to the Markdown copies. */

@@ -11,7 +11,7 @@ import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
-import { getPageImageUrl, getPageMarkdownUrl, gitConfig } from '@/lib/shared';
+import { contentLicense, getPageImageUrl, getPageMarkdownUrl, gitConfig } from '@/lib/shared';
 import { buildMetadata } from '@/lib/metadata';
 import { pageTrail } from '@/lib/sections';
 
@@ -42,6 +42,13 @@ export default async function Page(props: PageProps<'/tai-lieu/[[...slug]]'>) {
           })}
         />
       </DocsBody>
+      <p className="mt-8 border-t pt-4 text-xs text-fd-muted-foreground">
+        Nội dung theo giấy phép{' '}
+        <a href={contentLicense.url} className="underline underline-offset-2 hover:text-fd-foreground">
+          {contentLicense.name}
+        </a>
+        . Một số bài phỏng theo ethereum.org (CC BY 4.0) và EPF wiki (CC BY-SA 4.0); nguồn của từng bài được ghi trong bài.
+      </p>
     </DocsPage>
   );
 }
