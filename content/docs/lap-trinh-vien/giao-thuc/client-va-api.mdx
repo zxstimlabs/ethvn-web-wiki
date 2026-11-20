@@ -1,0 +1,209 @@
+---
+title: Phần mềm client và API
+description: Những phần mềm lớp thực thi và lớp đồng thuận đang chạy mạng chính, vì sao đa dạng phần mềm quan trọng, cách gọi JSON-RPC và Beacon API, và khi nào nên tự chạy nút thay vì dùng nhà cung cấp RPC.
+sources:
+  - https://epf.wiki/#/wiki/EL/el-clients
+  - https://epf.wiki/#/wiki/CL/cl-clients
+  - https://epf.wiki/#/wiki/EL/JSON-RPC
+  - https://epf.wiki/#/wiki/CL/beacon-api
+  - https://epf.wiki/#/wiki/testing/incidents
+  - https://epf.wiki/#/wiki/research/history-expiry/history-expiry
+  - https://ethereum.org/developers/docs/nodes-and-clients/
+  - https://ethereum.org/developers/docs/nodes-and-clients/client-diversity/
+  - https://ethereum.org/developers/docs/nodes-and-clients/run-a-node/
+  - https://ethereum.org/developers/docs/nodes-and-clients/nodes-as-a-service/
+  - https://ethereum.org/developers/docs/nodes-and-clients/archive-nodes/
+  - https://ethereum.org/developers/docs/apis/json-rpc/
+  - https://github.com/ethereum/execution-apis
+  - https://github.com/ethereum/beacon-APIs
+---
+
+Ethereum được định nghĩa bằng đặc tả, không phải bằng một chương trình. Nhiều nhóm độc lập viết phần mềm theo cùng đặc tả đó, bằng nhiều ngôn ngữ khác nhau. Ứng dụng của bạn nói chuyện với một trong các phần mềm ấy qua JSON-RPC, thường qua một thư viện như viem, và thường qua máy của một nhà cung cấp.
+
+Bài này giới thiệu các phần mềm đó, giải thích vì sao việc mạng lưới dùng nhiều phần mềm khác nhau là một cơ chế an toàn, rồi đi vào các phương thức JSON-RPC bạn sẽ dùng hằng ngày. Bài [Kiến trúc](./kien-truc.mdx) giải thích vì sao mỗi nút có hai lớp.
+
+## Các phần mềm lớp thực thi
+
+| Phần mềm | Ngôn ngữ | Nhóm phát triển | Ghi chú |
+|---|---|---|---|
+| Geth | Go | Quỹ Ethereum (EF) | Phần mềm lâu đời nhất còn được duy trì |
+| Nethermind | C# (.NET) | Nethermind | |
+| Besu | Java | Dự án mã nguồn mở thuộc Linux Foundation, do Consensys khởi đầu | Dùng được cho cả chuỗi riêng |
+| Erigon | Go | Erigon | Tách ra từ Geth, tối ưu cho nút lưu trữ, có sẵn lớp đồng thuận riêng (Caplin) |
+| Reth | Rust | Paradigm | Bản 1.0 ổn định từ tháng 6 năm 2024 |
+| ethrex | Rust | LambdaClass | Mới nhất. ethereum.org ghi là hỗ trợ mạng chính, EPF wiki vẫn xếp vào nhóm đang phát triển |
+
+EthereumJS (TypeScript) và Nimbus bản lớp thực thi (Nim) đang phát triển, chưa dùng cho mạng chính.
+
+## Các phần mềm lớp đồng thuận
+
+| Phần mềm | Ngôn ngữ | Nhóm phát triển |
+|---|---|---|
+| Lighthouse | Rust | Sigma Prime |
+| Prysm | Go | Offchain Labs (trước là Prysmatic Labs) |
+| Teku | Java | Consensys |
+| Nimbus | Nim | Status. Nhẹ, chạy được trên máy cấu hình thấp |
+| Lodestar | TypeScript | ChainSafe |
+| Grandine | Rust | Nhóm Grandine |
+
+Mỗi phần mềm lớp đồng thuận đi kèm phần mềm xác thực của riêng nó. Bài này không đưa tỉ lệ sử dụng của từng phần mềm vì con số thay đổi liên tục. Bạn có thể xem số liệu hiện tại ở [clientdiversity.org](https://clientdiversity.org) và [supermajority.info](https://supermajority.info).
+
+## Vì sao đa dạng phần mềm quan trọng
+
+Mọi phần mềm theo cùng một đặc tả, nhưng mỗi phần mềm có lỗi riêng. Khi một phần mềm có lỗi, hậu quả phụ thuộc vào lượng ETH đặt cọc của các trình xác thực dùng nó, vì phiếu **chứng thực** (attestation) được tính theo ETH đặt cọc. Hai ngưỡng quan trọng là 1/3 và 2/3, vì cần phiếu của 2/3 tổng ETH đặt cọc để một **mốc** (checkpoint) **được chứng minh** (justified), như bài [Khối](../../can-ban/cach-hoat-dong/khoi.mdx) mô tả.
+
+| Phần mềm lỗi chiếm | Điều gì xảy ra |
+|---|---|
+| Dưới 1/3 | Các nút dùng nó tách ra hoặc dừng lại. Phần còn lại vẫn ra khối và vẫn đạt **tính cuối cùng** (finality). Trình xác thực dùng phần mềm lỗi mất phần thưởng và bị phạt nhẹ vì vắng mặt, tới khi sửa xong |
+| Trên 1/3 | Phần còn lại không đủ 2/3 để chứng minh mốc. Chuỗi vẫn ra khối nhưng mất tính cuối cùng. Khi tính cuối cùng chậm quá 4 **kỷ nguyên** (epoch), cơ chế trừ dần tiền cọc khi vắng mặt bắt đầu, tới khi phía còn hoạt động chiếm lại 2/3 |
+| Trên 2/3 | Phần mềm lỗi tự đủ phiếu để đưa một nhánh sai tới tính cuối cùng. Theo ethereum.org, trình xác thực trên nhánh đó bị kẹt: muốn quay về nhánh đúng thì phải chịu **cắt tiền cọc** (slashing), hoặc rút ra rồi đặt cọc lại, vừa chậm vừa tốn kém |
+
+Lớp thực thi cũng vậy. Nếu phần mềm lớp thực thi của đa số trình xác thực chấp nhận một khối sai, lớp đồng thuận của họ sẽ bỏ phiếu cho khối đó. Vì vậy ethereum.org khuyên không phần mềm nào, ở lớp nào, nên vượt 1/3.
+
+Những sự cố đã xảy ra, theo EPF wiki và các bản báo cáo sự cố:
+
+- **2016, tấn công từ chối dịch vụ ở Thượng Hải.** Kẻ tấn công lợi dụng các lệnh bị định giá quá rẻ để buộc Geth đọc ổ đĩa hàng chục nghìn lần mỗi khối. Các phần mềm khác không có điểm yếu này nên mạng vẫn chạy, và hai đợt nâng cấp Tangerine Whistle, Spurious Dragon sau đó tăng giá các lệnh bị lợi dụng.
+- **27/8/2021, chuỗi tách ở khối 13.107.518**, khi Ethereum còn dùng bằng chứng công việc. Một lỗi xử lý bộ nhớ trong Geth khiến các nút chưa cập nhật bản 1.10.8 (phát hành ba ngày trước) tính ra gốc trạng thái khác và đi theo một nhánh thiểu số. Vì đa số đã cập nhật, nhánh đúng vẫn thắng.
+- **11 và 12/5/2023, mạng chính mất tính cuối cùng hai lần**, khoảng 25 phút và khoảng một giờ. Prysm và Teku bị quá tải khi xử lý các chứng thực cũ. Theo một phân tích trên ethresear.ch, tỉ lệ tham gia có lúc xuống khoảng 31%. Các phần mềm khác vẫn chạy nên khối vẫn được tạo ra. Prysm 4.0.4 và Teku 23.5.0 sửa lỗi này.
+- **24/2/2025, mạng thử nghiệm Holesky.** Khi Pectra kích hoạt, Geth, Nethermind và Besu bị cấu hình sai địa chỉ hợp đồng đặt cọc, nên chấp nhận một khối không hợp lệ. Các nút dùng ba phần mềm này chiếm siêu đa số, nên nhánh sai được chứng minh, và Holesky mất tính cuối cùng gần hai tuần, tới ngày 10/3/2025. EIP-7910 lấy sự cố này làm ví dụ chính khi đề xuất phương thức `eth_config`, nói ở phần sau.
+- **Đầu tháng 9 năm 2025, Reth.** Một lỗi cập nhật cây trạng thái khiến một số nút Reth tính sai gốc trạng thái và dừng lại. Reth là phần mềm thiểu số nên mạng không bị ảnh hưởng.
+
+<Callout type="info" title="Lưu ý">
+Sự cố ở Holesky là trường hợp "trên 2/3" xảy ra thật, may mắn là trên mạng thử nghiệm. Với ứng dụng, bài học là: nếu nhà cung cấp RPC của bạn chỉ chạy một phần mềm, bạn thừa hưởng mọi lỗi của phần mềm đó.
+</Callout>
+
+## JSON-RPC cho lập trình viên ứng dụng
+
+Lớp thực thi mở **JSON-RPC**, theo đặc tả ở `ethereum/execution-apis`. Mỗi yêu cầu là một đối tượng JSON gửi qua HTTP, WebSocket hoặc IPC. Geth mặc định nghe HTTP ở cổng 8545. Các nhóm phương thức `eth_`, `net_`, `web3_` là chuẩn chung. Các nhóm `debug_`, `trace_`, `txpool_`, `admin_` tùy từng phần mềm, và `admin_` không bao giờ nên mở ra ngoài.
+
+### Thẻ khối
+
+Nhiều phương thức nhận một tham số khối: số khối, mã băm khối (EIP-1898), hoặc một thẻ.
+
+| Thẻ | Nghĩa | Khi nào dùng |
+|---|---|---|
+| `latest` | Đầu chuỗi theo quy tắc chọn nhánh của lớp đồng thuận. Có thể bị thay ngay cả khi mạng bình thường | Hiển thị, ước lượng |
+| `safe` | Khối được coi là không bị đảo ngược nếu đa số trình xác thực trung thực và mạng không trễ bất thường. Cách tính tùy phần mềm lớp đồng thuận: thường là khối của mốc được chứng minh gần nhất, đặc tả mới có thêm quy tắc xác nhận nhanh | Giá trị vừa phải, cần nhanh hơn `finalized` |
+| `finalized` | Khối đã đạt tính cuối cùng. Muốn đảo ngược phải đốt ít nhất 1/3 tổng ETH đặt cọc. Chậm hơn `latest` khoảng 13 tới 19 phút | Ghi nhận tiền nạp, giao hàng, rút tiền sang chuỗi khác |
+| `pending` | Khối mẫu nút tự dựng từ mempool của nó. Mỗi nút một khác | Ít khi cần |
+| `earliest` | Khối thấp nhất nút còn giữ. Theo đặc tả hiện tại, không nhất thiết là khối đầu tiên của chuỗi | Hiếm |
+
+### Các phương thức bạn sẽ dùng nhiều nhất
+
+| Phương thức | Làm gì | Cần biết |
+|---|---|---|
+| `eth_call` | Chạy một lời gọi trên trạng thái của một khối, không tạo giao dịch, không tốn phí | Mọi hàm `view` đều đi qua đây. Geth mặc định giới hạn mỗi lời gọi 50 triệu gas và 5 giây |
+| `eth_estimateGas` | Tìm lượng gas nhỏ nhất để giao dịch chạy thành công trên trạng thái hiện tại | Trạng thái có thể đổi trước khi giao dịch vào khối, nên cộng thêm một khoản dư. Từ Fusaka, giao dịch dùng quá 16.777.216 gas là không hợp lệ, nên thao tác lớn hơn phải chia nhỏ |
+| `eth_sendRawTransaction` | Gửi một giao dịch đã ký, trả về ngay mã băm giao dịch | Có mã băm chưa có nghĩa giao dịch sẽ vào khối. Hãy theo dõi biên lai |
+| `eth_getLogs` | Tìm **nhật ký** (log) theo khoảng khối, địa chỉ và chủ đề | Nhà cung cấp thường giới hạn số khối mỗi truy vấn hoặc số kết quả, mỗi nơi một mức: hãy chia nhỏ khoảng khối. Dùng `blockHash` (EIP-234) để lấy đúng một khối |
+| `eth_getProof` | Trả về tài khoản và các ô storage kèm bằng chứng Merkle (EIP-1186) | Bạn tự kiểm chứng được kết quả với gốc trạng thái trong phần đầu khối, không cần tin nhà cung cấp. Theo EIP-1186, khóa storage là chuỗi 32 byte: một số nút từ chối dạng rút gọn như `0x0` |
+| `eth_config` | Cấu hình của đợt nâng cấp hiện tại và đợt kế tiếp: chain ID, thời điểm kích hoạt, thông số blob, danh sách precompile và hợp đồng hệ thống (EIP-7910) | Mọi phần mềm phải hỗ trợ từ Fusaka. Dùng để kiểm tra nút đã sẵn sàng cho đợt nâng cấp tới |
+
+Một **nút đầy đủ** (full node) chỉ giữ trạng thái của các khối gần đây, thường là 128 khối. Gọi `eth_call` hay `eth_getProof` trên khối cũ hơn cần một **nút lưu trữ** (archive node).
+
+<Callout type="warn" title="Quan trọng">
+Glamsterdam đã chạy trên Sepolia từ ngày 6/10/2026, chưa có ngày cho Hoodi và mạng chính. Hai điều cần biết nếu bạn thử nghiệm trên Sepolia:
+
+- **Mọi lần chuyển ETH phát một nhật ký** (EIP-7708), từ địa chỉ `0xff…fe`, với cùng chủ đề như sự kiện `Transfer` của ERC-20. Bộ lập chỉ mục chỉ lọc theo chủ đề mà không lọc theo địa chỉ hợp đồng sẽ nhận nhầm chúng thành chuyển token.
+- **Giá gas khác mạng chính.** Glamsterdam đổi phí cơ bản của giao dịch (EIP-2780), giá tạo và truy cập trạng thái (EIP-8037, EIP-8038) và giá calldata (EIP-7976). Kết quả `eth_estimateGas` trên Sepolia không dùng lại được cho mạng chính.
+</Callout>
+
+Gọi thẳng bằng `curl` để thấy cấu trúc yêu cầu:
+
+```bash
+export RPC=http://127.0.0.1:8545   # anvil, nút của bạn, hoặc URL của nhà cung cấp
+
+# Khối đã đạt tính cuối cùng gần nhất. false: chỉ lấy mã băm các giao dịch
+curl -s $RPC -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBlockByNumber","params":["finalized",false]}'
+```
+
+Kết quả có dạng `{"jsonrpc":"2.0","id":1,"result":{...}}`, hoặc có trường `error` thay cho `result` nếu lỗi. Trong công việc hằng ngày, `cast` của Foundry gọn hơn:
+
+```bash
+export TOKEN=0x...   # địa chỉ một hợp đồng token ERC-20
+export USER=0x...    # một địa chỉ đang giữ token đó
+export TO=0x...      # một địa chỉ nhận
+
+# eth_call: số dư token của USER tại khối safe
+cast call $TOKEN "balanceOf(address)(uint256)" $USER --block safe --rpc-url $RPC
+
+# eth_estimateGas: chuyển 1000 đơn vị nhỏ nhất của token từ USER sang TO cần bao nhiêu gas
+cast estimate $TOKEN "transfer(address,uint256)" $TO 1000 --from $USER --rpc-url $RPC
+
+# eth_getLogs: các sự kiện Transfer của token trong 1.000 khối
+cast logs --from-block 23000000 --to-block 23000999 --address $TOKEN \
+  "Transfer(address indexed,address indexed,uint256)" --rpc-url $RPC
+
+# eth_getProof: tài khoản của hợp đồng và ô storage số 0, kèm bằng chứng
+cast proof $TOKEN 0 --block finalized --rpc-url $RPC
+
+# eth_config: cấu hình nâng cấp hiện tại và kế tiếp
+cast rpc eth_config --rpc-url $RPC
+
+# eth_sendRawTransaction: gửi một giao dịch đã ký sẵn, ví dụ do cast mktx tạo
+cast publish $SIGNED_TX --rpc-url $RPC
+```
+
+Các lệnh trên đã chạy thử với cast 1.5.1 trên anvil vào tháng 11 năm 2026. Kết quả trên mạng chính thay đổi theo từng khối nên không in ở đây.
+
+## Beacon API
+
+Lớp đồng thuận mở **Beacon API**, một API REST theo đặc tả ở `ethereum/beacon-APIs`. Phần mềm xác thực dùng nó để nhận nhiệm vụ và gửi chữ ký. Ứng dụng thường dùng nó để theo dõi tính cuối cùng, xem thông tin trình xác thực, hoặc, với Layer 2 và bộ lập chỉ mục, để lấy dữ liệu blob.
+
+```bash
+export BEACON=http://127.0.0.1:5052   # cổng mặc định của Lighthouse khi bật --http
+
+# Mốc được chứng minh và mốc đạt tính cuối cùng hiện tại
+curl -s $BEACON/eth/v1/beacon/states/head/finality_checkpoints
+
+# Nút đã đồng bộ xong chưa
+curl -s $BEACON/eth/v1/node/syncing
+
+# Các blob của khối mới nhất
+curl -s $BEACON/eth/v1/beacon/blobs/head
+```
+
+Các đường dẫn trên lấy từ đặc tả Beacon API. Từ Fusaka, chỉ những nút giữ đủ mọi cột dữ liệu mới bắt buộc trả lời yêu cầu lấy blob. Mạng chỉ phải giữ dữ liệu blob trong 4.096 kỷ nguyên, khoảng 18 ngày. Nếu ứng dụng cần blob lâu hơn, bạn phải tự lưu.
+
+## Tự chạy nút hay dùng nhà cung cấp RPC
+
+| | Nhà cung cấp RPC | Nút của bạn |
+|---|---|---|
+| Tin cậy | Bạn tin họ trả lời đúng và không giấu giao dịch của bạn | Nút tự kiểm tra mọi khối |
+| Riêng tư | Họ thấy địa chỉ IP và mọi địa chỉ ví bạn hỏi | Không ai thấy |
+| Giới hạn | Giới hạn số yêu cầu, giới hạn `eth_getLogs`, có thể tính phí theo lượng dùng | Bạn tự đặt. Với Geth, `--rpc.rangelimit` mặc định không giới hạn số khối |
+| Phương thức | Nhiều nơi có nút lưu trữ và `debug_`, `trace_` | Phải tự bật, và nút lưu trữ cần nhiều ổ đĩa hơn hẳn |
+| Công sức | Gần như không | Cập nhật trước mỗi đợt nâng cấp, theo dõi ổ đĩa |
+
+Một nút đầy đủ, theo khuyến nghị của EIP-7870, cần SSD NVMe 4 TB, 32 GB RAM, CPU 4 lõi 8 luồng và mạng 50 Mbit/s tải xuống, 15 Mbit/s tải lên. Bài [Nút](../../can-ban/cach-hoat-dong/nut.mdx) có bảng đầy đủ.
+
+Có những cách ở giữa: dùng hai nhà cung cấp chạy hai phần mềm khác nhau và so kết quả cho những thao tác quan trọng, kiểm chứng kết quả bằng `eth_getProof`, hoặc dùng một nút nhẹ như Helios. Nút nhẹ dựa vào **ủy ban đồng bộ** (sync committee), 512 trình xác thực được chọn ngẫu nhiên khoảng mỗi 27 giờ để ký phần đầu các khối mới.
+
+## Đồng bộ một nút mới
+
+- **Lớp thực thi.** Mặc định là **đồng bộ snap** (snap sync): tải trạng thái gần đây từ các nút khác và kiểm tra nó với gốc trạng thái, rồi chạy tiếp từng khối. **Đồng bộ đầy đủ** (full sync) chạy lại mọi giao dịch từ khối đầu tiên, mất nhiều ngày tới nhiều tuần.
+- **Lớp đồng thuận.** **Đồng bộ từ mốc** (checkpoint sync): tải một trạng thái đã đạt tính cuối cùng gần đây từ một nút Beacon bạn tin, rồi kiểm tra tiếp từ đó, thay vì bắt đầu từ năm 2020, nên thường chỉ mất vài phút. Lighthouse nhận địa chỉ nút đó qua cờ `--checkpoint-sync-url`. Hãy so mã băm của mốc với một nguồn thứ hai, như một trình khám phá khối.
+- **Lịch sử cũ.** Theo EPF wiki, các phần mềm đang triển khai việc bỏ dữ liệu khối từ trước The Merge (giai đoạn đầu của EIP-4444). Một nút đầy đủ có thể không còn khối và biên lai cũ, nên `eth_getLogs` trên khoảng khối rất cũ có thể không trả về gì.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **Chọn thẻ khối theo rủi ro.** Giao diện dùng `latest`. Ghi nhận tiền nạp hay giao hàng thì đợi `finalized`.
+- **Đọc nhật ký theo trang.** Chia `eth_getLogs` thành các khoảng nhỏ, lưu lại khối đã đọc, và xử lý các nhật ký có `removed: true` khi một khối bị thay thế.
+- **Đừng tin tuyệt đối vào `eth_estimateGas`.** Cộng thêm một khoản dư, và chạy lại `eth_call` ngay trước khi gửi.
+- **Không phụ thuộc vào một nguồn.** Với số dư lớn hay thao tác không đảo ngược được, so kết quả từ hai nhà cung cấp, hoặc kiểm chứng bằng `eth_getProof`.
+- **Kiểm tra mạng trước khi ký.** Đối chiếu chain ID, và dùng `eth_config` để biết nút đã sẵn sàng cho đợt nâng cấp tới chưa.
+- **Lưu blob bạn cần.** Dữ liệu blob hết hạn sau khoảng 18 ngày.
+- **Lọc nhật ký theo cả địa chỉ hợp đồng**, không chỉ theo chủ đề. Từ Glamsterdam, chuyển ETH cũng phát nhật ký `Transfer`.
+- **Nếu tự chạy nút:** chỉ mở `eth_`, `net_`, `web3_` cho ứng dụng, đóng `admin_` và `debug_`, và dùng phần mềm thiểu số khi có thể.
+
+## Nguồn
+
+- EPF wiki: [Execution clients](https://epf.wiki/#/wiki/EL/el-clients), [Consensus clients](https://epf.wiki/#/wiki/CL/cl-clients), [JSON-RPC](https://epf.wiki/#/wiki/EL/JSON-RPC), [Beacon API](https://epf.wiki/#/wiki/CL/beacon-api), [Incidents](https://epf.wiki/#/wiki/testing/incidents), [History expiry](https://epf.wiki/#/wiki/research/history-expiry/history-expiry)
+- ethereum.org: [Nodes and clients](https://ethereum.org/developers/docs/nodes-and-clients/), [Client diversity](https://ethereum.org/developers/docs/nodes-and-clients/client-diversity/), [Run a node](https://ethereum.org/developers/docs/nodes-and-clients/run-a-node/), [Nodes as a service](https://ethereum.org/developers/docs/nodes-and-clients/nodes-as-a-service/), [Archive nodes](https://ethereum.org/developers/docs/nodes-and-clients/archive-nodes/), [JSON-RPC API](https://ethereum.org/developers/docs/apis/json-rpc/)
+- Đặc tả: [ethereum/execution-apis](https://github.com/ethereum/execution-apis) (JSON-RPC), [ethereum/beacon-APIs](https://github.com/ethereum/beacon-APIs), [ethereum/consensus-specs](https://github.com/ethereum/consensus-specs)
+- EIP: [234](https://eips.ethereum.org/EIPS/eip-234), [1186](https://eips.ethereum.org/EIPS/eip-1186), [1898](https://eips.ethereum.org/EIPS/eip-1898), [2780](https://eips.ethereum.org/EIPS/eip-2780), [4444](https://eips.ethereum.org/EIPS/eip-4444), [7708](https://eips.ethereum.org/EIPS/eip-7708), [7773](https://eips.ethereum.org/EIPS/eip-7773), [7825](https://eips.ethereum.org/EIPS/eip-7825), [7870](https://eips.ethereum.org/EIPS/eip-7870), [7910](https://eips.ethereum.org/EIPS/eip-7910), [7976](https://eips.ethereum.org/EIPS/eip-7976), [8037](https://eips.ethereum.org/EIPS/eip-8037), [8038](https://eips.ethereum.org/EIPS/eip-8038)
+- Báo cáo sự cố: [Geth, tách chuỗi 8/2021](https://github.com/ethereum/go-ethereum/blob/master/docs/postmortems/2021-08-22-split-postmortem.md), [mất tính cuối cùng 5/2023 (ethresear.ch)](https://ethresear.ch/t/cascading-network-effects-on-ethereums-finality/15871), [Holesky 2/2025 (Sigma Prime)](https://sigmaprime.io/blog/pectra-holesky-incident/)
+- Mã nguồn Geth (`cmd/utils/flags.go`, `eth/ethconfig/config.go`) và Lighthouse (`beacon_node/src/cli.rs`), đọc ngày 20/11/2026, cho các cờ và giá trị mặc định nêu trong bài
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

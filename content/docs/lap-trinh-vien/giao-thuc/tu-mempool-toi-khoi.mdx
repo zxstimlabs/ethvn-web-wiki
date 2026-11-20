@@ -1,0 +1,162 @@
+---
+title: Từ mempool tới khối
+description: Giao dịch của bạn đi đâu sau khi gửi, ai xếp nó vào khối và theo thứ tự nào. Mempool, MEV, MEV-Boost với người xây khối và relay, và những gì ePBS và FOCIL sẽ thay đổi.
+sources:
+  - https://epf.wiki/#/wiki/EL/block-production
+  - https://epf.wiki/#/wiki/research/PBS/mev
+  - https://epf.wiki/#/wiki/research/PBS/mev-boost
+  - https://epf.wiki/#/wiki/research/PBS/pbs
+  - https://epf.wiki/#/wiki/research/PBS/ePBS
+  - https://ethereum.org/developers/docs/mev/
+  - https://ethereum.org/developers/docs/blocks/
+  - https://ethereum.org/roadmap/glamsterdam/
+  - https://ethereum.org/roadmap/hegota/
+---
+
+Khi bạn bấm "gửi", giao dịch chưa vào chuỗi khối ngay. Nó đi qua nhiều nút, nằm chờ, rồi một ai đó chọn nó và đặt nó vào một vị trí trong khối. Ai chọn, và xếp theo thứ tự nào, quyết định giá bạn nhận được khi đổi token, và liệu có ai kiếm lời trên giao dịch của bạn hay không.
+
+Bài này đi theo đường đi đó trên mạng chính hiện nay (sau nâng cấp Fusaka), rồi nói những gì đã được lên kế hoạch. Phần cơ bản về khối có ở bài [Khối](../../can-ban/cach-hoat-dong/khoi.mdx) của mục Căn bản.
+
+## Mempool: hàng chờ không của riêng ai
+
+Ví gửi giao dịch đã ký tới một nút qua RPC (`eth_sendRawTransaction`). Nút kiểm tra chữ ký, nonce, số dư có đủ trả phí tối đa không, và giới hạn gas có vượt mức cho phép không (từ Fusaka, mỗi giao dịch tối đa 2<sup>24</sup> gas). Hợp lệ thì giao dịch vào **mempool** (hàng chờ giao dịch) của nút đó, rồi được chuyển cho các **nút ngang hàng** (peer). Các kiểu giao dịch và trường của chúng có ở bài [Giao dịch](./giao-dich.mdx), còn cách các nút nối với nhau có ở bài [Mạng ngang hàng](./mang-ngang-hang.mdx).
+
+- **Mỗi nút có mempool riêng.** Không có một mempool chung nào. Hai nút có thể đang giữ hai tập giao dịch hơi khác nhau.
+- **Lan truyền theo hai cách.** Theo giao thức `eth` giữa các nút lớp thực thi, nút gửi nguyên giao dịch cho một số nút ngang hàng, và chỉ báo mã băm cho số còn lại. Nút nào chưa có thì xin. Giao dịch blob thì chỉ được báo mã băm (EIP-4844 bắt buộc vậy). Một số client, như Geth, cũng chỉ báo mã băm cho giao dịch lớn.
+- **Chờ chạy và chờ nonce.** Giao dịch có nonce nối tiếp nonce hiện tại của tài khoản thì sẵn sàng vào khối. Giao dịch có nonce nhảy cóc phải đợi các nonce trước nó.
+- **Thay thế.** Gửi giao dịch mới cùng nonce, phí cao hơn, để thay giao dịch đang chờ. Geth đòi phí cao hơn ít nhất 10% (100% với giao dịch blob). Đây là chính sách của từng phần mềm client, không phải luật đồng thuận.
+
+Điều quan trọng nhất: mempool là công khai. Ai chạy nút cũng thấy giao dịch của bạn, với đầy đủ tham số, trước khi nó vào khối. Trong số đó có những chương trình chuyên săn lợi nhuận.
+
+## Nút tự xây khối thế nào
+
+Mỗi nút có hai phần mềm: lớp đồng thuận và lớp thực thi (xem [Kiến trúc](./kien-truc.mdx)). Khi trình xác thực của nút được chọn làm **người đề xuất** (proposer) cho một khe (cách chọn có ở bài [Đồng thuận](./dong-thuan.mdx)), hai lớp nói chuyện với nhau qua Engine API:
+
+```text
+Lớp đồng thuận                                 Lớp thực thi
+engine_forkchoiceUpdatedV3(đầu chuỗi,      ──▶  bắt đầu xây khối,
+  thời gian, RANDAO, địa chỉ nhận phí,          trả về payloadId
+  danh sách rút tiền)
+          … vài giây sau …
+engine_getPayloadV5(payloadId)             ──▶  trả về phần thực thi,
+                                                blockValue, blob
+ký khối beacon, phát lên mạng
+```
+
+Phần mềm lớp thực thi thường làm ngay một khối rỗng để không bỏ lỡ khe, rồi liên tục lấp đầy nó:
+
+1. Lấy giao dịch trả **phí ưu tiên** (priority fee, xem [Phí gas](../../can-ban/bat-dau/phi-gas.mdx)) cao nhất trong mempool, nhưng giữ đúng thứ tự nonce của từng người gửi.
+2. Chạy thử giao dịch trên trạng thái hiện tại. Giao dịch không hợp lệ (sai nonce, không đủ tiền trả phí) bị bỏ qua. Giao dịch bị revert thì vẫn vào khối và vẫn mất phí cho phần đã chạy.
+3. Dừng khi hết chỗ trong giới hạn gas của khối, hoặc hết giao dịch. Blob có giới hạn số lượng riêng.
+
+`blockValue` là tổng phí ưu tiên mà khối trả cho địa chỉ nhận phí. Con số này dùng để so với giá của người xây khối bên ngoài, ở phần sau. Khi khối được phát lên mạng, mỗi nút khác gọi `engine_newPayload` để lớp thực thi của mình chạy lại và kiểm tra nó.
+
+Không có luật giao thức nào quy định thứ tự giao dịch trong khối. Sắp theo phí chỉ là cách mặc định của phần mềm client. Ai xây khối thì toàn quyền chọn, bỏ và xếp thứ tự.
+
+## MEV: giá trị từ quyền xếp thứ tự
+
+**MEV** (maximal extractable value) là giá trị kiếm được nhờ quyền đưa vào, bỏ ra và xếp thứ tự giao dịch trong khối, ngoài phần thưởng và phí thông thường. Thời bằng chứng công việc, nó được gọi là "miner extractable value", vì thợ đào nắm quyền đó.
+
+| Loại | Cách làm | Ai chịu |
+|---|---|---|
+| **Kinh doanh chênh lệch giá** (arbitrage) | Hai sàn phi tập trung lệch giá: mua bên rẻ, bán bên đắt, trong cùng một giao dịch | Người cung cấp thanh khoản cho sàn bị lệch giá |
+| **Thanh lý** (liquidation) | Khoản vay không còn đủ tài sản bảo đảm: ai thanh lý trước được nhận phần thưởng thanh lý | Người vay, vốn đã chấp nhận luật này |
+| **Kẹp lệnh** (sandwich) | Thấy một lệnh đổi lớn trong mempool: mua ngay trước nó (chạy trước, front-running), để lệnh đó đẩy giá lên, rồi bán ngay sau nó (chạy sau, back-running) | Người đặt lệnh, nhận giá tệ hơn, tới đúng mức trượt giá họ cho phép |
+
+Không phải MEV nào cũng xấu. Kinh doanh chênh lệch giá kéo giá các sàn về khớp nhau, và giao thức cho vay cần người thanh lý nhanh để giữ an toàn. Kẹp lệnh thì chỉ lấy tiền của người dùng. Còn có các bot "chạy trước tổng quát": thấy một giao dịch có lời trong mempool, chúng chép lại, thay địa chỉ nhận bằng địa chỉ của mình, rồi gửi với phí cao hơn.
+
+**Ai giữ phần MEV?** Người tìm cơ hội là **người săn MEV** (searcher). Họ gửi **gói giao dịch** (bundle) kèm một khoản trả cho người xây khối. Theo ethereum.org, với cơ hội ai cũng thấy, như kinh doanh chênh lệch giá, người săn MEV có thể phải trả tới 90% lợi nhuận hoặc hơn để được chọn. Cạnh tranh đẩy phần lớn giá trị lên trên: từ người săn MEV sang người xây khối, rồi dồn về người đề xuất khối.
+
+MEV cũng tạo áp lực tập trung: bên vận hành lớn đầu tư được vào việc khai thác MEV và kiếm nhiều hơn người tự đặt cọc tại nhà. Nếu MEV trong một khối đủ lớn, người đề xuất còn có động cơ tổ chức lại chuỗi để giành nó.
+
+## MEV-Boost: tách người xây khối khỏi người đề xuất
+
+Để người tự đặt cọc tại nhà cũng nhận được phần MEV như bên lớn, mà không phải tự săn MEV, phần lớn trình xác thực dùng **MEV-Boost**. Đây là cách tách người xây khối khỏi người đề xuất (proposer-builder separation, PBS) **ngoài giao thức**: giao thức chỉ thấy một khối đã ký, không biết ai xây nó.
+
+1. **Người săn MEV** gửi gói giao dịch cho người xây khối.
+2. **Người xây khối** (block builder) gộp các gói, giao dịch từ mempool công khai và từ các **luồng lệnh riêng** (private order flow) thành khối có lợi nhất. Họ gửi khối kèm **giá thầu** tới các relay. Họ thường trả người đề xuất bằng một giao dịch chuyển ETH ở cuối khối.
+3. **Relay** là nút do bên thứ ba vận hành, như Flashbots hay Ultra Sound. Relay chịu trách nhiệm bảo đảm khối hợp lệ và giá thầu được trả thật, rồi chỉ đưa cho người đề xuất phần đầu khối kèm giá thầu, giấu danh sách giao dịch.
+4. **MEV-Boost** là phần mềm chạy cạnh nút của trình xác thực. Nó hỏi các relay đã cấu hình và chọn giá thầu cao nhất. Phần mềm lớp đồng thuận so giá đó với `blockValue` của khối tự xây, và có thể dùng khối của mình nếu giá thầu thấp hơn.
+5. **Người đề xuất ký khối đã che** (blinded block): ký phần đầu khối khi chưa thấy giao dịch bên trong. Relay nhận chữ ký rồi công bố khối đầy đủ.
+
+<Callout type="info" title="Lưu ý">
+MEV-Boost chỉ có ở nút chạy trình xác thực. Nút mà ví hay nhà cung cấp RPC dùng để đọc chuỗi và gửi giao dịch không chạy nó. Relay cũng không phải một phần của nút trình xác thực: đó là dịch vụ ngoài giao thức. Còn việc chuyển tiếp giao dịch và khối giữa các nút là việc mọi nút đều làm.
+</Callout>
+
+Cách này dựa trên lòng tin. Người đề xuất tin relay sẽ công bố khối sau khi họ ký. Nếu relay không làm, khe bị trống, và người đề xuất không thể ký khối khác cho cùng khe, vì ký hai khối là lỗi bị cắt tiền cọc. Người xây khối tin relay không lấy cắp chiến lược MEV của mình. Thêm nữa, một số ít người xây khối xây phần lớn khối, và một số relay lọc bỏ giao dịch liên quan tới các địa chỉ bị trừng phạt. Trình xác thực tự chọn dùng relay nào.
+
+## Luồng lệnh riêng và RPC riêng
+
+Thay vì đưa giao dịch vào mempool công khai, bạn có thể gửi nó thẳng tới người xây khối qua một **RPC riêng**, ví dụ Flashbots Protect hay MEV Blocker. Bot trong mempool không thấy giao dịch, nên khó kẹp lệnh của bạn. Một số dịch vụ còn trả lại cho bạn một phần lợi nhuận từ các giao dịch chạy sau lệnh của bạn.
+
+Cái giá phải trả:
+
+- **Phải tin bên vận hành RPC** không tự chạy trước lệnh của bạn, và không để lộ nó.
+- **Có thể chậm hơn.** Chỉ những người xây khối nhận được giao dịch mới đưa được nó vào khối.
+- **Tập trung hơn.** Người xây khối có luồng lệnh riêng thắng đấu giá nhiều hơn, khiến thị trường xây khối dồn về ít bên.
+- **Không thay được giới hạn trượt giá.** Giá vẫn có thể đổi vì các giao dịch khác trong cùng khối.
+
+Trên nhiều Layer 2, giao dịch đi thẳng tới **bộ sắp xếp** (sequencer) chứ không qua mempool công khai, nên MEV có dạng khác. Hãy đọc tài liệu của mạng bạn dùng.
+
+## Sắp thay đổi: ePBS và danh sách bắt buộc đưa vào
+
+**ePBS** (EIP-7732) đưa việc tách người xây khối vào chính giao thức. Nó là thay đổi chính của nâng cấp Glamsterdam theo EIP-7773. Glamsterdam đã chạy trên mạng thử nghiệm Sepolia từ ngày 6 tháng 10 năm 2026, nhưng tới tháng 11 năm 2026 chưa có ngày lên mạng chính. Mọi điều dưới đây vẫn là kế hoạch:
+
+- Khối beacon không còn chứa phần thực thi, mà chỉ chứa giá thầu đã ký của một người xây khối. Người xây khối công bố phần thực thi sau, trong cùng khe.
+- Người xây khối đặt cọc trong giao thức (từ 1 ETH), và tiền trả cho người đề xuất được trừ thẳng từ khoản cọc đó. Việc trao đổi không cần một relay đáng tin ở giữa.
+- Một **ủy ban đúng hạn** (Payload Timeliness Committee, PTC) gồm 512 trình xác thực mỗi khe bỏ phiếu xem phần thực thi có được công bố đúng hạn và dữ liệu blob có sẵn hay không.
+- Theo EIP-7732, giao dịch trong khe N chỉ được mạng lưới kiểm tra rộng rãi khi khối beacon của khe N + 1 được xây lên trên nó.
+
+MEV-Boost và relay vẫn có thể tồn tại song song, vì giao thức cho phép người đề xuất nhận tiền theo cách khác.
+
+**FOCIL** (EIP-7805), **danh sách bắt buộc đưa vào** (inclusion list), nhắm vào việc chống kiểm duyệt. Mỗi khe, 16 trình xác thực mỗi người lập một danh sách tối đa 8 KiB giao dịch từ mempool công khai. Khối tiếp theo phải chứa các giao dịch đó, trừ khi chúng không hợp lệ hoặc khối đã đầy, nếu không các trình xác thực khác sẽ không bỏ phiếu cho khối. FOCIL đã được xếp lịch cho nâng cấp Hegotá (EIP-8081, vẫn ở trạng thái Draft, chưa có ngày). FOCIL chỉ bảo vệ giao dịch nằm trong mempool công khai, không bảo vệ giao dịch gửi qua kênh riêng.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+Hai tham số dưới đây là tuyến phòng thủ chính trước kẹp lệnh. Chúng nằm trong chính giao dịch, nên giữ hiệu lực bất kể ai xây khối:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+abstract contract SwapGuard {
+    error Expired(uint256 deadline);
+    error TooLittleReceived(uint256 amountOut, uint256 minAmountOut);
+
+    function swap(uint256 amountIn, uint256 minAmountOut, uint256 deadline)
+        external
+        returns (uint256 amountOut)
+    {
+        // Nằm chờ quá hạn thì thôi, không khớp lệnh ở mức giá đã cũ
+        if (block.timestamp > deadline) revert Expired(deadline);
+
+        // Giá lúc giao dịch chạy trong khối, có thể khác giá lúc người dùng ký
+        amountOut = _swap(amountIn);
+
+        // Trượt giá quá mức người dùng chấp nhận: hoàn tác cả giao dịch
+        if (amountOut < minAmountOut) revert TooLittleReceived(amountOut, minAmountOut);
+    }
+
+    function _swap(uint256 amountIn) internal virtual returns (uint256 amountOut);
+}
+```
+
+Đoạn mã đã được biên dịch và kiểm thử bằng Foundry (forge 1.5.1, solc 0.8.34) vào tháng 11 năm 2026, với một kiểm thử đẩy giá xuống 1% trước lệnh của người dùng và thấy giao dịch bị hoàn tác.
+
+- **Luôn đặt giới hạn trượt giá.** Tính `minAmountOut` từ báo giá ngay trước khi ký. Đừng bao giờ để 0. Mức trượt giá cho phép chính là phần tối đa kẻ kẹp lệnh lấy được.
+- **Luôn đặt hạn chót.** Giao dịch có thể nằm trong mempool rất lâu, rồi được đưa vào khối khi giá đã khác hẳn.
+- **Cho người dùng chọn gửi qua RPC riêng** với lệnh lớn hoặc nhạy cảm về giá, và nói rõ đánh đổi.
+- **Dùng cam kết rồi tiết lộ** (commit-reveal) cho đấu giá, bỏ phiếu, trò chơi. Bước một, người dùng gửi `keccak256(abi.encode(msg.sender, value, salt))`. Bước hai, ở một khối sau, mới gửi `value` và `salt`. Đưa `msg.sender` vào mã băm để không ai chép được cam kết của người khác.
+- **Đừng giả định thứ tự giao dịch.** "Ai gửi trước được chạy trước" không tồn tại. Hai giao dịch từ hai người gửi có thể vào cùng khối theo bất kỳ thứ tự nào, hoặc vào hai khối khác nhau. Điều kiện nào cần cho một thao tác thì kiểm tra trong cùng giao dịch đó.
+- **Đừng dùng `block.timestamp` hay `block.prevrandao` làm số ngẫu nhiên** khi có tiền đặt vào kết quả. `block.timestamp` đoán trước được, vì nó cố định theo khe. `block.prevrandao` đã có trước khi khối được xây, nên người xây khối biết nó, và người đề xuất có thể tác động tới nó bằng cách bỏ khe.
+- **Tham số giao dịch không bí mật.** Mọi tham số đều hiện ra trong mempool trước khi giao dịch được thực thi. Xem thêm [Quyền riêng tư](../../can-ban/dung-ethereum/quyen-rieng-tu.mdx).
+
+## Nguồn
+
+- EPF wiki: [Block production](https://epf.wiki/#/wiki/EL/block-production), [MEV](https://epf.wiki/#/wiki/research/PBS/mev), [MEV-Boost](https://epf.wiki/#/wiki/research/PBS/mev-boost), [PBS](https://epf.wiki/#/wiki/research/PBS/pbs), [ePBS](https://epf.wiki/#/wiki/research/PBS/ePBS)
+- ethereum.org: [MEV](https://ethereum.org/developers/docs/mev/), [Khối](https://ethereum.org/developers/docs/blocks/), [Glamsterdam](https://ethereum.org/roadmap/glamsterdam/), [Hegotá](https://ethereum.org/roadmap/hegota/)
+- [Engine API](https://github.com/ethereum/execution-apis/tree/main/src/engine) và [builder-specs](https://github.com/ethereum/builder-specs) (giao diện mà MEV-Boost dùng)
+- [flashbots/mev-boost](https://github.com/flashbots/mev-boost)
+- EIP: [4844](https://eips.ethereum.org/EIPS/eip-4844), [7732](https://eips.ethereum.org/EIPS/eip-7732), [7773](https://eips.ethereum.org/EIPS/eip-7773), [7805](https://eips.ethereum.org/EIPS/eip-7805), [7825](https://eips.ethereum.org/EIPS/eip-7825), [8081](https://eips.ethereum.org/EIPS/eip-8081)
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

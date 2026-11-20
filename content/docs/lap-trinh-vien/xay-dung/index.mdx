@@ -1,0 +1,26 @@
+---
+title: Xây dựng ứng dụng
+description: Một dự án từ đầu tới cuối. Viết một máy bán token bằng Solidity, kiểm thử bằng Foundry, rồi làm giao diện web với wagmi và viem.
+---
+
+Cách học nhanh nhất là làm một thứ chạy được. Phần này đi qua đúng một dự án, từ thư mục trống tới ứng dụng web: một **máy bán token**.
+
+Giống máy bán nước ngoài phố: bạn bỏ tiền vào, máy trả hàng ra. Ở đây bạn gửi ETH tới địa chỉ của máy, và máy trả lại token tên **XU** theo tỉ giá cố định, 1 ETH đổi 1.000 XU. Máy có số hàng giới hạn, báo lỗi khi hết hàng, và chỉ chủ máy rút được ETH đã thu.
+
+Dự án nhỏ, nhưng chạm vào hầu hết những gì bạn sẽ gặp khi làm ứng dụng thật: nhận ETH, token ERC-20, phân quyền, sự kiện, lỗi tùy chỉnh, kiểm thử, triển khai, và giao diện web gọi hợp đồng.
+
+## Đọc theo thứ tự
+
+1. [Môi trường làm việc](./moi-truong.mdx): cài Foundry, tạo dự án, kèm lời nhắc để trợ lý AI dựng dự án cùng bạn.
+2. [Solidity cho người đã biết lập trình](./solidity.mdx): những gì giống và khác ngôn ngữ bạn đang dùng.
+3. [Máy bán token](./may-ban-token.mdx): viết hợp đồng, viết kiểm thử, chạy thử trên mạng nội bộ.
+
+Đang viết: bảo mật, triển khai lên mạng thử nghiệm, giao diện web với wagmi và viem, đọc sự kiện, trải nghiệm người dùng trên Layer 2, và những việc cần làm trước khi lên mạng chính.
+
+## Bạn cần gì
+
+- Biết dùng dòng lệnh (terminal) và Git.
+- Đã lập trình bằng một ngôn ngữ bất kỳ. Phần giao diện web dùng TypeScript và React.
+- Không cần tiền: mọi thứ chạy trên mạng thử nội bộ, sau đó là mạng thử nghiệm với ETH miễn phí.
+
+Mã trong các bài đã được chạy thử với Foundry, Solidity 0.8 và OpenZeppelin Contracts 5.6 vào tháng 11 năm 2026.

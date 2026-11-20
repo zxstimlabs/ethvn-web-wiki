@@ -1,0 +1,205 @@
+---
+title: EVM
+description: Máy ảo Ethereum, chiếc máy tính mà mọi nút chạy giống hệt nhau. Ethereum như một máy trạng thái, mã byte, ngăn xếp, bộ nhớ, storage, giá gas từng lệnh, lời gọi giữa các hợp đồng, và vì sao ghi storage đắt.
+sources:
+  - https://epf.wiki/#/wiki/EL/evm
+  - https://epf.wiki/#/wiki/EL/precompiled-contracts
+  - https://ethereum.org/developers/docs/evm/
+  - https://www.evm.codes/
+  - https://github.com/ethereum/execution-specs
+---
+
+Mỗi nút Ethereum xử lý giao dịch bằng cùng một chương trình: **máy ảo Ethereum** (Ethereum Virtual Machine, EVM). Với cùng trạng thái ban đầu và cùng giao dịch, mọi nút phải ra cùng một kết quả, tới từng byte. Nếu không, các nút sẽ không đồng ý với nhau về số dư của ai, và chuỗi khối tách làm đôi.
+
+Yêu cầu đó tạo ra ba tính chất của EVM:
+
+- **Tất định** (deterministic). Không có số ngẫu nhiên thật, không đọc tệp, không gọi mạng. Hợp đồng chỉ thấy giao dịch, khối hiện tại và trạng thái của chuỗi.
+- **Cô lập.** Một hợp đồng chỉ đọc và ghi được storage của chính nó. Muốn tác động tới hợp đồng khác, nó phải gọi hợp đồng đó.
+- **Tính phí từng lệnh.** Mỗi lệnh tốn một lượng [gas](../../can-ban/cach-hoat-dong/gas.mdx) cố định. Hết gas thì dừng, nên một vòng lặp vô tận không thể làm treo mạng lưới.
+
+## Ethereum là một máy trạng thái
+
+Trong khoa học máy tính, **máy trạng thái** (state machine) mô tả một hệ thống bằng ba thứ: các trạng thái nó có thể ở, các đầu vào, và một **hàm chuyển trạng thái** nhận trạng thái hiện tại cùng một đầu vào rồi trả ra trạng thái mới:
+
+```text
+Υ(S, I) = S'      S: trạng thái hiện tại, I: đầu vào, S': trạng thái mới
+```
+
+Lấy [máy bán token](../xay-dung/may-ban-token.mdx) trong phần Xây dựng ứng dụng làm ví dụ. Trạng thái: máy còn 1.000.000 XU, Alice có 0 XU. Đầu vào: Alice gửi 0,1 ETH. Trạng thái mới: máy còn 999.900 XU và 0,1 ETH, Alice có 100 XU. Nếu Alice gửi 0 ETH, hàm chuyển trạng thái trả về đúng trạng thái cũ, vì giao dịch bị từ chối.
+
+Ethereum là một máy trạng thái như vậy, ở quy mô cả mạng lưới:
+
+- **Trạng thái** là **trạng thái thế giới** (world state): một ánh xạ từ địa chỉ 20 byte tới trạng thái của tài khoản ở địa chỉ đó (số nonce, số dư, mã, storage). Bài [Trạng thái và cấu trúc dữ liệu](./trang-thai.mdx) giải thích nó được lưu thế nào.
+- **Đầu vào** là giao dịch. Giao dịch được gom thành khối, và mỗi khối đưa trạng thái thế giới sang một trạng thái mới. Chuỗi khối là chuỗi các bước chuyển đó.
+- **Hàm chuyển trạng thái** chính là EVM.
+
+Có hai loại tài khoản. **Tài khoản do khóa điều khiển** (EOA) không có mã, trừ khi đã ủy quyền theo [EIP-7702](../../can-ban/dung-ethereum/eip-7702.mdx). **Tài khoản hợp đồng** có mã EVM, và mã đó chính là hợp đồng thông minh.
+
+EVM là một **máy ảo** vì cùng lý do với máy ảo Java: mã nguồn được biên dịch thành mã byte cho một cỗ máy trừu tượng, rồi mỗi phần mềm nút tự chạy mã byte đó trên phần cứng của mình. Mỗi phần mềm client cài EVM theo cùng một đặc tả (execution-specs), bằng ngôn ngữ riêng. Ví dụ revm, bản cài đặt bằng Rust mà Reth và Foundry dùng.
+
+## Máy ngăn xếp
+
+EVM không có thanh ghi như CPU. Mỗi lệnh lấy đầu vào từ đỉnh **ngăn xếp** (stack) và đặt kết quả trở lại đó. Mỗi ô của ngăn xếp rộng 256 bit (32 byte), vừa với những giá trị Ethereum dùng nhiều nhất: số dư, và kết quả băm Keccak-256.
+
+Ngăn xếp hoạt động theo kiểu vào sau ra trước: đặt lên (push) thì nằm trên cùng, lấy xuống (pop) thì lấy cái trên cùng. Lấy từ ngăn xếp rỗng là lỗi, và lời gọi dừng lại. Ngăn xếp sâu tối đa 1.024 ô, nhưng lệnh chỉ với tới 16 ô trên cùng (các lệnh `DUP1` tới `DUP16`, `SWAP1` tới `SWAP16`). Ngăn xếp được làm mới cho mỗi lời gọi hợp đồng.
+
+<Callout type="info" title="Lưu ý">
+Giới hạn 16 ô là gốc của lỗi "Stack too deep" khi biên dịch Solidity: hàm có quá nhiều biến cục bộ và tham số cùng lúc. Cách sửa thường là gom biến vào một struct, tách hàm nhỏ hơn, hoặc biên dịch qua IR (`via_ir = true` trong `foundry.toml`).
+</Callout>
+
+## Mã byte và bộ đếm chương trình
+
+Hợp đồng được lưu trên chuỗi dưới dạng **mã byte** (bytecode): một dãy byte, thường viết ở dạng thập lục phân. Mỗi byte là một **lệnh** (opcode), hoặc là dữ liệu đi kèm lệnh đứng trước. Hiện chỉ các lệnh `PUSH1` tới `PUSH32` có dữ liệu đi kèm: `PUSH1` lấy 1 byte phía sau, `PUSH32` lấy 32 byte. Mỗi lệnh có một tên dễ đọc, và mã byte viết bằng các tên đó gọi là hợp ngữ EVM (EVM assembly).
+
+**Bộ đếm chương trình** (program counter) giữ vị trí của lệnh sắp chạy. Ví dụ, chương trình cộng 6 với 7:
+
+```text
+vị trí   mã byte   hợp ngữ
+0x00     60 06     PUSH1 0x06
+0x02     60 07     PUSH1 0x07
+0x04     01        ADD          ngăn xếp còn 0x0d (13)
+```
+
+Không có lệnh nào ở vị trí `0x01` và `0x03`, vì đó là chỗ của dữ liệu `06` và `07`. Lệnh `JUMP` và `JUMPI` (nhảy có điều kiện) đặt lại bộ đếm chương trình tới một vị trí được đánh dấu bằng `JUMPDEST`. Solidity dùng chúng cho `if`, vòng lặp và lời gọi hàm nội bộ.
+
+Có lệnh nhảy, EVM chạy được mọi thuật toán, kể cả vòng lặp vô tận. Gas chặn điều đó: mỗi giao dịch chỉ chạy được số bước mà gas của nó trả đủ. Vì vậy người ta gọi EVM là "gần như Turing đầy đủ" (quasi-Turing-complete).
+
+## Một dòng Solidity chạy thế nào
+
+Lấy dòng `count = count + 1;`, với `count` là biến trạng thái nằm ở ô storage số 0. Bỏ đi phần mã phụ trình biên dịch sinh ra, phần chính là sáu lệnh:
+
+```text
+5f      PUSH0       đặt 0 (số ô) lên ngăn xếp
+54      SLOAD       đọc ô 0 trong storage
+60 01   PUSH1 0x01  đặt 1 lên ngăn xếp
+01      ADD         cộng hai số trên cùng
+5f      PUSH0       đặt 0 (số ô) lên ngăn xếp
+55      SSTORE      ghi vào ô 0 trong storage
+```
+
+<EvmScene />
+
+| Lệnh | Gas | Vì sao |
+|---|---|---|
+| `PUSH0` | 2 | |
+| `SLOAD` | 2.100 | Lần đầu đọc ô này trong giao dịch |
+| `PUSH1` | 3 | |
+| `ADD` | 3 | |
+| `PUSH0` | 2 | |
+| `SSTORE` | 2.900 | Sửa một ô khác 0 thành giá trị khác 0 |
+| **Tổng** | **5.010** | |
+
+Chạy đúng sáu lệnh này trong một hợp đồng trên anvil, mạng thử nội bộ của Foundry, giao dịch tốn 26.010 gas: 21.000 gas cơ bản của mọi giao dịch, cộng 5.010 gas ở trên. Hai lệnh chạm vào storage chiếm 5.000 trong số 5.010.
+
+## Dữ liệu nằm ở đâu
+
+| Nơi | Sống bao lâu | Giá | Ghi chú |
+|---|---|---|---|
+| Ngăn xếp | Trong một lần gọi | 2–3 gas mỗi lệnh | 1.024 ô, với tới 16 ô trên cùng |
+| **Bộ nhớ** (memory) | Trong một lần gọi | 3 gas mỗi 32 byte, đắt dần khi mở rộng | Mảng byte, xóa sạch khi lời gọi kết thúc |
+| **Storage** | Vĩnh viễn | Đọc: 2.100 lần đầu, 100 lần sau. Ghi vào ô đang là 0: 20.000. Sửa ô khác 0: 2.900. Khi ghi, cộng thêm 2.100 nếu là lần đầu chạm vào ô | Mỗi hợp đồng có 2<sup>256</sup> ô, mỗi ô 32 byte, mặc định là 0 |
+| **Transient storage** | Tới hết giao dịch | 100 gas (`TLOAD`, `TSTORE`) | Có từ Cancun (EIP-1153). Hợp với khóa chống gọi ngược |
+| **Calldata** | Trong giao dịch | 4 gas mỗi byte 0, 16 gas mỗi byte khác 0 | Dữ liệu đầu vào, chỉ đọc |
+| Mã (code) | Vĩnh viễn, không sửa được | 200 gas mỗi byte khi triển khai | Tối đa 24.576 byte (EIP-170) |
+| **Nhật ký** (log) | Vĩnh viễn, trong biên lai | 375 gas, cộng 375 mỗi chủ đề (topic) và 8 mỗi byte | Hợp đồng không đọc lại được. Đây là các sự kiện (event) của Solidity |
+
+### Bộ nhớ
+
+Bộ nhớ là một mảng byte, ban đầu toàn số 0, được tạo mới cho mỗi lời gọi. `MSTORE` lấy từ ngăn xếp một vị trí và một giá trị 32 byte, rồi ghi giá trị vào vị trí đó. `MSTORE8` ghi 1 byte, `MLOAD` đọc 32 byte lên ngăn xếp, `MSIZE` cho biết bộ nhớ đã mở rộng tới đâu. Không có lệnh đọc 1 byte: phải đọc cả 32 byte rồi lọc ra byte cần.
+
+Bộ nhớ mở rộng theo từng khối 32 byte, và lần đầu chạm tới một khối mới thì phải trả phí mở rộng. Với `a` là số khối 32 byte, tổng phí là `3·a + a²/512` gas. Phần bình phương khiến vài kilobyte thì rẻ, nhưng 1 MiB đã tốn khoảng 2,2 triệu gas, và 3 MiB (khoảng 19,2 triệu gas) vượt quá giới hạn 16.777.216 gas của một giao dịch.
+
+### Calldata
+
+Calldata là dữ liệu đầu vào của lời gọi, chỉ đọc. `CALLDATALOAD` đọc 32 byte từ một vị trí lên ngăn xếp, còn `CALLDATACOPY` chép một đoạn calldata vào bộ nhớ.
+
+### Storage
+
+Storage là kho khóa-giá trị lưu vĩnh viễn của một tài khoản: 2<sup>256</sup> ô, mỗi ô 32 byte, ban đầu toàn số 0. Nó không nằm trong EVM, mà thuộc về tài khoản đang chạy. Tài khoản giữ **gốc storage** (storage root) trỏ tới một cây Merkle-Patricia riêng chứa các ô. `SSTORE` lấy số ô và giá trị từ ngăn xếp rồi ghi vào. `SLOAD` lấy số ô rồi đặt giá trị của ô đó lên ngăn xếp.
+
+Chỉ mã của chính tài khoản mới đọc và ghi được storage của nó. Một EOA đã ủy quyền theo EIP-7702 thì chạy mã được ủy quyền trên storage của chính nó. Solidity tiết kiệm storage bằng cách gói nhiều biến nhỏ vào chung một ô.
+
+Giá đọc và ghi storage phụ thuộc vào việc ô đó đã được chạm tới trong giao dịch chưa. Lần đầu là truy cập **lạnh** (cold), đắt. Những lần sau là truy cập **ấm** (warm), rẻ (EIP-2929). Lý do: lần đầu, nút có thể phải đọc dữ liệu từ ổ đĩa, còn những lần sau đã nằm trong bộ nhớ đệm. Địa chỉ của hợp đồng khác cũng được tính lạnh và ấm như vậy.
+
+Xóa một ô về 0 được hoàn lại 4.800 gas, nhưng tổng tiền hoàn trong một giao dịch không vượt quá 1/5 lượng gas đã dùng (EIP-3529).
+
+## Gọi giữa các hợp đồng
+
+- **`CALL`** gọi một hợp đồng khác, có thể gửi kèm ETH. Hợp đồng được gọi chạy với storage của chính nó.
+- **`STATICCALL`** cũng gọi như vậy, nhưng cấm mọi thay đổi trạng thái. Solidity dùng nó khi gọi hàm `view` của hợp đồng khác.
+- **`DELEGATECALL`** chạy mã của hợp đồng khác **trên storage của mình**, và giữ nguyên `msg.sender`. Đây là nền tảng của hợp đồng nâng cấp được (proxy). Tài khoản ủy quyền theo [EIP-7702](../../can-ban/dung-ethereum/eip-7702.mdx) dựa trên cùng ý tưởng: chạy mã của một hợp đồng khác trên trạng thái của chính tài khoản.
+
+Mỗi lời gọi chạy trong một khung riêng. Nếu khung đó **revert**, mọi thay đổi trong khung bị hoàn tác, còn bên gọi nhận về "thất bại" và tự quyết định làm gì tiếp. Bên gọi chỉ chuyển được tối đa 63/64 lượng gas còn lại cho bên được gọi (EIP-150), nên chuỗi lời gọi lồng nhau không thể sâu vô hạn.
+
+Gọi ra ngoài cũng là trao quyền điều khiển: hợp đồng kia có thể gọi ngược lại vào hợp đồng của bạn trước khi hàm của bạn chạy xong. Đó là kiểu tấn công gọi ngược (reentrancy).
+
+## ABI: hàm được gọi thế nào
+
+EVM không biết "hàm" là gì. Một giao dịch gửi tới hợp đồng chỉ mang theo một chuỗi byte, là calldata. Theo quy ước gọi là **ABI** (Application Binary Interface), 4 byte đầu của calldata là **bộ chọn hàm** (function selector): 4 byte đầu của kết quả băm Keccak-256 của chữ ký hàm. Phần sau là các tham số, mỗi tham số chiếm 32 byte.
+
+```bash
+cast sig "buy()"           # 0xa6f2ae3a
+cast sig "ZeroPayment()"   # 0x8f28ea88
+```
+
+Mã do Solidity sinh ra so 4 byte đầu với bộ chọn của từng hàm, rồi nhảy tới đúng hàm. Lỗi tùy chỉnh cũng được mã hóa theo cách đó, nên `cast` hay viem đọc ra được tên lỗi `ZeroPayment` từ dữ liệu revert. Bạn sẽ thấy điều này trong bài [Máy bán token](../xay-dung/may-ban-token.mdx).
+
+## Hợp đồng biên dịch sẵn
+
+Một số phép tính quá đắt nếu viết bằng mã byte, nên được cài thẳng vào phần mềm của nút, ở những địa chỉ cố định. Đó là các **hợp đồng biên dịch sẵn** (precompile). Hợp đồng gọi chúng như gọi một hợp đồng bình thường.
+
+| Địa chỉ | Làm gì | Có từ |
+|---|---|---|
+| `0x01` | `ecrecover`: lấy địa chỉ từ chữ ký secp256k1 | Frontier (2015) |
+| `0x02`, `0x03` | Băm SHA-256, RIPEMD-160 | Frontier |
+| `0x04` | Sao chép dữ liệu | Frontier |
+| `0x05` | Lũy thừa modulo (modexp) | Byzantium (2017) |
+| `0x06`–`0x08` | Phép toán trên đường cong BN254, dùng để kiểm chứng bằng chứng zk-SNARK | Byzantium |
+| `0x09` | Hàm nén BLAKE2 | Istanbul (2019) |
+| `0x0a` | Kiểm chứng cam kết KZG của blob | Cancun (2024) |
+| `0x0b`–`0x11` | Phép toán trên đường cong BLS12-381 (EIP-2537) | Pectra (2025) |
+| `0x100` | Kiểm chữ ký secp256r1, loại chữ ký của passkey và chip bảo mật trên điện thoại (EIP-7951) | Fusaka (2025) |
+
+## Giới hạn cần biết
+
+- Mã hợp đồng tối đa 24.576 byte (EIP-170), mã khởi tạo tối đa 49.152 byte (EIP-3860). Hợp đồng lớn hơn phải tách ra.
+- Từ Fusaka, một giao dịch dùng tối đa 16.777.216 gas (2<sup>24</sup>, EIP-7825), dù giới hạn gas của cả khối lớn hơn nhiều: 60 triệu vào cuối năm 2025, và đang được nâng dần.
+- Từ Cancun, `SELFDESTRUCT` gần như không còn tác dụng (EIP-6780). Nó chỉ xóa được hợp đồng tạo ra trong cùng giao dịch.
+
+## Những thay đổi gần đây
+
+- **Cancun** (3/2024): transient storage (`TLOAD`, `TSTORE`), lệnh sao chép bộ nhớ `MCOPY`, các lệnh đọc blob, và `SELFDESTRUCT` bị hạn chế.
+- **Pectra** (5/2025): precompile BLS12-381, tài khoản ủy quyền EIP-7702, và giá sàn cho calldata với giao dịch chở nhiều dữ liệu (EIP-7623).
+- **Fusaka** (12/2025): lệnh đếm số bit 0 đứng đầu `CLZ` (EIP-7939), precompile secp256r1, và giới hạn gas mỗi giao dịch.
+
+Một thay đổi lớn hơn cho định dạng mã byte, EVM Object Format (EOF), từng được lên kế hoạch cho Fusaka nhưng đã bị rút ra năm 2025.
+
+Các bảng giá gas trong bài đúng với mạng chính hiện tại (luật của Fusaka). Nâng cấp tiếp theo, **Glamsterdam**, đã chạy trên mạng thử nghiệm Sepolia từ ngày 6/10/2026 nhưng chưa có ngày cho mạng chính. Trong danh sách thay đổi của nó (EIP-7773) có nhiều việc chạm tới EVM:
+
+- Tăng giá gas khi tạo trạng thái mới (EIP-8037) và khi đọc, ghi trạng thái (EIP-8038). Các con số 20.000 và 2.100 ở trên sẽ đổi. Công ty kiểm toán ChainSecurity đã [chỉ ra](https://www.chainsecurity.com/blog/glamsterdam-gas) rằng với cách tính mới, `gasleft()` có thể tăng lên. Hợp đồng gán cứng lượng gas, hoặc giả định `gasleft()` chỉ giảm, có thể không còn an toàn. Xem thêm [Lộ trình](./lo-trinh.mdx).
+- Nâng giới hạn mã hợp đồng từ 24 KiB lên 64 KiB, và mã khởi tạo từ 48 KiB lên 128 KiB (EIP-7954).
+- Mọi lần chuyển ETH đều phát một nhật ký (EIP-7708), nên ứng dụng theo dõi được ETH đi đâu mà không cần dò từng lời gọi.
+- Lệnh `DUPN`, `SWAPN`, `EXCHANGE` với tới sâu hơn 16 ô ngăn xếp (EIP-8024).
+- Tiền hoàn gas không còn được trừ khi tính giới hạn gas của khối (EIP-7778).
+
+Vì vậy trên Sepolia, số gas bạn đo được có thể đã khác các bảng trong bài.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **Đọc storage một lần.** Nếu một hàm dùng cùng một biến trạng thái nhiều lần, chép nó vào biến cục bộ.
+- **Ghi ít ô storage nhất có thể.** Xếp các biến nhỏ (`uint64`, `address`, `bool`) cạnh nhau để Solidity gói chúng chung một ô 32 byte.
+- **Giá trị không đổi thì khai báo `constant` hoặc `immutable`.** Chúng nằm trong mã, không tốn lệnh `SLOAD`.
+- **Dữ liệu chỉ để hiển thị thì phát sự kiện.** Lịch sử, nhật ký hoạt động không cần nằm trong storage.
+- **Ô storage mới đắt nhất.** Lần đầu một người nhận token, hợp đồng phải ghi một ô mới (20.000 gas). Người dùng mới luôn trả nhiều phí hơn người cũ.
+- **Mọi thứ đều công khai.** Ai cũng đọc được storage của bạn bằng `cast storage`, kể cả biến `private`.
+- **Gọi ra ngoài là trao quyền điều khiển.** Cập nhật trạng thái trước, gọi ra ngoài sau (quy tắc checks-effects-interactions).
+
+## Nguồn
+
+- EPF wiki: [The Ethereum Virtual Machine](https://epf.wiki/#/wiki/EL/evm), [Precompiled contracts](https://epf.wiki/#/wiki/EL/precompiled-contracts)
+- [evm.codes](https://www.evm.codes/): bảng lệnh và giá gas, có sân chơi để chạy thử mã byte
+- [ethereum/execution-specs](https://github.com/ethereum/execution-specs): đặc tả lớp thực thi, viết bằng Python
+- ethereum.org: [Máy ảo Ethereum](https://ethereum.org/developers/docs/evm/)
+- EIP: [150](https://eips.ethereum.org/EIPS/eip-150), [170](https://eips.ethereum.org/EIPS/eip-170), [1153](https://eips.ethereum.org/EIPS/eip-1153), [2929](https://eips.ethereum.org/EIPS/eip-2929), [3529](https://eips.ethereum.org/EIPS/eip-3529), [3860](https://eips.ethereum.org/EIPS/eip-3860), [6780](https://eips.ethereum.org/EIPS/eip-6780), [7623](https://eips.ethereum.org/EIPS/eip-7623), [7825](https://eips.ethereum.org/EIPS/eip-7825), [7939](https://eips.ethereum.org/EIPS/eip-7939), [7951](https://eips.ethereum.org/EIPS/eip-7951)
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

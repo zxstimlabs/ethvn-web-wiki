@@ -5,6 +5,10 @@ sources:
   - https://ethereum.org/wallets/
   - https://ethereum.org/guides/how-to-create-an-ethereum-account/
   - https://ethereum.org/guides/how-to-use-a-wallet/
+  - https://ethereum.org/developers/docs/accounts/
+  - https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
+  - https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+  - https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
 ---
 
 Để dùng Ethereum, bạn cần một **ví**. Nhưng ví trên Ethereum khác chiếc ví trong túi bạn ở một điểm quan trọng: **ví không chứa tiền**. Tài sản của bạn nằm trên mạng lưới Ethereum. Ví chỉ là công cụ giúp bạn xem và sử dụng tài sản đó.
@@ -30,10 +34,10 @@ Vì ví chỉ là "ứng dụng đọc", bạn có thể đổi sang ví khác b
 
 ## Cụm từ khôi phục
 
-Khi tạo ví mới, ví sẽ cho bạn một **cụm từ khôi phục** (recovery phrase, còn gọi là seed phrase): 12 hoặc 24 từ tiếng Anh theo một thứ tự nhất định. Ví dụ:
+Khi tạo ví mới, ví sẽ cho bạn một **cụm từ khôi phục** (recovery phrase, còn gọi là seed phrase): 12 hoặc 24 từ tiếng Anh theo một thứ tự nhất định. Ví dụ (cụm từ minh họa, ai cũng đọc được, đừng dùng cho ví thật):
 
 ```
-there aeroplane curve vent formation doge possible product distinct under spirit lamp
+puppy cube hole indicate wall fly thought soda mango library olympic amused
 ```
 
 Từ cụm từ này, ví tạo ra khóa riêng tư cho mọi tài khoản của bạn. Điều đó có nghĩa là:
@@ -44,13 +48,31 @@ Từ cụm từ này, ví tạo ra khóa riêng tư cho mọi tài khoản của
 
 <RecoveryScene />
 
-Hình trên cho thấy vì sao: số dư không nằm trong điện thoại mà được ghi trên mọi nút của Ethereum. Cụm từ khôi phục cho ra khóa riêng tư, khóa cho ra địa chỉ, nên ai nhập đúng 12 từ cũng có lại đúng địa chỉ đó, dù là bạn hay kẻ gian. Xem [Địa chỉ và khóa](../cach-hoat-dong/dia-chi-va-khoa.mdx).
+Hình trên cho thấy vì sao: số dư không nằm trong điện thoại mà được ghi trên mọi nút của Ethereum. Cụm từ khôi phục cho ra khóa riêng tư, khóa cho ra địa chỉ, nên ai nhập đúng 12 từ cũng có lại đúng địa chỉ đó, dù là bạn hay kẻ gian. Phần [Từ cụm từ khôi phục ra khóa và địa chỉ](#từ-cụm-từ-khôi-phục-ra-khóa-và-địa-chỉ) bên dưới cho thấy ví tính những thứ này thế nào.
 
 <Callout type="warn" title="Cảnh báo">
 Cách giữ cụm từ khôi phục:
 - Viết ra giấy (hoặc khắc lên kim loại) và cất ở nơi an toàn. Có thể giữ hai bản ở hai nơi khác nhau.
 - **Không** chụp màn hình, **không** lưu trong ghi chú điện thoại, email, Google Drive, iCloud hay gửi qua Zalo, Messenger, Telegram.
 - **Không bao giờ** nhập cụm từ khôi phục vào trang web hay đưa cho bất kỳ ai, kể cả người tự xưng là "hỗ trợ kỹ thuật".
+</Callout>
+
+## Từ cụm từ khôi phục ra khóa và địa chỉ
+
+Cụm từ khôi phục không phải mật khẩu đặt cho ví. Nó là gốc của mọi khóa: từ 12 từ này, ví tính ra cặp khóa và địa chỉ của từng tài khoản. Hình dưới dùng chính cụm từ ví dụ ở trên, và các giá trị trong hình là kết quả tính thật.
+
+<SeedScene />
+
+1. **12 từ là một con số.** Mỗi từ là một số thứ tự trong danh sách 2.048 từ cố định của chuẩn BIP-39 (đếm từ 0): "puppy" là số 1392, "cube" là số 427. Vì vậy 12 từ thực chất ghi lại một số ngẫu nhiên 128 bit mà ví tạo ra lúc bạn tạo ví (24 từ: 256 bit). Từ cuối chứa thêm vài bit kiểm tra, nên gõ sai một từ thì ví thường báo cụm từ không hợp lệ.
+2. **Hạt giống.** Ví trộn cụm từ qua 2.048 vòng băm thành một số 512 bit gọi là **hạt giống** (seed).
+3. **Cặp khóa.** Từ hạt giống và số thứ tự của tài khoản, ví tính ra một khóa riêng tư. Từ khóa riêng tư, ví tính ra khóa công khai bằng một phép toán trên đường cong elliptic. Hai khóa đi thành cặp: khóa riêng tư dùng để ký giao dịch, khóa công khai để mọi người kiểm tra chữ ký đó.
+4. **Địa chỉ.** Ví băm khóa công khai bằng Keccak-256, giữ lại 20 byte cuối và thêm `0x` phía trước.
+5. **Tài khoản tiếp theo.** Đổi số thứ tự (tài khoản 1, 2, 3…) là ra một cặp khóa và một địa chỉ mới, vẫn từ cùng hạt giống. Vì vậy khi bạn bấm "Thêm tài khoản", ví không cần cụm từ mới.
+
+Mọi bước đều là phép tính cố định: cùng 12 từ luôn cho ra cùng các khóa và địa chỉ, ở bất kỳ ví nào dùng cùng chuẩn. Nhờ vậy bạn khôi phục được ví. Và không bước nào tính ngược được: biết địa chỉ hay khóa công khai, không ai suy ra được khóa riêng tư hay cụm từ. Nhờ vậy bạn chia sẻ địa chỉ mà vẫn an toàn. Xem thêm [Địa chỉ và khóa](../cach-hoat-dong/dia-chi-va-khoa.mdx).
+
+<Callout type="info" title="Lưu ý">
+Phần lớn ví đánh số tài khoản theo cùng một cách: **đường dẫn** (derivation path) `m/44'/60'/0'/0/0` cho tài khoản 1, `…/1` cho tài khoản 2, và cứ thế. Một số ví dùng đường dẫn khác. Nếu nhập cụm từ vào ví mới mà không thấy tài khoản cũ, hãy tìm tùy chọn đường dẫn trong ví đó trước khi nghĩ là mất tiền.
 </Callout>
 
 ## Các loại ví

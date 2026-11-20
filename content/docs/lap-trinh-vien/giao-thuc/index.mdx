@@ -1,0 +1,26 @@
+---
+title: Hiểu giao thức
+description: Ethereum từ bên trong, viết ngắn cho kỹ sư. Mười một bài về EVM, trạng thái, giao dịch, đồng thuận, mạng, mật mã và lộ trình, mỗi bài chỉ ra điều đó ảnh hưởng gì tới ứng dụng của bạn.
+---
+
+Tài liệu đầy đủ nhất về bên trong Ethereum là [EPF wiki](https://epf.wiki) của chương trình Ethereum Protocol Fellowship: hơn trăm trang, viết cho người muốn tham gia phát triển giao thức. Phần này phỏng theo EPF wiki và tài liệu cho lập trình viên của ethereum.org, rút gọn lại những gì một lập trình viên ứng dụng cần biết.
+
+Cả hai nguồn đều có chỗ đã cũ, nên mọi con số, ngày tháng và trạng thái nâng cấp trong các bài đã được đối chiếu với các EIP và đặc tả vào tháng 11 năm 2026. Mỗi bài kết thúc bằng phần **Điều này ảnh hưởng gì tới ứng dụng của bạn**, rồi phần **Nguồn** dẫn tới các trang EPF và ethereum.org cho ai muốn đọc sâu hơn.
+
+## Đọc theo thứ tự
+
+| # | Bài | Bạn sẽ hiểu |
+|---|---|---|
+| 1 | [Kiến trúc: hai lớp của một nút](./kien-truc.mdx) | Lớp thực thi, lớp đồng thuận, Engine API giữa chúng, và một khối đi qua nút thế nào |
+| 2 | [EVM](./evm.mdx) | Máy ảo chạy hợp đồng: mã byte, ngăn xếp, bộ nhớ, storage, giá gas từng lệnh |
+| 3 | [Trạng thái và cấu trúc dữ liệu](./trang-thai.mdx) | Tài khoản, cây Merkle-Patricia, biên lai và nhật ký, bằng chứng Merkle, RLP và SSZ |
+| 4 | [Giao dịch](./giao-dich.mdx) | Các trường và năm kiểu giao dịch, phí EIP-1559, nonce, biên lai, và tự ký một giao dịch |
+| 5 | [Từ mempool tới khối](./tu-mempool-toi-khoi.mdx) | Ai xếp giao dịch vào khối, MEV, MEV-Boost, và cách bảo vệ người dùng khỏi kẹp lệnh |
+| 6 | [Đồng thuận](./dong-thuan.mdx) | Gasper, khe và kỷ nguyên, tính cuối cùng, và khi nào nên coi giao dịch là xong |
+| 7 | [Mạng ngang hàng](./mang-ngang-hang.mdx) | Hai mạng trong một nút: devp2p và libp2p, giao dịch và khối lan đi thế nào |
+| 8 | [Mật mã](./mat-ma.mdx) | Keccak, chữ ký ECDSA và BLS, ký thông điệp trong ứng dụng, cam kết KZG |
+| 9 | [Mở rộng và dữ liệu khả dụng](./mo-rong.mdx) | Blob, PeerDAS, và phí của Layer 2 được tạo thành thế nào |
+| 10 | [Phần mềm client và API](./client-va-api.mdx) | Các client, vì sao cần đa dạng, JSON-RPC và Beacon API, tự chạy nút hay dùng nhà cung cấp |
+| 11 | [Lộ trình và cách giao thức thay đổi](./lo-trinh.mdx) | Các đợt nâng cấp đã qua, Glamsterdam và Hegotá, và một EIP đi tới mạng chính ra sao |
+
+Phần [Ethereum hoạt động thế nào](../../can-ban/cach-hoat-dong/index.mdx) ở mục Căn bản giải thích cùng các chủ đề này cho người không lập trình. Nếu một khái niệm ở đây còn lạ, hãy đọc bài tương ứng ở đó trước.

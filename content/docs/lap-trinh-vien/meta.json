@@ -1,6 +1,7 @@
 {
   "title": "Lập trình viên",
-  "description": "Xây dựng ứng dụng trên Ethereum",
+  "description": "Hiểu giao thức, viết hợp đồng Solidity và làm giao diện web",
   "icon": "Code",
-  "root": true
+  "root": true,
+  "pages": ["index", "giao-thuc", "xay-dung"]
 }

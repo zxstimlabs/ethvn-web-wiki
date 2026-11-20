@@ -1,0 +1,5 @@
+{
+  "title": "Xây dựng ứng dụng",
+  "defaultOpen": true,
+  "pages": ["index", "moi-truong", "solidity", "may-ban-token"]
+}

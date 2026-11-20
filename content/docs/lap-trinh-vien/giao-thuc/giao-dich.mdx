@@ -1,0 +1,227 @@
+---
+title: Giao dịch
+description: Một giao dịch là một thông điệp đã ký, gồm khoảng chục trường. Năm kiểu giao dịch, phí theo EIP-1559, cách mạng lưới biết ai gửi, nonce, biên lai và các giới hạn mới, kèm một giao dịch thật được ký và giải mã từng byte.
+sources:
+  - https://epf.wiki/#/wiki/EL/transaction
+  - https://epf.wiki/#/wiki/EL/el-data-structures-summary
+  - https://epf.wiki/#/wiki/research/scaling/core-changes/eip-4844
+  - https://epf.wiki/#/wiki/research/account-abstraction/eip-7702
+  - https://ethereum.org/developers/docs/transactions/
+  - https://ethereum.org/developers/docs/gas/
+---
+
+Mọi thay đổi do người dùng tạo ra trên Ethereum đều bắt đầu từ một **giao dịch** (transaction). Nó là một thông điệp do khóa riêng tư của một tài khoản ký, đại ý: "tôi, với số thứ tự này, gửi chừng này wei và dữ liệu này tới địa chỉ kia, và chịu trả phí tối đa chừng này". Hợp đồng không tự gửi được giao dịch. Nó chỉ chạy khi một giao dịch, trực tiếp hay qua hợp đồng khác, gọi tới nó.
+
+Bài [Đọc một giao dịch](../../can-ban/dung-ethereum/doc-giao-dich.mdx) cho thấy giao dịch trên trình khám phá khối, và bài [Gas](../../can-ban/cach-hoat-dong/gas.mdx) giải thích vì sao phải trả phí. Bài này đi vào từng trường, từng byte.
+
+## Các trường của một giao dịch
+
+Giao dịch kiểu 2, loại phổ biến nhất hiện nay, có các trường sau:
+
+| Trường | Nghĩa |
+|---|---|
+| `chainId` | Mã của mạng, mạng chính là 1. Chữ ký cho mạng này không dùng lại được trên mạng khác |
+| `nonce` | Số thứ tự giao dịch của người gửi, đếm từ 0 |
+| `maxPriorityFeePerGas` | **Phí ưu tiên** (priority fee) tối đa cho mỗi đơn vị gas |
+| `maxFeePerGas` | **Phí tối đa** (max fee) cho mỗi đơn vị gas, tính cả phí cơ sở |
+| `gasLimit` | **Giới hạn gas** (gas limit): lượng gas tối đa giao dịch được dùng |
+| `to` | Địa chỉ nhận. Để trống thì giao dịch tạo hợp đồng mới, và `data` là mã khởi tạo |
+| `value` | Số wei chuyển cho bên nhận |
+| `data` | Dữ liệu đầu vào. Khi gọi hợp đồng, đây là bộ chọn hàm và tham số theo [ABI](./evm.mdx#abi-hàm-được-gọi-thế-nào) |
+| `accessList` | Danh sách địa chỉ và ô storage giao dịch sẽ chạm tới (EIP-2930). Thường để trống |
+| `yParity`, `r`, `s` | Chữ ký secp256k1 của người gửi |
+
+Không có trường `from`. Mạng lưới tự tính ra người gửi từ chữ ký, như mục dưới giải thích.
+
+## Phong bì có kiểu
+
+Ban đầu Ethereum chỉ có một dạng giao dịch: danh sách RLP `[nonce, gasPrice, gasLimit, to, value, data, v, r, s]`. Để thêm trường mới mà không phá dạng cũ, EIP-2718 (Berlin, 2021) đặt ra **phong bì có kiểu** (typed transaction envelope):
+
+```text
+giao dịch = kiểu (1 byte, từ 0x00 tới 0x7f) || nội dung
+```
+
+Giao dịch dạng cũ là một danh sách RLP, nên byte đầu của nó luôn từ `0xc0` trở lên. Nhìn byte đầu là biết đang đọc kiểu nào. Nội dung của các kiểu mới cũng là danh sách RLP (xem [Trạng thái và cấu trúc dữ liệu](./trang-thai.mdx#rlp)). Byte kiểu nằm trong dữ liệu được ký, và **mã băm giao dịch** (transaction hash) là Keccak-256 của toàn bộ chuỗi byte, kể cả byte kiểu.
+
+| Kiểu | Tên | Có từ | Thêm gì |
+|---|---|---|---|
+| 0 | Dạng cũ (legacy) | 2015 | Một trường `gasPrice` duy nhất. Không có `chainId` riêng: từ EIP-155 (2016), mã mạng được gói vào `v` |
+| 1 | Danh sách truy cập | Berlin, 2021 (EIP-2930) | `chainId`, `accessList`, và chữ ký dạng `yParity` |
+| 2 | Phí động | London, 2021 (EIP-1559) | Thay `gasPrice` bằng `maxPriorityFeePerGas` và `maxFeePerGas` |
+| 3 | Blob | Dencun, 2024 (EIP-4844) | `maxFeePerBlobGas` và `blobVersionedHashes`. `to` không được để trống |
+| 4 | Đặt mã (set code) | Pectra, 2025 (EIP-7702) | `authorizationList`, mỗi phần tử `[chainId, address, nonce, yParity, r, s]`. Danh sách không được rỗng, `to` không được để trống |
+
+**Kiểu 3** chở **blob**: dữ liệu mà rollup đăng lên Ethereum, mỗi blob 128 KiB. Từ Fusaka, mỗi giao dịch chở tối đa 6 blob. Bản thân giao dịch chỉ ghi mã băm của từng blob. Blob đi kèm khối ở lớp đồng thuận và chỉ được giữ khoảng 18 ngày (4.096 **kỷ nguyên**, epoch). Blob có thị trường phí riêng, và phí blob cũng bị đốt. Bài [Mở rộng và dữ liệu khả dụng](./mo-rong.mdx) nói kỹ hơn.
+
+**Kiểu 4** chở các **lệnh ủy quyền** (authorization) của [EIP-7702](../../can-ban/dung-ethereum/eip-7702.mdx). Mỗi lệnh được ký riêng bằng khóa của tài khoản muốn ủy quyền, trên `keccak256(0x05 || rlp([chainId, address, nonce]))`. Vì vậy người gửi giao dịch có thể là một bên khác, trả phí hộ. Lệnh ghi `chainId` bằng 0 có hiệu lực trên mọi mạng.
+
+## Phí theo EIP-1559
+
+Từ London (2021), mỗi khối có một **phí cơ sở** (base fee) do giao thức tự tính. Mức gas mục tiêu của một khối bằng nửa giới hạn gas của khối:
+
+```text
+phí cơ sở mới = phí cơ sở cũ × (1 + (gas đã dùng − mục tiêu) / mục tiêu / 8)
+```
+
+Khối đầy thì phí cơ sở của khối sau tăng 12,5%, khối rỗng thì giảm 12,5%, đúng mục tiêu thì giữ nguyên. Phí cơ sở bị **đốt** (burn): không ai nhận.
+
+Giá thực trả cho mỗi đơn vị gas là:
+
+```text
+giá thực = phí cơ sở + min(maxPriorityFeePerGas, maxFeePerGas − phí cơ sở)
+```
+
+- Giao dịch chỉ vào được khối có phí cơ sở không vượt quá `maxFeePerGas`. Nếu phí cơ sở tăng vượt mức đó, giao dịch nằm chờ.
+- Phí ưu tiên trả cho địa chỉ nhận phí của khối, do **người đề xuất** (proposer) khối chọn. Khi khối được mua qua MEV-Boost, **người xây khối** (block builder) thường ghi địa chỉ của mình vào đó, rồi trả cho người đề xuất khoản tiền đã thầu.
+- Người gửi phải có đủ `value + gasLimit × maxFeePerGas`. Mạng lưới tạm giữ `gasLimit × giá thực`, rồi trả lại phần gas không dùng.
+- Với giao dịch kiểu 0 và 1, `gasPrice` được dùng làm cả hai mức trần. Mọi phần cao hơn phí cơ sở đều thành phí ưu tiên. Đó là lý do nên dùng kiểu 2.
+
+## Ai gửi giao dịch?
+
+Với kiểu 1 trở lên, người gửi ký mã băm Keccak-256 của `kiểu || rlp([các trường, trừ chữ ký])`. Từ mã băm đó và chữ ký, thuật toán ECDSA khôi phục được khóa công khai. Địa chỉ người gửi là 20 byte cuối của mã băm Keccak-256 khóa công khai. `yParity` (0 hoặc 1) cho biết chọn điểm nào trong hai điểm khả dĩ trên đường cong.
+
+Mọi nút đều làm phép tính này cho mọi giao dịch. Vì vậy `from` không cần gửi kèm, và không ai giả được nó. Hai quy tắc khác bảo vệ chữ ký:
+
+- **Mã mạng** (EIP-155, 2016). Kiểu 0 gói `chainId` vào `v = chainId × 2 + 35` hoặc `+ 36`. Giao dịch kiểu 0 không có mã mạng vẫn hợp lệ theo giao thức, nên có thể bị phát lại trên mạng khác. Geth mặc định từ chối nhận chúng qua RPC. Các kiểu mới luôn có `chainId`.
+- **`s` nhỏ** (EIP-2). `s` phải nằm ở nửa dưới của miền giá trị. Như vậy mỗi giao dịch chỉ có một chữ ký hợp lệ, và không ai sửa được chữ ký để đổi mã băm giao dịch.
+
+Bài [Mật mã](./mat-ma.mdx) giải thích secp256k1 và ECDSA.
+
+## Nonce: thứ tự và thay giao dịch
+
+Giao dịch của một tài khoản chạy đúng theo thứ tự **nonce**. Một giao dịch chỉ vào được khối khi nonce của nó bằng đúng nonce hiện tại của tài khoản.
+
+- **Nonce nhỏ hơn**: bị từ chối ("nonce too low"). Nonce đó đã dùng rồi.
+- **Nonce lớn hơn**: nằm chờ trong mempool cho tới khi các nonce còn thiếu được lấp. Một giao dịch kẹt chặn mọi giao dịch sau nó.
+
+Muốn **thay** một giao dịch đang chờ, gửi giao dịch mới cùng nonce và phí cao hơn. Đây là luật của mempool từng phần mềm, không phải luật đồng thuận. Geth mặc định đòi tăng ít nhất 10% cả `maxFeePerGas` lẫn `maxPriorityFeePerGas`, và 100% với giao dịch blob. Muốn **hủy**, gửi 0 ETH cho chính mình với cùng nonce và phí cao hơn. Không có gì bảo đảm: nếu giao dịch cũ đã vào khối trước, giao dịch thay thế bị từ chối. Bài [Từ mempool tới khối](./tu-mempool-toi-khoi.mdx) nói về mempool.
+
+## Biên lai
+
+Mỗi giao dịch trong khối có một **biên lai** (receipt). Phần được cam kết trong khối, qua `receiptsRoot`, chỉ gồm năm thứ: kiểu, `status`, `cumulativeGasUsed` (tổng gas đã dùng trong khối tính tới giao dịch này), bộ lọc Bloom và các nhật ký. Những trường khác mà RPC trả về, như `gasUsed`, `effectiveGasPrice`, `from` hay `contractAddress`, là do nút tính thêm. [Trạng thái và cấu trúc dữ liệu](./trang-thai.mdx#biên-lai-nhật-ký-và-bộ-lọc-bloom) nói về nhật ký và bộ lọc Bloom.
+
+- **`status` bằng 1** là thành công, **bằng 0** là thất bại (EIP-658, 2017). Giao dịch thất bại vẫn nằm trong khối, vẫn tăng nonce và vẫn mất phí. Chỉ các thay đổi khác bị hoàn tác.
+- **Lý do revert không nằm trong biên lai.** Muốn biết, hãy lần vết (trace) giao dịch, hoặc chạy lại nó bằng `eth_call` trên trạng thái của khối trước. Cách sau có thể ra kết quả khác nếu các giao dịch đứng trước trong khối đã đổi trạng thái.
+- **Tạo hợp đồng.** Địa chỉ hợp đồng mới là 20 byte cuối của `keccak256(rlp([người gửi, nonce]))`, nên biết trước được.
+
+## Các giới hạn mới
+
+- **Tối đa 2<sup>24</sup> gas mỗi giao dịch** (Fusaka, EIP-7825). Giao dịch có `gasLimit` trên 16.777.216 không hợp lệ: mempool từ chối, và khối chứa nó bị loại. Giới hạn của cả khối lớn hơn nhiều (60 triệu vào cuối năm 2025, và đang được nâng dần), nhưng một giao dịch không còn chiếm được cả khối.
+- **Giá sàn cho calldata** (Pectra, EIP-7623). Gas của giao dịch, bỏ qua phần phí tạo hợp đồng, được tính như sau:
+
+  ```text
+  tokens = số byte 0 + 4 × số byte khác 0
+  gas    = 21000 + max(4 × tokens + gas thực thi, 10 × tokens)
+  ```
+
+  Giao dịch nhiều dữ liệu mà ít tính toán phải trả 10 gas cho mỗi byte 0 và 40 gas cho mỗi byte khác 0, thay vì 4 và 16. `gasLimit` phải đủ cho mức sàn ngay từ đầu. Mục đích là giảm kích thước khối tối đa, để có chỗ thêm blob hoặc nâng giới hạn gas.
+
+<Callout type="warn" title="Quan trọng">
+anvil 1.5.1 không áp giới hạn 2<sup>24</sup> gas, kể cả khi chạy với `--hardfork osaka` (kiểm tra tháng 11 năm 2026). Một giao dịch chạy được trên anvil vẫn có thể bị mạng chính từ chối. Hãy tự kiểm `gasLimit` trong mã, hoặc thử trên mạng thử nghiệm.
+</Callout>
+
+Các con số trên là luật của mạng chính hiện nay (Fusaka). Nâng cấp Glamsterdam đã chạy trên mạng thử nghiệm Sepolia từ ngày 6/10/2026, nhưng chưa có ngày cho Hoodi và mạng chính. Nó đổi giá giao dịch thêm một lần nữa:
+
+- Giá sàn calldata lên 64 gas cho mọi byte, dù là byte 0 hay không (EIP-7976).
+- Danh sách truy cập bị tính phí theo dung lượng dữ liệu (EIP-7981).
+- Mức 21.000 gas cơ bản được tách thành nhiều phần theo tài nguyên thực dùng (EIP-2780). Gửi ETH tới một tài khoản đã có vẫn tốn 21.000 gas, nhưng giao dịch tạo tài khoản mới hay chạm tới tài khoản EIP-7702 tốn thêm.
+- Tạo trạng thái mới và truy cập trạng thái đắt hơn (EIP-8037, EIP-8038).
+
+Vì vậy, cùng một giao dịch có thể tốn lượng gas khác nhau trên Sepolia và trên mạng chính. Đừng lấy ước lượng gas từ Sepolia làm số cho mạng chính.
+
+## Thử tay: ký và giải mã một giao dịch
+
+Khởi động `anvil`, mạng thử nội bộ của Foundry. Trong một cửa sổ khác, tạo và ký một giao dịch gửi 0,01 ETH, phí ưu tiên 1 gwei, phí tối đa 3 gwei:
+
+```bash
+# Khóa thử số 0 của anvil. Khóa này được công bố cho mọi người:
+# không bao giờ dùng nó, hay gửi tiền thật tới địa chỉ của nó, trên mạng thật.
+cast mktx --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
+  0x70997970C51812dc3A010C7d01b50e0d17dc79C8 \
+  --value 0.01ether --nonce 0 --gas-limit 21000 \
+  --gas-price 3gwei --priority-gas-price 1gwei
+# 0x02f873827a6980843b9aca0084b2d05e008252089470997970c51812dc3a010c7d01b50e0d17dc79c8872386f26fc1000080c001a0fdb774673687755fec0138e84216a6c1636192e305022fba41f4e3f4e86a02e9a04fe374562184d50a88ec10eefad487b9851c57c6f119027e5ee1fc2cbd2b15d4
+```
+
+Với giao dịch kiểu 2, `--gas-price` là `maxFeePerGas`. `cast` hỏi anvil để lấy `chainId`, còn các trường khác đã ghi rõ. Chữ ký ECDSA ở đây là tất định, nên bạn sẽ được đúng chuỗi byte trên. Tách chuỗi đó ra:
+
+```text
+02                                          kiểu 2
+f8 73                                       danh sách RLP, phần ruột 0x73 = 115 byte
+82 7a69                                     chainId = 31337 (anvil)
+80                                          nonce = 0
+84 3b9aca00                                 maxPriorityFeePerGas = 1 gwei
+84 b2d05e00                                 maxFeePerGas = 3 gwei
+82 5208                                     gasLimit = 21000
+94 70997970c51812dc3a010c7d01b50e0d17dc79c8 to (20 byte)
+87 2386f26fc10000                           value = 10^16 wei = 0,01 ETH
+80                                          data: rỗng
+c0                                          accessList: danh sách rỗng
+01                                          yParity = 1
+a0 fdb77467…86a02e9                         r (32 byte)
+a0 4fe37456…cbd2b15d4                       s (32 byte)
+```
+
+Giải mã bằng `cast`. Trường `signer` không có trong giao dịch: `cast` khôi phục nó từ chữ ký.
+
+```bash
+cast decode-transaction 0x02f873827a6980843b9aca0084b2d05e008252089470997970c51812dc3a010c7d01b50e0d17dc79c8872386f26fc1000080c001a0fdb774673687755fec0138e84216a6c1636192e305022fba41f4e3f4e86a02e9a04fe374562184d50a88ec10eefad487b9851c57c6f119027e5ee1fc2cbd2b15d4
+```
+
+```json
+{
+  "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+  "type": "0x2",
+  "chainId": "0x7a69",
+  "nonce": "0x0",
+  "gas": "0x5208",
+  "maxFeePerGas": "0xb2d05e00",
+  "maxPriorityFeePerGas": "0x3b9aca00",
+  "to": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+  "value": "0x2386f26fc10000",
+  "accessList": [],
+  "input": "0x",
+  "r": "0xfdb774673687755fec0138e84216a6c1636192e305022fba41f4e3f4e86a02e9",
+  "s": "0x4fe374562184d50a88ec10eefad487b9851c57c6f119027e5ee1fc2cbd2b15d4",
+  "yParity": "0x1",
+  "v": "0x1",
+  "hash": "0x7fc75a49fbde1e8383ad85c3e4cbe7da5309a2475b7993f294761c0d43af39e0"
+}
+```
+
+`hash` chính là Keccak-256 của toàn bộ chuỗi byte đã ký: chạy `cast keccak` với chuỗi đó sẽ ra đúng giá trị này. Gửi giao dịch lên anvil rồi đọc biên lai:
+
+```bash
+cast publish 0x02f873827a6980843b9aca0084b2d05e008252089470997970c51812dc3a010c7d01b50e0d17dc79c8872386f26fc1000080c001a0fdb774673687755fec0138e84216a6c1636192e305022fba41f4e3f4e86a02e9a04fe374562184d50a88ec10eefad487b9851c57c6f119027e5ee1fc2cbd2b15d4
+
+TX=0x7fc75a49fbde1e8383ad85c3e4cbe7da5309a2475b7993f294761c0d43af39e0
+cast receipt $TX status              # 1 (success)
+cast receipt $TX gasUsed             # 21000
+cast receipt $TX effectiveGasPrice   # 2000000000
+cast block 1 -f baseFeePerGas        # 1000000000
+```
+
+Phí cơ sở của khối là 1 gwei. Giá thực là 1 + min(1, 3 − 1) = 2 gwei, thấp hơn mức tối đa 3 gwei. Phí là 21.000 × 2 gwei = 42.000 gwei. Trong đó 21.000 gwei bị đốt, 21.000 gwei trả cho địa chỉ nhận phí. Tài khoản gửi mất 0,010042 ETH.
+
+Các lệnh trên đã chạy với Foundry 1.5.1 trên một anvil vừa khởi động, tháng 11 năm 2026.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **Dùng giao dịch kiểu 2**, không dùng kiểu 0. Với kiểu 0, mọi phần trên phí cơ sở đều thành tiền boa.
+- **Đặt `maxFeePerGas` dư ra.** Phí cơ sở có thể tăng 12,5% mỗi khối. Bạn chỉ trả giá thực, nên đặt trần cao hơn không làm bạn trả nhiều hơn, chỉ giúp giao dịch không bị kẹt.
+- **Tự quản lý nonce** nếu máy chủ của bạn gửi nhiều giao dịch từ một tài khoản. Theo dõi giao dịch đang chờ, và khi cần thay thì tăng phí ít nhất 10%. Một giao dịch kẹt chặn mọi giao dịch sau.
+- **Kiểm `status` trong biên lai**, đừng chỉ xem giao dịch đã vào khối chưa. Với khoản lớn, chờ khối đạt [tính cuối cùng](../../can-ban/cach-hoat-dong/khoi.mdx#khi-nào-khối-không-thể-đảo-ngược) (finality).
+- **Mô phỏng trước khi gửi.** `eth_call` và `eth_estimateGas` cho biết giao dịch có revert không, kèm lý do. Biên lai thì không có lý do.
+- **Chia nhỏ việc lớn.** Một giao dịch không dùng quá 16.777.216 gas. Triển khai nhiều hợp đồng hay xử lý lô lớn cần tách thành nhiều giao dịch.
+- **Dữ liệu lớn thì cân nhắc blob hoặc nén.** Calldata có giá sàn, và Glamsterdam nâng mức sàn đó lên nữa.
+- **Không xin người dùng ký lệnh ủy quyền EIP-7702.** Theo chính EIP-7702, việc đó là của ví, không phải của ứng dụng. Ứng dụng xin gộp lệnh qua `wallet_sendCalls` (ERC-5792).
+
+## Nguồn
+
+- EPF wiki: [Transaction](https://epf.wiki/#/wiki/EL/transaction), [EL Data Structures summary](https://epf.wiki/#/wiki/EL/el-data-structures-summary), [EIP-4844](https://epf.wiki/#/wiki/research/scaling/core-changes/eip-4844), [EIP-7702](https://epf.wiki/#/wiki/research/account-abstraction/eip-7702)
+- ethereum.org: [Giao dịch](https://ethereum.org/developers/docs/transactions/), [Gas và phí](https://ethereum.org/developers/docs/gas/)
+- Đặc tả: [ethereum/execution-specs](https://github.com/ethereum/execution-specs) (bản Osaka: kiểm tra giao dịch, giới hạn 6 blob)
+- EIP: [2](https://eips.ethereum.org/EIPS/eip-2), [155](https://eips.ethereum.org/EIPS/eip-155), [658](https://eips.ethereum.org/EIPS/eip-658), [1559](https://eips.ethereum.org/EIPS/eip-1559), [2718](https://eips.ethereum.org/EIPS/eip-2718), [2780](https://eips.ethereum.org/EIPS/eip-2780), [2930](https://eips.ethereum.org/EIPS/eip-2930), [4844](https://eips.ethereum.org/EIPS/eip-4844), [7594](https://eips.ethereum.org/EIPS/eip-7594), [7623](https://eips.ethereum.org/EIPS/eip-7623), [7702](https://eips.ethereum.org/EIPS/eip-7702), [7773](https://eips.ethereum.org/EIPS/eip-7773), [7825](https://eips.ethereum.org/EIPS/eip-7825), [7976](https://eips.ethereum.org/EIPS/eip-7976), [7981](https://eips.ethereum.org/EIPS/eip-7981), [8037](https://eips.ethereum.org/EIPS/eip-8037), [8038](https://eips.ethereum.org/EIPS/eip-8038)
+- Geth: [Tùy chọn dòng lệnh](https://geth.ethereum.org/docs/fundamentals/command-line-options) (`--txpool.pricebump`, `--blobpool.pricebump`, `--rpc.allow-unprotected-txs`)
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

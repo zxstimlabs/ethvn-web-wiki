@@ -26,6 +26,8 @@ import { DelegationScene } from '@/components/iso/delegation-scene';
 import { UserOpScene } from '@/components/iso/user-op-scene';
 import { NetworksScene } from '@/components/iso/networks-scene';
 import { SupplyScene } from '@/components/iso/supply-scene';
+import { SeedScene } from '@/components/iso/seed-scene';
+import { EvmScene } from '@/components/iso/evm-scene';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -57,6 +59,8 @@ export function getMDXComponents(components?: MDXComponents) {
     UserOpScene,
     NetworksScene,
     SupplyScene,
+    SeedScene,
+    EvmScene,
     ...components,
   } satisfies MDXComponents;
 }

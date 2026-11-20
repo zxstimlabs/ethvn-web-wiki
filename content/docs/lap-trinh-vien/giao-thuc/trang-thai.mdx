@@ -1,0 +1,250 @@
+---
+title: Trạng thái và cấu trúc dữ liệu
+description: Số dư, mã và storage của mọi tài khoản nằm trong một cây Merkle-Patricia, tóm lại bằng một mã băm 32 byte trong mỗi khối, nên ai cũng kiểm chứng được dữ liệu mà không phải tin nút RPC. Kèm theo đó là hai cách mã hóa RLP, SSZ và những thay đổi đang được nghiên cứu.
+sources:
+  - https://epf.wiki/#/wiki/EL/data-structures
+  - https://epf.wiki/#/wiki/EL/el-data-structures-summary
+  - https://epf.wiki/#/wiki/EL/RLP
+  - https://epf.wiki/#/wiki/CL/SSZ
+  - https://epf.wiki/#/wiki/CL/merkleization
+  - https://epf.wiki/#/wiki/research/history-expiry/history-expiry
+  - https://ethereum.org/developers/docs/accounts/
+  - https://ethereum.org/developers/docs/data-structures-and-encoding/patricia-merkle-trie/
+  - https://ethereum.org/developers/docs/data-structures-and-encoding/rlp/
+  - https://ethereum.org/developers/docs/data-structures-and-encoding/ssz/
+  - https://ethereum.org/roadmap/statelessness/
+  - https://ethereum.org/roadmap/verkle-trees/
+---
+
+Sau mỗi khối, mọi nút Ethereum giữ cùng một bức ảnh chụp: số dư, nonce, mã và storage của mọi tài khoản. Đó là **trạng thái** (state). Các nút không gửi cả bức ảnh cho nhau để so. Chúng so một mã băm 32 byte nằm trong phần đầu khối: **gốc trạng thái** (state root).
+
+Bài này giải thích trạng thái được sắp xếp thế nào để một mã băm tóm được tất cả, cách dùng điều đó để chứng minh một số dư mà không cần tin ai, và hai cách Ethereum mã hóa dữ liệu thành byte. Cách giao dịch thay đổi trạng thái nằm ở bài [EVM](./evm.mdx).
+
+## Tài khoản có bốn trường
+
+Trạng thái là một bảng ánh xạ từ địa chỉ 20 byte tới tài khoản. Mỗi tài khoản có đúng bốn trường:
+
+| Trường | Nghĩa |
+|---|---|
+| `nonce` | Với **tài khoản do khóa điều khiển** (EOA): số giao dịch đã gửi. Với hợp đồng: số hợp đồng nó đã tạo |
+| `balance` | Số dư, tính bằng wei (1 ETH = 10<sup>18</sup> wei) |
+| `storageRoot` | Gốc của cây storage riêng của tài khoản |
+| `codeHash` | Mã băm Keccak-256 của mã. Tài khoản không có mã mang mã băm của chuỗi rỗng, `0xc5d2…a470` |
+
+Không có trường nào ghi "đây là hợp đồng". Tài khoản hợp đồng đơn giản là tài khoản có mã. Từ Pectra (2025), một EOA đã ủy quyền theo [EIP-7702](../../can-ban/dung-ethereum/eip-7702.mdx) cũng có mã: 23 byte, gồm `0xef0100` nối với địa chỉ của hợp đồng được ủy quyền. Vì vậy `codeHash` của một EOA có thể thay đổi.
+
+**Storage** của mỗi hợp đồng gồm 2<sup>256</sup> ô, mỗi ô 32 byte. Ô chưa ghi mặc định bằng 0 và không chiếm chỗ: cây chỉ chứa các ô khác 0. Ghi vào một ô mới là thêm một lá vào cây, nên rất đắt, như bài [EVM](./evm.mdx#dữ-liệu-nằm-ở-đâu) đã nói. Glamsterdam tăng giá tạo trạng thái mới (EIP-8037) và đổi giá truy cập trạng thái (EIP-8038), nên trên Sepolia các con số đó có thể đã khác mạng chính.
+
+## Cây Merkle-Patricia
+
+Cấu trúc này ghép hai ý tưởng.
+
+- **Cây Merkle.** Mỗi nút cha là mã băm của các nút con. Đổi một byte ở lá, mã băm của mọi nút trên đường lên gốc đều đổi. Vì vậy gốc là "dấu vân tay" của toàn bộ dữ liệu: hai cây có cùng gốc thì chứa cùng dữ liệu.
+- **Cây Patricia** (radix trie). Khóa được đọc từng ký tự để chọn nhánh, và những đoạn khóa chung được gộp lại để cây không quá sâu.
+
+Ethereum ghép hai thứ thành **cây Merkle-Patricia** (Merkle Patricia Trie, MPT). Khóa được đọc từng nửa byte, tức từng chữ số hex, nên mỗi nút có tới 16 nhánh. Có ba loại **nút cây** (trie node, đừng nhầm với nút mạng):
+
+- **Nút nhánh** (branch): 17 phần tử, gồm 16 con trỏ ứng với 16 chữ số hex và một chỗ cho giá trị.
+- **Nút mở rộng** (extension): một đoạn khóa chung, rồi một con trỏ tới nút tiếp theo. Nó thay cho một chuỗi nút nhánh chỉ có một con.
+- **Lá** (leaf): phần còn lại của khóa, và giá trị.
+
+Mỗi nút cây được mã hóa bằng RLP (xem bên dưới). Nút cha trỏ tới nút con bằng mã băm Keccak-256 của nút con. Nút con ngắn hơn 32 byte thì nằm luôn trong nút cha. Mã băm của nút gốc là gốc của cây.
+
+Lớp thực thi dùng cây này bốn lần:
+
+| Cây | Khóa | Giá trị | Sống bao lâu |
+|---|---|---|---|
+| Trạng thái | `keccak256(địa chỉ)` | `rlp([nonce, balance, storageRoot, codeHash])` | Một cây chung, cập nhật sau mỗi khối |
+| Storage | `keccak256(số ô, 32 byte)` | RLP của giá trị, bỏ các byte 0 ở đầu | Mỗi tài khoản một cây, gốc nằm trong `storageRoot` |
+| Giao dịch | `rlp(vị trí trong khối)` | Giao dịch đã mã hóa | Mỗi khối một cây, dựng mới |
+| Biên lai | `rlp(vị trí trong khối)` | Biên lai đã mã hóa | Mỗi khối một cây, dựng mới |
+
+Khóa của cây trạng thái và cây storage được băm trước khi đưa vào cây. Nhờ vậy kẻ tấn công không chọn được khóa để tạo một nhánh thật sâu, làm chậm mọi nút.
+
+## Phần đầu khối cam kết cho mọi thứ
+
+Phần đầu khối của lớp thực thi chứa gốc của các cây đó, cùng vài cam kết khác:
+
+| Trường | Cam kết cho |
+|---|---|
+| `stateRoot` | Toàn bộ trạng thái, sau khi chạy hết giao dịch trong khối |
+| `transactionsRoot` | Danh sách giao dịch, đúng thứ tự |
+| `receiptsRoot` | Biên lai của từng giao dịch |
+| `logsBloom` | Bộ lọc Bloom của mọi nhật ký trong khối |
+| `withdrawalsRoot` | Tiền rút từ lớp đồng thuận về lớp thực thi (Shanghai, EIP-4895) |
+| `parentBeaconBlockRoot` | Gốc SSZ của khối cha bên lớp đồng thuận (Dencun, EIP-4788) |
+
+Khi nhận một khối, nút chạy lại mọi giao dịch trên bản trạng thái của mình, tính lại các gốc rồi so với phần đầu khối. Lệch một bit là khối bị loại. Bản thân trạng thái không nằm trong khối, chỉ gốc của nó nằm đó.
+
+Bảng trên đúng với mạng chính hiện nay (luật Fusaka). Nâng cấp Glamsterdam đã chạy trên mạng thử nghiệm Sepolia từ ngày 6/10/2026, nhưng chưa có ngày cho Hoodi và mạng chính. Nó thêm vào phần đầu khối trường `block_access_list_hash`: mã băm của **danh sách truy cập cấp khối** (block-level access list, EIP-7928), ghi mọi tài khoản và ô storage mà khối chạm tới cùng giá trị sau khi chạy. Nút dùng danh sách này để đọc ổ đĩa và kiểm giao dịch song song.
+
+## Biên lai, nhật ký và bộ lọc Bloom
+
+Mỗi giao dịch sinh ra một **biên lai** (receipt). Ngoài byte kiểu giao dịch, biên lai gồm bốn thứ: thành công hay thất bại, tổng gas đã dùng trong khối tính tới giao dịch này, bộ lọc Bloom, và danh sách **nhật ký** (log). Bài [Giao dịch](./giao-dich.mdx) giải thích biên lai từ phía người gửi.
+
+Mỗi nhật ký là một sự kiện (event) của Solidity sau khi biên dịch. Nó gồm địa chỉ hợp đồng phát ra nó, từ 0 tới 4 **chủ đề** (topic) dài 32 byte, và phần dữ liệu. Chủ đề đầu tiên thường là mã băm của chữ ký sự kiện:
+
+```bash
+cast sig-event "Transfer(address,address,uint256)"
+# 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
+```
+
+Các tham số `indexed` thành chủ đề, phần còn lại vào dữ liệu. Hợp đồng không đọc được nhật ký. Chỉ phần mềm bên ngoài chuỗi đọc được, qua `eth_getLogs`.
+
+**Bộ lọc Bloom** (logs bloom) là một mảng 2.048 bit (256 byte). Với địa chỉ và từng chủ đề của mỗi nhật ký, nút lấy mã băm Keccak-256 rồi bật 3 bit do mã băm chọn. Bộ lọc của khối là phép OR của bộ lọc mọi biên lai trong khối.
+
+Muốn biết một khối có thể chứa sự kiện `Transfer` của một token hay không, chỉ cần xem 6 bit: 3 bit của địa chỉ token và 3 bit của chủ đề `Transfer`. Có một bit bằng 0 thì chắc chắn không có. Cả 6 bằng 1 thì *có thể* có, phải đọc biên lai mới chắc. Khối càng nhiều nhật ký, bộ lọc càng đầy và càng hay báo nhầm. EIP-7668 đề xuất bỏ hẳn bộ lọc này, và đang nằm trong danh sách được cân nhắc cho nâng cấp Hegotá.
+
+## Bằng chứng Merkle: kiểm chứng mà không cần tin
+
+Vì mỗi nút cha là mã băm của các nút con, muốn chứng minh một lá thuộc cây, chỉ cần đưa ra các nút cây trên đường từ gốc tới lá. Người kiểm tra băm ngược từ lá lên. Nếu ra đúng gốc trạng thái mà họ đã tin, giá trị ở lá là thật. Họ không cần giữ cả cây, cũng không cần tin bên đưa bằng chứng. Đó là **bằng chứng Merkle** (Merkle proof).
+
+- **Nút nhẹ** (light client) chỉ theo dõi phần đầu khối của lớp đồng thuận, do một **ủy ban đồng bộ** (sync committee) 512 trình xác thực ký. Ủy ban đổi sau mỗi 256 **kỷ nguyên** (epoch), khoảng 27 giờ. Qua một bằng chứng SSZ, nút nhẹ lấy được gốc trạng thái của lớp thực thi, rồi kiểm từng số dư, từng ô storage mà một nút RPC không đáng tin trả về. Helios là một phần mềm nút nhẹ làm đúng việc này.
+- **Cầu nối và rollup** chứng minh với một hợp đồng ở chuỗi khác rằng một ô storage trên Ethereum có một giá trị nhất định, miễn hợp đồng đó biết một mã băm khối đáng tin. Ngay trên Ethereum, hợp đồng đọc được mã băm của 8.191 khối gần nhất (EIP-2935, Pectra) và gốc khối của lớp đồng thuận (EIP-4788), nên cũng tự kiểm được bằng chứng.
+- **`eth_getProof`** (EIP-1186) là phương thức RPC trả về tài khoản kèm bằng chứng, cho cả tài khoản lẫn các ô storage bạn hỏi.
+
+### Thử với anvil
+
+Khởi động `anvil`, mạng thử nội bộ của Foundry, rồi chạy trong một cửa sổ khác:
+
+```bash
+# Gửi 1 ETH từ tài khoản thử số 0 sang số 1 để có một khối mới.
+# Khóa này anvil công bố cho mọi người: không bao giờ dùng trên mạng thật.
+cast send --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
+  0x70997970C51812dc3A010C7d01b50e0d17dc79C8 --value 1ether
+
+cast proof 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+```
+
+Kết quả, rút gọn và xuống dòng cho dễ đọc:
+
+```json
+{
+  "address": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+  "balance": "0x21e27c1806e59a40000",
+  "codeHash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+  "nonce": "0x0",
+  "storageHash": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+  "accountProof": ["0xf90131a032d89d41…", "0xf873a030314e565e…"],
+  "storageProof": []
+}
+```
+
+`accountProof` là các nút cây trên đường từ gốc tới lá. Băm nút đầu tiên phải ra đúng gốc trạng thái của khối:
+
+```bash
+cast keccak $(cast proof 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 | jq -r '.accountProof[0]')
+# 0x485378290f4c5f024877cb78416b1f0af7b8670aee46adf931c31c6a8c8845ee
+cast block latest -f stateRoot
+# 0x485378290f4c5f024877cb78416b1f0af7b8670aee46adf931c31c6a8c8845ee
+```
+
+Nút cuối cùng là lá. Giải mã nó ra hai phần: phần còn lại của khóa, và tài khoản đã mã hóa RLP.
+
+```bash
+cast from-rlp $(cast proof 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 | jq -r '.accountProof[-1]')
+# kết quả (rút gọn):
+# ["0x30314e565e0574cb412563df634608d76f5c59d9f817e85966100ec1d48005c0",
+#  "0xf84e808a021e27c1806e59a40000a056e81f17…b421a0c5d24601…a470"]
+```
+
+Khóa đầy đủ là `keccak256(địa chỉ)` = `0x00314e56…05c0`. Nút gốc đã dùng chữ số hex đầu tiên (`0`) để chọn nhánh. Lá giữ 63 chữ số còn lại, thêm một nửa byte `3` ở đầu, nghĩa là "đây là lá, phần khóa có số chữ số lẻ". Phần thứ hai được giải mã ở mục RLP ngay dưới.
+
+Mã băm ở máy bạn có thể khác nếu phiên bản Foundry khác (lệnh kiểm tra với Foundry 1.5.1, tháng 11 năm 2026). Điều quan trọng là hai dòng đầu trùng nhau.
+
+Anvil chỉ có vài tài khoản nên bằng chứng chỉ có 2 nút. Cây trên mạng chính lớn hơn nhiều, và mỗi nút nhánh mang theo tới 16 mã băm. EIP-7864 ước tính bằng chứng cho một lá trong cây 2<sup>32</sup> phần tử nặng khoảng 3.840 byte.
+
+<Callout type="info" title="Lưu ý">
+Nút đầy đủ thường chỉ trả bằng chứng cho các khối gần đây. Theo ethereum.org, Geth mặc định giữ trạng thái của 128 khối gần nhất. Muốn bằng chứng cho một khối cũ, bạn cần một nút lưu trữ (archive node).
+</Callout>
+
+## Mã hóa: RLP ở lớp thực thi, SSZ ở lớp đồng thuận
+
+Mã băm được tính trên chuỗi byte, nên mọi nút phải mã hóa cùng một dữ liệu ra đúng cùng một chuỗi byte. JSON không làm được điều đó: một đối tượng có nhiều cách viết, khác nhau ở khoảng trắng và thứ tự khóa.
+
+### RLP
+
+**RLP** (Recursive Length Prefix) chỉ biết hai thứ: chuỗi byte và danh sách. Nó không biết số nguyên, chữ hay giá trị đúng sai. Giao thức tự quy ước. Số nguyên được viết big-endian và bỏ các byte 0 ở đầu, nên số 0 là chuỗi rỗng.
+
+| Dữ liệu | Mã hóa |
+|---|---|
+| Một byte từ `0x00` tới `0x7f` | Giữ nguyên byte đó |
+| Chuỗi dài 0 tới 55 byte | Byte `0x80` cộng độ dài, rồi tới chuỗi |
+| Chuỗi dài hơn | Byte `0xb7` cộng số byte của độ dài, rồi độ dài, rồi chuỗi |
+| Danh sách, phần ruột dài 0 tới 55 byte | Byte `0xc0` cộng độ dài, rồi các phần tử đã mã hóa |
+| Danh sách dài hơn | Byte `0xf7` cộng số byte của độ dài, rồi độ dài, rồi phần ruột |
+
+Byte đầu tiên cho biết ngay đang đọc loại gì. Thử với `cast to-rlp`:
+
+```bash
+cast to-rlp 0x0401                      # số 1025
+# 0x820401
+cast to-rlp '["0x636174","0x646f67"]'   # danh sách ["cat", "dog"]
+# 0xc88363617483646f67
+cast to-rlp '["0x","0x021e27c1806e59a40000","0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"]'
+# 0xf84e808a021e27c1806e59a40000a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a0c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+```
+
+Lệnh cuối mã hóa đúng tài khoản trong lá ở mục trước. Tách ra từng phần:
+
+```text
+f8 4e                       danh sách dài (0xf7 + 1: độ dài chiếm 1 byte), phần ruột 0x4e = 78 byte
+80                          nonce = 0 (chuỗi rỗng)
+8a 021e27c1806e59a40000     balance: chuỗi 10 byte = 10.001 ETH tính bằng wei
+a0 56e81f17…b421            storageRoot: chuỗi 32 byte, gốc của một cây rỗng
+a0 c5d24601…a470            codeHash: chuỗi 32 byte, mã băm của mã rỗng
+```
+
+### SSZ
+
+Lớp đồng thuận dùng **SSZ** (Simple Serialize). Nó khác RLP ở bốn điểm:
+
+- **Có kiểu.** `uint64`, `boolean`, `Vector`, `List`, `Container`… Vì kiểu đã biết trước, phần có độ dài cố định không cần tiền tố độ dài. Phần có độ dài thay đổi được trỏ tới bằng một vị trí (offset) 4 byte.
+- **Số nguyên little-endian, đủ độ dài.** `uint64` 1025 là `0x0104000000000000` (8 byte), trong khi RLP viết `0x820401`.
+- **Đọc thẳng một trường** mà không phải giải mã cả đối tượng.
+- **Merkle hóa** (merkleization) **có sẵn.** Hàm `hash_tree_root` chia dữ liệu thành các khúc 32 byte, băm từng cặp bằng SHA-256 cho tới khi còn một gốc. Mỗi trường có một vị trí cố định trong cây, gọi là **chỉ số tổng quát** (generalized index), nên bằng chứng cho một trường bất kỳ ngắn và dễ kiểm. Nút nhẹ dựa vào điều này.
+
+Lớp thực thi băm bằng Keccak-256, lớp đồng thuận băm bằng SHA-256. Đã có đề xuất chuyển khối của lớp thực thi sang SSZ (EIP-7807), nhưng nó bị từ chối đưa vào Hegotá. Tới tháng 11 năm 2026, giao dịch, biên lai và cây trạng thái vẫn dùng RLP.
+
+## Lịch sử: không phải nút nào cũng giữ
+
+Để kiểm một khối mới, nút cần trạng thái hiện tại, không cần lịch sử (phần đầu, thân và biên lai của các khối cũ). Vậy mà trước đây, mọi nút đầy đủ vẫn phải giữ và phục vụ toàn bộ lịch sử từ khối đầu tiên.
+
+**EIP-4444** đề xuất cho nút xóa lịch sử cũ và thôi phục vụ nó qua mạng ngang hàng. EIP này vẫn là bản nháp (Draft), nhưng bước đầu đã được thực hiện:
+
+- **Từ ngày 8 tháng 7 năm 2025**, mọi phần mềm lớp thực thi hỗ trợ xóa lịch sử trước The Merge (trước khối 15.537.394). Theo Quỹ Ethereum, việc này tiết kiệm khoảng 300 tới 500 GB. Khi đó, phần lớn client chỉ xóa khi người vận hành bật, riêng Nethermind bật mặc định cho nút đồng bộ mới.
+- **Fusaka** yêu cầu client hỗ trợ giao thức mạng `eth/69` (EIP-7642). Mỗi nút cho các nút khác biết mình giữ lịch sử từ khối nào.
+- Lịch sử cũ vẫn có trong các tệp ERA, do nhiều bên lưu trữ và chia sẻ. Mọi phần đầu khối từ khối đầu tiên vẫn được giữ.
+- Xóa dần cả lịch sử sau The Merge vẫn đang được thiết kế.
+
+## Trạng thái sẽ thay đổi thế nào
+
+Mục tiêu dài hạn là **nút không cần giữ toàn bộ trạng thái** (statelessness). Mỗi khối sẽ đi kèm bằng chứng cho phần trạng thái nó chạm tới, và nút kiểm khối bằng bằng chứng đó thay vì ổ đĩa của mình. Cây Merkle-Patricia không hợp với việc này. Bằng chứng của nó lớn, vì mỗi tầng mang tới 15 mã băm anh em. Nó còn dùng RLP và Keccak, vốn chậm khi chứng minh bằng ZK, và tách mã khỏi cây.
+
+Có hai hướng đã được đề xuất. Cả hai mới là nghiên cứu, chưa được xếp lịch cho nâng cấp nào:
+
+| | Cây Verkle (EIP-6800) | Cây nhị phân (EIP-7864) |
+|---|---|---|
+| Ý tưởng | Cây rộng 256 nhánh, dùng cam kết vectơ thay cho mã băm, nên bằng chứng rất nhỏ | Một cây nhị phân duy nhất cho tài khoản, mã và storage. Hàm băm thân thiện với việc chứng minh bằng ZK |
+| Trạng thái EIP (11/2026) | Stagnant: ngừng cập nhật | Draft: đang được phát triển. Hàm băm chưa chốt (bản nháp dùng BLAKE3, ứng viên khác là Keccak và Poseidon2) |
+
+ethereum.org và EPF wiki vẫn giới thiệu cây Verkle như kế hoạch chính. Danh sách EIP của Glamsterdam (EIP-7773) và Hegotá (EIP-8081, bản nháp, chưa có ngày) không có cả hai. Chuyển đổi, nếu xảy ra, sẽ phải chép lại toàn bộ trạng thái sang cấu trúc mới.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **Đừng tin mù quáng nút RPC.** Với dữ liệu quan trọng, như số dư mà cầu nối hay hệ thống lưu ký dựa vào, hãy kiểm bằng chứng từ `eth_getProof` so với một gốc trạng thái bạn tin, hoặc tự chạy nút hay nút nhẹ.
+- **Tính đúng số ô trước khi xin bằng chứng storage.** Biến thường nằm ở ô theo thứ tự khai báo. Phần tử của mapping nằm ở ô băm từ khóa và số ô của mapping: `cast index address <địa chỉ> <số ô>` tính sẵn cho bạn.
+- **Nhật ký rẻ nhưng hợp đồng không đọc được.** Dùng chúng cho dữ liệu chỉ để hiển thị và lập chỉ mục bên ngoài chuỗi. Đừng coi bộ lọc Bloom là câu trả lời chắc chắn: nó chỉ loại bớt khối.
+- **Chuyển ETH không tự để lại nhật ký.** Lần chuyển từ EOA thấy được trong danh sách giao dịch, còn lần chuyển từ bên trong hợp đồng thì phải lần vết (trace) giao dịch mới thấy. Glamsterdam cho mọi lần chuyển ETH phát một nhật ký `Transfer` (EIP-7708). Nâng cấp này đã chạy trên Sepolia từ ngày 6/10/2026, chưa có ngày cho Hoodi và mạng chính, nên trên mạng chính đừng dựa vào nhật ký này.
+- **Lịch sử trước The Merge có thể không còn.** Nếu ứng dụng cần nhật ký hay biên lai trước khối 15.537.394, hãy kiểm nhà cung cấp RPC của bạn còn giữ chúng không, hoặc đọc từ tệp ERA. Bằng chứng cho khối cũ thì cần nút lưu trữ.
+- **Đừng khóa cứng cách kiểm bằng chứng trong hợp đồng.** Nếu hợp đồng của bạn kiểm bằng chứng Merkle-Patricia, hãy cho phép thay bộ kiểm. Cây trạng thái có thể đổi trong tương lai.
+
+## Nguồn
+
+- EPF wiki: [Data Structures in Execution Layer](https://epf.wiki/#/wiki/EL/data-structures), [EL Data Structures summary](https://epf.wiki/#/wiki/EL/el-data-structures-summary), [RLP](https://epf.wiki/#/wiki/EL/RLP), [SSZ](https://epf.wiki/#/wiki/CL/SSZ), [Merkleization](https://epf.wiki/#/wiki/CL/merkleization), [History Expiry](https://epf.wiki/#/wiki/research/history-expiry/history-expiry)
+- ethereum.org: [Tài khoản](https://ethereum.org/developers/docs/accounts/), [Cây Merkle-Patricia](https://ethereum.org/developers/docs/data-structures-and-encoding/patricia-merkle-trie/), [RLP](https://ethereum.org/developers/docs/data-structures-and-encoding/rlp/), [SSZ](https://ethereum.org/developers/docs/data-structures-and-encoding/ssz/), [Statelessness](https://ethereum.org/roadmap/statelessness/)
+- Đặc tả: [ethereum/execution-specs](https://github.com/ethereum/execution-specs) (cây, bộ lọc Bloom), [ethereum/consensus-specs](https://github.com/ethereum/consensus-specs) (SSZ, giao thức nút nhẹ)
+- EIP: [1186](https://eips.ethereum.org/EIPS/eip-1186), [2935](https://eips.ethereum.org/EIPS/eip-2935), [4444](https://eips.ethereum.org/EIPS/eip-4444), [4788](https://eips.ethereum.org/EIPS/eip-4788), [4895](https://eips.ethereum.org/EIPS/eip-4895), [6800](https://eips.ethereum.org/EIPS/eip-6800), [7642](https://eips.ethereum.org/EIPS/eip-7642), [7668](https://eips.ethereum.org/EIPS/eip-7668), [7702](https://eips.ethereum.org/EIPS/eip-7702), [7708](https://eips.ethereum.org/EIPS/eip-7708), [7773](https://eips.ethereum.org/EIPS/eip-7773), [7807](https://eips.ethereum.org/EIPS/eip-7807), [7864](https://eips.ethereum.org/EIPS/eip-7864), [7928](https://eips.ethereum.org/EIPS/eip-7928), [8037](https://eips.ethereum.org/EIPS/eip-8037), [8038](https://eips.ethereum.org/EIPS/eip-8038), [8081](https://eips.ethereum.org/EIPS/eip-8081)
+- Quỹ Ethereum: [Partial history expiry announcement](https://blog.ethereum.org/2025/07/08/partial-history-exp) (8 tháng 7 năm 2025)
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

@@ -1,0 +1,238 @@
+---
+title: Mật mã
+description: Những công cụ mật mã Ethereum dùng và chỗ bạn gặp chúng khi viết ứng dụng. Keccak-256, chữ ký secp256k1, ký thông điệp theo EIP-191 và EIP-712, BLS của trình xác thực, cam kết KZG cho blob, secp256r1 cho passkey, và rủi ro từ máy tính lượng tử.
+sources:
+  - https://epf.wiki/#/wiki/Cryptography/intro
+  - https://epf.wiki/#/wiki/Cryptography/keccak256
+  - https://epf.wiki/#/wiki/Cryptography/ecdsa
+  - https://epf.wiki/#/wiki/Cryptography/bls
+  - https://epf.wiki/#/wiki/Cryptography/KZG
+  - https://epf.wiki/#/wiki/Cryptography/post-quantum-cryptography
+  - https://ethereum.org/developers/docs/accounts/
+  - https://ethereum.org/developers/docs/transactions/
+  - https://ethereum.org/roadmap/danksharding/
+  - https://ethereum.org/roadmap/security/quantum-resistance/
+---
+
+Ethereum không tự phát minh mật mã. Nó ghép vài công cụ đã được nghiên cứu kỹ, mỗi công cụ cho một việc. Hai bài [Địa chỉ và khóa](../../can-ban/cach-hoat-dong/dia-chi-va-khoa.mdx) và [Chữ ký số](../../can-ban/cach-hoat-dong/chu-ky-so.mdx) giải thích ý tưởng. Bài này đi vào những chi tiết lập trình viên ứng dụng gặp hằng ngày: dùng hàm băm nào, chữ ký trông ra sao, ký thông điệp sao cho an toàn, và những gì sắp thay đổi.
+
+| Công cụ | Dùng để | Bạn gặp khi |
+|---|---|---|
+| Keccak-256 | Địa chỉ, bộ chọn hàm, vị trí ô storage, mã băm giao dịch, cây trạng thái | Gần như mọi lúc |
+| SHA-256 | Lớp đồng thuận, mã băm phiên bản của blob | Làm việc với blob hoặc dữ liệu lớp đồng thuận |
+| ECDSA trên secp256k1 | Chữ ký của tài khoản thường | Ký giao dịch, ký thông điệp, kiểm chữ ký trong hợp đồng |
+| BLS12-381 | Chữ ký của **trình xác thực** (validator) | Đặt cọc, cầu nối đọc dữ liệu lớp đồng thuận |
+| KZG | Cam kết cho dữ liệu blob | Gửi blob, xây Layer 2 |
+| ECDSA trên secp256r1 | Passkey, chip bảo mật trong điện thoại | **Ví thông minh** (smart wallet) đăng nhập bằng passkey |
+
+Lệnh trong bài được kiểm tra với Foundry 1.5.1, tháng 11/2026.
+
+## Keccak-256, không phải SHA3-256
+
+Gần như mọi **mã băm** (hash) trong Ethereum là Keccak-256. Keccak thắng cuộc thi SHA-3 của NIST năm 2012. Trước khi chốt chuẩn SHA-3 (FIPS 202, tháng 8/2015), NIST đổi cách **đệm** (padding) dữ liệu: SHA3-256 thêm hai bit phân tách miền, nên byte đệm đầu tiên là `0x06`, còn Keccak gốc dùng `0x01`. Ethereum đã chọn Keccak từ trước thay đổi đó. Vì vậy, cùng một đầu vào, hai hàm cho kết quả khác hẳn nhau:
+
+```bash
+cast keccak ""
+# 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+
+printf '' | openssl dgst -sha3-256   # cần OpenSSL 3 trở lên
+# SHA3-256(stdin)= a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a
+```
+
+Giá trị `0xc5d2…a470` đáng nhớ: đó là mã băm của chuỗi rỗng, và cũng là `EXTCODEHASH` của một tài khoản đã tồn tại nhưng không có mã.
+
+Hai chỗ hay nhầm:
+
+- Lệnh EVM `KECCAK256` (byte `0x20`) trước đây tên là `SHA3`. Ở ngoài chuỗi, hãy dùng hàm Keccak của thư viện Ethereum (`keccak256` của viem hay ethers), không dùng SHA3-256 của thư viện chuẩn như `hashlib.sha3_256` của Python.
+- Lớp đồng thuận dùng SHA-256 chứ không dùng Keccak: gốc Merkle của SSZ, mã băm phiên bản của blob, mã của tin gossip đều là SHA-256.
+
+## Chữ ký secp256k1
+
+Khóa riêng tư là một số 256 bit. Khóa công khai là một điểm trên đường cong secp256k1, viết thành 64 byte (tọa độ x và y). Địa chỉ là 20 byte cuối của Keccak-256 khóa công khai. Thử với tài khoản số 0 của anvil:
+
+```bash
+# Khóa thử nghiệm của anvil: công khai, ai cũng biết. Không bao giờ gửi tiền thật vào.
+K=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+cast wallet public-key --private-key $K | xargs cast keccak
+# 0xc1ffd3cfee2d9e5cd67643f8f39fd6e51aad88f6f4ce6ab8827279cfffb92266
+cast wallet address --private-key $K
+# 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266   (20 byte cuối của dòng trên)
+```
+
+Một chữ ký **ECDSA** gồm ba phần: `r` và `s`, mỗi phần 32 byte, và `v` một byte. Từ `r` có hai điểm trên đường cong có thể khớp, và `v` cho biết là điểm nào. Nhờ đó ai cũng **khôi phục** được khóa công khai, rồi địa chỉ, chỉ từ chữ ký và mã băm của nội dung. Vì vậy giao dịch Ethereum không có trường "người gửi": mọi nút tự tính ra người gửi từ chữ ký. Hợp đồng làm việc tương tự qua **hợp đồng biên dịch sẵn** (precompile) `ecrecover` ở địa chỉ `0x01`, giá 3.000 gas.
+
+- Giao dịch kiểu mới (kiểu 1 tới 4) lưu `yParity` là 0 hoặc 1. Giao dịch kiểu cũ dùng `v` là 27 hoặc 28, hoặc `chainId × 2 + 35` (hay `+ 36`) theo EIP-155. Đưa mã chuỗi vào chữ ký để giao dịch ký cho mạng này không phát lại được trên mạng khác.
+- Mỗi lần ký cần một số bí mật dùng một lần. Lộ số này, hoặc dùng lại nó cho hai thông điệp, là lộ khóa riêng tư. Thư viện hiện nay tính nó một cách tất định từ khóa và thông điệp (RFC 6979), nên ký hai lần cùng một thông điệp ra cùng một chữ ký. Đây là một lý do để không bao giờ tự viết mã ký.
+
+## Ký thông điệp trong dapp
+
+**Ứng dụng phi tập trung** (dapp) thường nhờ ví ký một thông điệp thay vì một giao dịch: để đăng nhập, để đặt lệnh ngoài chuỗi, hay để cho phép chi tiêu mà không tốn gas. ERC-191 quy định mọi dữ liệu được ký như vậy bắt đầu bằng byte `0x19`, theo sau là một byte phiên bản. Nhờ byte `0x19`, dữ liệu đã ký không bao giờ trùng với một giao dịch hợp lệ.
+
+### `personal_sign`: văn bản tự do
+
+Phiên bản `0x45` (chữ `E`) là kiểu `personal_sign` mà mọi ví hỗ trợ. Ví ghép tiền tố `"\x19Ethereum Signed Message:\n"`, độ dài thông điệp tính bằng byte, và thông điệp, rồi băm bằng Keccak-256 trước khi ký:
+
+```bash
+cast wallet sign --private-key $K "Xin chào ETH.vn"
+# 0x87c0ba3bcdbd04106860fac02ca339b2fae6bc24e07cc571b67555821b9934c964b1205b1c35ee6ccd653919bf828870bf69ccf6ef56f3ef254e3d99f77c8e821b
+# r = 0x87c0…9934c9 (32 byte), s = 0x64b1…7c8e82 (32 byte), v = 0x1b = 27
+cast hash-message "Xin chào ETH.vn"
+# 0xbe8f7650c138cdef207d2d0da5d2faba33f11b1de7d7711748eb8f331839be5d
+cast wallet verify --address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 "Xin chào ETH.vn" 0x87c0ba3bcdbd04106860fac02ca339b2fae6bc24e07cc571b67555821b9934c964b1205b1c35ee6ccd653919bf828870bf69ccf6ef56f3ef254e3d99f77c8e821b
+# Validation succeeded. Address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 signed this message.
+```
+
+Chuỗi "Xin chào ETH.vn" có 15 ký tự nhưng 16 byte, vì chữ "à" chiếm 2 byte trong UTF-8. Tiền tố ghi `16`, không phải `15`.
+
+<Callout type="warn" title="Quan trọng">
+Tiếng Việt có hai cách lưu cùng một chữ có dấu: dạng dựng sẵn (NFC, "à" là một ký tự) và dạng tổ hợp (NFD, "a" cộng dấu huyền riêng). Hai dạng nhìn giống hệt nhau nhưng khác byte. Với dạng NFD, câu trên dài 17 byte và cho mã băm khác, nên chữ ký sẽ không khớp. Hãy chuẩn hóa văn bản về NFC (`text.normalize("NFC")` trong JavaScript) trước khi ký và trước khi kiểm chữ ký.
+</Callout>
+
+### EIP-712: dữ liệu có cấu trúc
+
+Văn bản tự do khó đọc và dễ bị lạm dụng. EIP-712 (phiên bản `0x01`) cho ví ký một cấu trúc có kiểu rõ ràng, để ví hiện từng trường cho người dùng đọc. Mã băm được ký là:
+
+```text
+keccak256(0x19 ‖ 0x01 ‖ domainSeparator ‖ hashStruct(message))
+```
+
+`domainSeparator` là mã băm của **miền** (domain): tên ứng dụng, phiên bản, `chainId` và địa chỉ hợp đồng sẽ kiểm chữ ký. Nhờ đó, chữ ký cho hợp đồng này trên mạng này không dùng được ở hợp đồng khác hay mạng khác. Ví dụ kinh điển là `Permit` của ERC-2612: chủ token ký để cho phép một địa chỉ khác chi tiêu, không cần gửi giao dịch `approve`. Tệp `permit.json` dưới đây dùng `chainId` 31337, mã chuỗi của anvil:
+
+```json
+{
+  "types": {
+    "EIP712Domain": [
+      { "name": "name", "type": "string" },
+      { "name": "version", "type": "string" },
+      { "name": "chainId", "type": "uint256" },
+      { "name": "verifyingContract", "type": "address" }
+    ],
+    "Permit": [
+      { "name": "owner", "type": "address" },
+      { "name": "spender", "type": "address" },
+      { "name": "value", "type": "uint256" },
+      { "name": "nonce", "type": "uint256" },
+      { "name": "deadline", "type": "uint256" }
+    ]
+  },
+  "primaryType": "Permit",
+  "domain": {
+    "name": "Demo Token",
+    "version": "1",
+    "chainId": 31337,
+    "verifyingContract": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+  },
+  "message": {
+    "owner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "spender": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "value": "1000000000000000000",
+    "nonce": 0,
+    "deadline": 1893456000
+  }
+}
+```
+
+```bash
+cast wallet sign --private-key $K --data --from-file permit.json
+# 0xeb33999bf84349ef0ddaa838ec2613ed2131a7570900d2fe7c26fa42609b39340f2f0e7b51b4d60a0d3e75f74c2c8afb401bdd26034ed331ff2d7a6f94d6219e1c
+```
+
+Tự tính `domainSeparator` và `hashStruct` bằng `cast abi-encode` và `cast keccak`, rồi ký mã băm cuối bằng `cast wallet sign --no-hash`, sẽ ra đúng chữ ký này.
+
+EIP-712 không tự chống **tấn công phát lại** (replay attack). Chính thông điệp phải mang `nonce` và `deadline`, và hợp đồng phải đánh dấu nonce đã dùng.
+
+<Callout type="error" title="Thận trọng">
+Một chữ ký `Permit` có giá trị như một lệnh `approve`: ai cầm nó cũng gửi được lên hợp đồng token, rồi rút token trong hạn mức. Trang lừa đảo hay xin loại chữ ký này vì nạn nhân không thấy giao dịch nào. Nếu ứng dụng của bạn xin chữ ký, hãy để ví hiện rõ `spender`, `value` và `deadline`. Chuẩn ERC-7730 giúp ví **ký rõ ràng** (clear signing): hiện các trường đó bằng lời dễ đọc.
+</Callout>
+
+### Kiểm chữ ký trong hợp đồng
+
+Precompile `ecrecover` có ba cái bẫy:
+
+- **Lỗi thì không hoàn tác.** Precompile trả về rỗng, và hàm `ecrecover` của Solidity trả về địa chỉ 0. Nếu biến `signer` của bạn chưa được gán (cũng là 0), một chữ ký rác sẽ "hợp lệ".
+- **Chữ ký dẻo** (malleable). Với mỗi chữ ký `(r, s, v)`, chữ ký `(r, n − s, v')` với `v'` đảo giữa 27 và 28 cũng hợp lệ, trong đó `n` là bậc của đường cong. EIP-2 (Homestead, 2016) bắt giao dịch phải có `s ≤ n/2`, nhưng cố ý để `ecrecover` nhận cả `s` cao. Hai lời gọi dưới đây ra cùng một địa chỉ:
+
+  ```bash
+  # Chạy `anvil` ở một cửa sổ khác trước.
+  H=0xbe8f7650c138cdef207d2d0da5d2faba33f11b1de7d7711748eb8f331839be5d
+  R=0x87c0ba3bcdbd04106860fac02ca339b2fae6bc24e07cc571b67555821b9934c9
+  cast call 0x0000000000000000000000000000000000000001 $(cast abi-encode "f(bytes32,uint8,bytes32,bytes32)" $H 27 $R 0x64b1205b1c35ee6ccd653919bf828870bf69ccf6ef56f3ef254e3d99f77c8e82)
+  # 0x000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266
+  cast call 0x0000000000000000000000000000000000000001 $(cast abi-encode "f(bytes32,uint8,bytes32,bytes32)" $H 28 $R 0x9b4edfa4e3ca1193329ac6e6407d778dfb450fefbff1ac4c9a8420f2d8b9b2bf)
+  # 0x000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266
+  ```
+
+  Vì vậy, đừng dùng bản thân chữ ký làm khóa để chống dùng lại. Hãy dùng nonce.
+- **Hợp đồng không ký ECDSA được.** Ví thông minh xác nhận chữ ký qua hàm `isValidSignature(bytes32,bytes)` của ERC-1271, trả về `0x1626ba7e` nếu hợp lệ.
+
+Thư viện `ECDSA` của OpenZeppelin từ chối `s` cao và hoàn tác khi khôi phục ra địa chỉ 0. `SignatureChecker` của OpenZeppelin xử lý cả tài khoản thường lẫn ví thông minh.
+
+## BLS12-381: chữ ký của trình xác thực
+
+Mỗi **kỷ nguyên** (epoch), mọi trình xác thực bỏ phiếu một lần, nên mỗi **khe** (slot) có rất nhiều chữ ký. Ký bằng ECDSA thì khối sẽ đầy chữ ký. Lớp đồng thuận dùng chữ ký **BLS** trên đường cong BLS12-381 vì chữ ký BLS **cộng gộp được**:
+
+- Khóa công khai 48 byte, chữ ký 96 byte.
+- Chữ ký của cả một **ủy ban** (committee) trên cùng một nội dung gộp thành một chữ ký 96 byte, kèm một dãy bit cho biết ai đã ký. Để kiểm, nút cộng các khóa công khai lại rồi làm một phép kiểm cặp ghép (pairing) duy nhất.
+- Ký BLS là tất định, không cần số bí mật dùng một lần như ECDSA.
+- Để chặn kiểu tấn công dùng khóa giả cài vào phép gộp, mỗi trình xác thực phải ký bằng chính khóa của mình khi đặt cọc, chứng minh mình giữ khóa đó.
+- Thứ được ký luôn là gốc SSZ của dữ liệu trộn với một **miền** cho từng loại việc và từng nâng cấp, nên chữ ký cho việc này không dùng lại được cho việc khác.
+
+Kiểm một chữ ký BLS chậm hơn ECDSA nhiều, nên giao dịch vẫn dùng ECDSA. Từ Pectra (5/2025), hợp đồng gọi được các phép toán BLS12-381 qua precompile `0x0b` tới `0x11` (EIP-2537), ví dụ để kiểm chữ ký của trình xác thực trong một cầu nối.
+
+## KZG: cam kết cho blob
+
+Một blob gồm 4.096 số, mỗi số 32 byte, tổng 128 KiB. KZG coi các số này là giá trị của một đa thức và nén cả blob thành một **cam kết** (commitment) 48 byte. Sau đó, ai giữ blob cũng chứng minh được "đa thức tại điểm z có giá trị y" bằng một bằng chứng 48 byte, mà người kiểm không cần cả blob.
+
+- Giao dịch blob chỉ chứa **mã băm phiên bản** (versioned hash): byte `0x01` nối với 31 byte cuối của SHA-256 của cam kết. Hợp đồng đọc mã này bằng lệnh `BLOBHASH`, nhưng không đọc được nội dung blob.
+- Muốn chứng minh một phần nội dung blob cho hợp đồng, gọi precompile `0x0a` (50.000 gas) với mã băm phiên bản, điểm, giá trị, cam kết và bằng chứng.
+- Từ Fusaka, người gửi kèm 128 bằng chứng cho mỗi blob, mỗi bằng chứng cho một ô, để nút kiểm từng cột riêng lẻ (xem [Mạng ngang hàng](./mang-ngang-hang.mdx) và [Mở rộng và dữ liệu khả dụng](./mo-rong.mdx)).
+- Nút chỉ phải giữ blob trong 4.096 kỷ nguyên, khoảng 18 ngày.
+
+KZG cần một bộ tham số tính từ một số bí mật mà không ai được biết. Bộ tham số này đến từ một **nghi thức thiết lập** (trusted setup) mở cho mọi người, chạy 208 ngày, từ 13/1/2023 tới 8/8/2023, với 141.416 lượt đóng góp. Mỗi người trộn thêm ngẫu nhiên của mình rồi xóa nó đi. Chỉ cần một người làm đúng, không ai dựng lại được số bí mật.
+
+## secp256r1 và passkey
+
+Passkey, chip Secure Enclave của iPhone và kho khóa của Android ký bằng ECDSA trên một đường cong khác: secp256r1, còn gọi là P-256. Fusaka thêm precompile `P256VERIFY` ở địa chỉ `0x100` (EIP-7951), giá 6.900 gas, để [ví thông minh](../../can-ban/dung-ethereum/vi-thong-minh.mdx) kiểm chữ ký passkey ngay trên chuỗi. Nó khác `ecrecover` ở bốn điểm:
+
+- **Chỉ kiểm, không khôi phục.** Đầu vào là 160 byte: mã băm, `r`, `s`, tọa độ x và y của khóa công khai. Ví phải tự lưu khóa công khai.
+- **Sai thì trả về rỗng**, không phải 0 và không hoàn tác. Hợp lệ thì trả về 32 byte có giá trị 1. Luôn kiểm độ dài kết quả.
+- **Không chặn `s` cao.** Chữ ký P-256 dẻo theo chuẩn, nên ứng dụng phải tự chặn nếu cần. Thư viện `P256` của OpenZeppelin làm việc này.
+- **Passkey không ký thẳng mã băm giao dịch.** Theo chuẩn WebAuthn, nó ký dữ liệu xác thực của thiết bị nối với SHA-256 của một đoạn JSON chứa "thử thách". Hợp đồng phải dựng lại đúng dữ liệu đó, như thư viện `WebAuthn` của OpenZeppelin làm.
+
+Nhiều Layer 2 đã có precompile cùng địa chỉ và cùng định dạng từ trước, theo RIP-7212, nhưng tính 3.450 gas.
+
+## Máy tính lượng tử
+
+Thuật toán Shor trên một máy tính lượng tử đủ lớn sẽ phá được mọi thứ dựa trên đường cong elliptic: ECDSA trên secp256k1 và secp256r1, BLS, KZG. Hàm băm như Keccak chỉ bị yếu đi, không bị phá. Hiện chưa có máy nào đủ mạnh, và các ước tính về thời điểm còn khác nhau nhiều.
+
+Với một tài khoản thường, địa chỉ chỉ là mã băm của khóa công khai. Khóa công khai chỉ lộ ra khi tài khoản ký giao dịch đầu tiên, vì ai cũng khôi phục được nó từ chữ ký.
+
+Các hướng dưới đây đều là **nghiên cứu và kế hoạch**, chưa có trên mạng chính (tháng 11/2026):
+
+- **Trình xác thực:** thay BLS bằng chữ ký dựa trên hàm băm (leanXMSS), lớn hơn nhiều, rồi gộp bằng một máy ảo zk nhỏ (leanVM). Trang [pq.ethereum.org](https://pq.ethereum.org) của Quỹ Ethereum (cập nhật 27/6/2026) ước tính phần nâng cấp giao thức có thể xong vào khoảng năm 2029, và nói rõ lộ trình còn phụ thuộc quyết định của cộng đồng.
+- **Blob:** thay KZG bằng cam kết dựa trên hàm băm (kiểu STARK) hoặc trên lưới (lattice). Cả hai còn đang được nghiên cứu.
+- **Tài khoản:** cho mỗi tài khoản tự đổi cách ký qua **trừu tượng hóa tài khoản** (account abstraction), thay vì đổi một lần cho cả mạng. EIP-8141 (**giao dịch dạng khung**, frame transaction) đã được xếp lịch cho Hegotá (EIP-8081) nhưng vẫn ở trạng thái Draft, và Hegotá chưa có ngày kích hoạt. Đề xuất precompile kiểm chữ ký ML-DSA (EIP-8355) đã bị loại khỏi Hegotá.
+
+NIST đã chuẩn hóa hai loại chữ ký an toàn trước máy tính lượng tử vào tháng 8/2024: ML-DSA (FIPS 204, dựa trên lưới) và SLH-DSA (FIPS 205, dựa trên hàm băm).
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **Dùng Keccak-256, không dùng SHA3-256**, khi tính địa chỉ, bộ chọn hàm hay vị trí ô storage ở ngoài chuỗi.
+- **Không tự viết mã mật mã.** Dùng viem hoặc ethers ở ngoài chuỗi, OpenZeppelin trong hợp đồng.
+- **Ký thông điệp có giá trị bằng EIP-712**, với `chainId`, `verifyingContract`, `nonce` và `deadline`. Dành `personal_sign` cho văn bản để người dùng đọc, như lời đăng nhập.
+- **Chuẩn hóa văn bản tiếng Việt về NFC** trước khi ký và trước khi kiểm.
+- **Kiểm chữ ký bằng `SignatureChecker`**, để ví thông minh (ERC-1271) cũng đăng nhập được. Nếu phải gọi `ecrecover` trực tiếp, chặn `s` cao và chặn địa chỉ 0.
+- **Với passkey:** lưu khóa công khai, kiểm độ dài kết quả của `0x100`, chặn `s` cao.
+- **Với blob:** hợp đồng chỉ thấy mã băm phiên bản. Tự lưu dữ liệu nếu cần lâu hơn khoảng 18 ngày.
+- **Chừa đường đổi cách xác thực.** Ví thông minh và hợp đồng nâng cấp được sẽ dễ chuyển sang chữ ký an toàn trước máy tính lượng tử hơn. Hiện chưa cần làm gì gấp.
+
+## Nguồn
+
+- EPF wiki: [Cryptography](https://epf.wiki/#/wiki/Cryptography/intro), [Keccak256](https://epf.wiki/#/wiki/Cryptography/keccak256), [ECDSA](https://epf.wiki/#/wiki/Cryptography/ecdsa), [BLS](https://epf.wiki/#/wiki/Cryptography/bls), [KZG](https://epf.wiki/#/wiki/Cryptography/KZG), [Post-Quantum Cryptography](https://epf.wiki/#/wiki/Cryptography/post-quantum-cryptography)
+- ethereum.org: [Accounts](https://ethereum.org/developers/docs/accounts/), [Transactions](https://ethereum.org/developers/docs/transactions/), [Danksharding](https://ethereum.org/roadmap/danksharding/), [Post-quantum cryptography](https://ethereum.org/roadmap/security/quantum-resistance/)
+- EIP và ERC: [2](https://eips.ethereum.org/EIPS/eip-2), [155](https://eips.ethereum.org/EIPS/eip-155), [191](https://eips.ethereum.org/EIPS/eip-191), [712](https://eips.ethereum.org/EIPS/eip-712), [1052](https://eips.ethereum.org/EIPS/eip-1052), [1271](https://eips.ethereum.org/EIPS/eip-1271), [2537](https://eips.ethereum.org/EIPS/eip-2537), [2612](https://eips.ethereum.org/EIPS/eip-2612), [4844](https://eips.ethereum.org/EIPS/eip-4844), [7594](https://eips.ethereum.org/EIPS/eip-7594), [7951](https://eips.ethereum.org/EIPS/eip-7951), [8081](https://eips.ethereum.org/EIPS/eip-8081), [8141](https://eips.ethereum.org/EIPS/eip-8141)
+- [consensus-specs, Phase 0](https://github.com/ethereum/consensus-specs/blob/master/specs/phase0/beacon-chain.md): bộ BLS dùng cho trình xác thực và chữ ký đặt cọc
+- Quỹ Ethereum: [Tổng kết nghi thức KZG](https://blog.ethereum.org/2024/01/23/kzg-wrap) (1/2024), [pq.ethereum.org](https://pq.ethereum.org) (đọc tháng 11/2026)
+- [OpenZeppelin Contracts v5.6.1](https://github.com/OpenZeppelin/openzeppelin-contracts/tree/v5.6.1/contracts/utils/cryptography): `ECDSA`, `SignatureChecker`, `P256`, `WebAuthn`
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

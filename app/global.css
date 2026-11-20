@@ -165,3 +165,20 @@ html > body[data-scroll-locked] {
   margin-right: 0px !important;
   --removed-body-scroll-bar-size: 0px !important;
 }
+
+/* Shiki writes an empty line of a plain-text code block as
+   <span class="line"><span></span></span>. Fumadocs' `.line:empty` rule misses
+   that shape, so blank lines in ```text blocks collapsed to nothing. */
+.shiki .line:has(> span:only-child:empty) {
+  height: 1lh;
+}
+
+/* A prompt readers copy into their AI app (<div className="ai-prompt"> around
+   a ```text block): wrap long lines instead of scrolling sideways on phones. */
+.ai-prompt pre {
+  width: 100%;
+}
+.ai-prompt .line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,187 @@
+---
+title: "Kiến trúc: hai lớp của một nút"
+description: Từ The Merge, mỗi nút Ethereum là hai phần mềm nói chuyện với nhau qua Engine API. Bài này theo chân một khối đi qua nút, giải thích các lựa chọn thiết kế gốc của Ethereum, và tóm tắt lịch sử từ sách trắng tới Fusaka.
+sources:
+  - https://epf.wiki/#/wiki/protocol/architecture
+  - https://epf.wiki/#/wiki/protocol/design-rationale
+  - https://epf.wiki/#/wiki/protocol/prehistory
+  - https://epf.wiki/#/wiki/protocol/history
+  - https://epf.wiki/#/wiki/EL/el-architecture
+  - https://epf.wiki/#/wiki/EL/engine-api
+  - https://epf.wiki/#/wiki/CL/cl-architecture
+  - https://ethereum.org/developers/docs/nodes-and-clients/
+  - https://ethereum.org/developers/docs/nodes-and-clients/node-architecture/
+  - https://ethereum.org/developers/docs/intro-to-ethereum/
+  - https://ethereum.org/developers/docs/ethereum-stack/
+  - https://ethereum.org/ethereum-forks/
+  - https://github.com/ethereum/execution-apis/tree/main/src/engine
+---
+
+Trước năm 2022, một nút Ethereum là một chương trình duy nhất, chẳng hạn Geth. Nó nhận giao dịch, chạy EVM, kiểm tra bằng chứng công việc và tự chọn chuỗi tốn nhiều công sức đào nhất. Từ The Merge (15/9/2022), một nút là hai chương trình chạy cạnh nhau: **phần mềm lớp thực thi** (execution client) và **phần mềm lớp đồng thuận** (consensus client). Chúng nói chuyện với nhau qua một giao diện riêng tên là **Engine API**.
+
+Ứng dụng của bạn hầu như chỉ nói chuyện với lớp thực thi, qua JSON-RPC. Nhưng chính lớp đồng thuận quyết định khối nào là `latest`, `safe` hay `finalized`, và khi nào một khối mới bị thay thế. Hiểu hai lớp chia việc thế nào giúp bạn chọn đúng mức an toàn cho từng thao tác.
+
+Bài [Nút](../../can-ban/cach-hoat-dong/nut.mdx) ở mục Căn bản giải thích nút là gì và vì sao nên tự chạy. Bài này đi vào bên trong.
+
+## Vì sao có hai lớp
+
+Chuỗi bằng chứng cổ phần, **Beacon Chain**, ra mắt ngày 1/12/2020 như một mạng riêng, với phần mềm riêng và mạng ngang hàng riêng. Nó chạy song song với chuỗi bằng chứng công việc gần hai năm. The Merge (EIP-3675) nối hai mạng lại: phần mềm lớp thực thi bỏ phần đào khối và từ đó nhận lệnh từ phần mềm lớp đồng thuận. Mỗi bên giữ đúng phần việc mình làm tốt.
+
+| | Lớp thực thi | Lớp đồng thuận |
+|---|---|---|
+| Giữ dữ liệu gì | Trạng thái (số dư, mã, storage), biên lai, mempool (hàng chờ giao dịch) | Trạng thái Beacon: danh sách trình xác thực, số dư cọc, các **mốc** (checkpoint), số ngẫu nhiên RANDAO |
+| Làm gì | Chạy giao dịch trong [EVM](./evm.mdx), kiểm tra gốc trạng thái, dựng phần thực thi của khối | Chạy **quy tắc chọn nhánh** (fork choice), theo dõi mốc được chứng minh và tính cuối cùng, kiểm tra chữ ký của trình xác thực |
+| Mạng ngang hàng | devp2p: lan truyền giao dịch, tải khối cũ khi đồng bộ | libp2p: lan truyền khối, **chứng thực** (attestation) và dữ liệu blob |
+| API cho bên ngoài | JSON-RPC | Beacon API (REST) |
+| Đặc tả | `ethereum/execution-specs` | `ethereum/consensus-specs` |
+| Ví dụ | Geth, Nethermind, Besu, Erigon, Reth | Lighthouse, Prysm, Teku, Nimbus, Lodestar, Grandine |
+
+Từ The Merge, khối mới không còn được lan truyền trên mạng của lớp thực thi nữa, vì chỉ lớp đồng thuận đủ thông tin để biết một khối có hợp lệ hay không. Mạng đó giờ chủ yếu chở giao dịch.
+
+Người muốn làm [trình xác thực](../../can-ban/cach-hoat-dong/trinh-xac-thuc.mdx) chạy thêm phần thứ ba, **phần mềm xác thực** (validator client). Nó giữ khóa ký của trình xác thực, hỏi lớp đồng thuận xem khi nào tới lượt mình, rồi ký khối và chứng thực. Nút không đặt cọc thì không cần phần này.
+
+Hai lớp có hai đặc tả, nên mỗi đợt nâng cấp có hai tên ghép lại: Prague (thực thi) và Electra (đồng thuận) thành Pectra, Osaka và Fulu thành Fusaka.
+
+## Engine API: lớp đồng thuận ra lệnh, lớp thực thi làm
+
+Lớp thực thi mở Engine API, lớp đồng thuận gọi vào. Đặc tả nằm ở `ethereum/execution-apis` (thư mục `src/engine`). Ba phương thức chính:
+
+| Phương thức | Ai gọi, khi nào | Làm gì |
+|---|---|---|
+| `engine_newPayload` | Lớp đồng thuận, khi nhận được một khối | Đưa phần thực thi của khối cho lớp thực thi kiểm tra: chạy lại mọi giao dịch, so gốc trạng thái, so danh sách mã băm của blob. Trả về `VALID`, `INVALID`, `SYNCING` (thiếu dữ liệu, đang tải) hoặc `ACCEPTED` (khối nằm trên nhánh phụ, chưa chạy) |
+| `engine_forkchoiceUpdated` | Lớp đồng thuận, mỗi khi đầu chuỗi thay đổi | Báo ba khối: đầu chuỗi, khối an toàn và khối đạt tính cuối cùng. Nếu kèm **thuộc tính khối** (payload attributes), lớp thực thi bắt đầu dựng một khối mới và trả về `payloadId` |
+| `engine_getPayload` | Lớp đồng thuận của người đề xuất | Lấy khối đã dựng theo `payloadId`, kèm tổng phí ưu tiên người đề xuất sẽ nhận và dữ liệu blob |
+
+Mỗi đợt nâng cấp đổi cấu trúc khối thì thêm một phiên bản. Trên mạng chính hiện nay (Fusaka) là `engine_newPayloadV4`, `engine_forkchoiceUpdatedV3` và `engine_getPayloadV5`. Khi khởi động, hai phần mềm có thể gọi `engine_exchangeCapabilities` để biết bên kia hỗ trợ những phiên bản nào.
+
+Engine API chạy ở cổng riêng, mặc định là 8551, tách khỏi cổng JSON-RPC công khai. Mọi yêu cầu HTTP phải mang một mã JWT ký bằng HMAC-SHA256 với một khóa bí mật 256 bit mà hai phần mềm dùng chung, và thời điểm ký phải lệch không quá 60 giây so với đồng hồ của lớp thực thi. Khóa thường nằm trong tệp `jwt.hex`. Geth đọc nó qua cờ `--authrpc.jwtsecret`, Lighthouse qua `--execution-jwt`.
+
+```bash
+# Tạo khóa bí mật: 32 byte ngẫu nhiên, ghi thành 64 ký tự hex
+openssl rand -hex 32 > jwt.hex
+```
+
+<Callout type="warn" title="Quan trọng">
+JWT chỉ xác thực bên gọi, không mã hóa đường truyền. Đừng bao giờ mở cổng 8551 ra internet. Hai phần mềm nên chạy trên cùng một máy hoặc trong mạng nội bộ.
+</Callout>
+
+Một phần mềm lớp đồng thuận có thể điều khiển nhiều phần mềm lớp thực thi để dự phòng. Chiều ngược lại thì không: mỗi phần mềm lớp thực thi chỉ nên nhận lệnh từ một lớp đồng thuận, vì nó chỉ theo được một đầu chuỗi tại một thời điểm.
+
+## Một khối đi qua nút thế nào
+
+Thời gian được chia thành **khe** (slot) 12 giây, 32 khe làm một **kỷ nguyên** (epoch). Mỗi khe có tối đa một khối.
+
+### Khi nút nhận khối của người khác
+
+1. **Nhận và kiểm tra sơ bộ.** Lớp đồng thuận nhận khối qua mạng ngang hàng, kiểm tra đúng **người đề xuất** (proposer) của khe đó, chữ ký BLS hợp lệ, khối cha đã biết.
+2. **Kiểm tra dữ liệu blob.** Từ Fusaka (PeerDAS, EIP-7594), nút không tải toàn bộ blob. Nó chỉ giữ và lấy mẫu một số cột dữ liệu, đủ để tin rằng cả blob có trên mạng. Bài [Mở rộng và dữ liệu khả dụng](./mo-rong.mdx) giải thích kỹ hơn.
+3. **Giao phần thực thi.** Lớp đồng thuận gọi `engine_newPayload`. Lớp thực thi chạy lại từng giao dịch, kiểm tra gas, gốc trạng thái, gốc biên lai, rồi trả lời `VALID` hay `INVALID`.
+4. **Cập nhật trạng thái Beacon** (chứng thực, rút tiền, nạp cọc, cắt tiền cọc) và chạy lại quy tắc chọn nhánh.
+5. **Báo đầu chuỗi mới.** Lớp đồng thuận gọi `engine_forkchoiceUpdated`. Từ lúc này, `latest` trong JSON-RPC trỏ tới khối mới.
+6. **Chứng thực.** Nếu nút có trình xác thực được phân công trong khe này, nó bỏ phiếu cho đầu chuỗi ngay khi nhận được khối hợp lệ. Nếu tới giây thứ 4 (1/3 khe) mà khối chưa tới, nó bỏ phiếu cho đầu chuỗi nó đang thấy, tức khối trước đó.
+
+### Khi nút là người đề xuất
+
+1. **Biết trước lượt của mình.** Lịch người đề xuất được tính từ trước. Từ Fusaka, lịch của kỷ nguyên kế tiếp được ghi cố định trong trạng thái Beacon (EIP-7917).
+2. **Dựng khối sớm.** Trước khe của mình, lớp đồng thuận gửi `engine_forkchoiceUpdated` kèm thuộc tính khối: thời điểm, số ngẫu nhiên, địa chỉ nhận phí, danh sách rút tiền cọc và gốc của khối Beacon cha. Lớp thực thi dựng ngay một khối rỗng để phòng hờ, rồi chọn giao dịch từ mempool và cải thiện khối dần trong lúc chờ.
+3. **Lấy khối.** Đầu khe, lớp đồng thuận gọi `engine_getPayload`. Nếu dùng MEV-Boost, nó còn hỏi các relay (nút do bên thứ ba vận hành) xem **người xây khối** (block builder) trả giá bao nhiêu, rồi chọn khối có lợi hơn. Bài [Từ mempool tới khối](./tu-mempool-toi-khoi.mdx) kể phần này.
+4. **Ký và phát.** Phần mềm xác thực ký khối Beacon, lớp đồng thuận phát khối và các cột dữ liệu blob ra mạng.
+5. Các nút khác làm đúng các bước ở phần trên. Khoảng 13 tới 19 phút sau, khối đạt **tính cuối cùng** (finality), như bài [Khối](../../can-ban/cach-hoat-dong/khoi.mdx) mô tả.
+
+<Callout type="idea" title="Mẹo">
+Từ The Merge, `block.timestamp` luôn bằng thời điểm bắt đầu khe: thời điểm khởi tạo Beacon Chain cộng số khe nhân 12 giây. Hai khối liền nhau cách nhau 12 giây, hoặc 24 giây nếu có một khe trống. Đừng giả định 12 giây là mãi mãi: EIP-8198 (Quick Slots), đang được cân nhắc cho Hegotá, đề xuất rút khe xuống 10 giây. Glamsterdam, đã chạy trên Sepolia nhưng chưa lên mạng chính, thêm lệnh `SLOTNUM` (EIP-7843) để hợp đồng đọc thẳng số khe thay vì tính từ thời điểm.
+</Callout>
+
+## Những lựa chọn thiết kế gốc
+
+Phần lớn thiết kế của Ethereum có từ 2014–2015, và vẫn ảnh hưởng tới mã bạn viết hôm nay.
+
+### Tài khoản thay vì UTXO
+
+Bitcoin lưu tiền như những tờ tiền trong ví: mỗi **đầu ra chưa tiêu** (UTXO) là một tờ, số dư là tổng các tờ bạn có khóa để tiêu. Ethereum lưu tiền như tài khoản ngân hàng: mỗi địa chỉ có số dư, một nonce, và nếu là hợp đồng thì có mã và storage.
+
+Cách này cho giao dịch nhỏ hơn (một người gửi, một chữ ký) và làm hợp đồng dễ viết hơn nhiều: một hợp đồng giữ trạng thái như một đối tượng, thay vì phải lần theo từng tờ tiền. Cái giá là mỗi giao dịch cần một nonce để chống [tấn công phát lại](./giao-dich.mdx), giao dịch của một tài khoản phải chạy đúng thứ tự, và quyền riêng tư kém hơn vì người ta dùng lại một địa chỉ.
+
+### Từ 256 bit
+
+Mỗi ô ngăn xếp của EVM rộng 256 bit, để vừa với mật mã Ethereum dùng: một mã băm Keccak-256, hay một khóa riêng tư secp256k1, nằm gọn trong một ô. Vì vậy `uint256` là kiểu "tự nhiên" của EVM. Kiểu nhỏ hơn chỉ có lợi khi Solidity gói được nhiều biến vào chung một ô storage.
+
+### Keccak-256, không phải SHA3-256
+
+Ethereum chọn Keccak, thuật toán thắng cuộc thi SHA-3 của NIST, trước khi NIST sửa cách đệm dữ liệu trong bản chuẩn cuối. Hai hàm cho kết quả khác nhau:
+
+```bash
+cast keccak ""
+# 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+
+printf '' | openssl dgst -sha3-256
+# SHA3-256(stdin)= a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a
+```
+
+Nhiều chỗ vẫn gọi Keccak-256 là "sha3", như phương thức JSON-RPC `web3_sha3`. Khi tự tính bộ chọn hàm hay mã băm ngoài chuỗi, hãy dùng hàm Keccak-256 của thư viện Ethereum (viem có `keccak256`), đừng dùng SHA3-256 của thư viện mật mã chuẩn.
+
+### Cây Merkle-Patricia
+
+Trạng thái, giao dịch và biên lai được xếp vào các cây Merkle-Patricia, và gốc của mỗi cây nằm trong phần đầu khối. Sửa bất kỳ giá trị nào thì gốc đổi theo. Ngược lại, có gốc thì chứng minh được một giá trị bằng một chuỗi mã băm từ lá lên gốc, đó chính là thứ `eth_getProof` trả về (xem [Phần mềm client và API](./client-va-api.mdx)).
+
+Cái giá là mỗi lần đọc trạng thái phải đi qua nhiều nút của cây, nên đọc ghi storage đắt. Các nhà nghiên cứu đang bàn việc thay cấu trúc này: trước là cây Verkle, gần đây là cây nhị phân (EIP-7864, còn là bản nháp, chưa xếp vào nâng cấp nào). Bài [Trạng thái và cấu trúc dữ liệu](./trang-thai.mdx) đi sâu hơn.
+
+### Gas
+
+EVM chạy được mọi chương trình, nên không ai biết trước một chương trình có dừng hay không. [Gas](../../can-ban/cach-hoat-dong/gas.mdx) giải quyết việc đó: mỗi bước tốn một khoản, giao dịch tự đặt mức tối đa, hết gas thì dừng và hoàn tác, nhưng toàn bộ gas đã cấp vẫn bị tính phí. Giá từng lệnh phản ánh tài nguyên nó dùng, nên lệnh chạm ổ đĩa đắt hơn lệnh tính toán.
+
+Đây cũng là một nguyên tắc: giao thức không cấm một kiểu sử dụng nào, mà định giá nó, để ai dùng nhiều tài nguyên thì trả nhiều hơn.
+
+### Đơn giản, và "không có tính năng"
+
+Mục tiêu ban đầu là một lập trình viên bình thường đọc hiểu và tự viết được toàn bộ đặc tả, để giao thức không phụ thuộc vào một nhóm nhỏ chuyên gia. Ethereum ngày nay phức tạp hơn nhiều, nhưng nguyên tắc vẫn là: nếu phải thêm độ phức tạp, ưu tiên đặt nó ở Layer 2, rồi tới phần mềm client, cuối cùng mới tới đặc tả giao thức. Kiến trúc hai lớp là một ví dụ: mỗi lớp phức tạp bên trong, nhưng hai lớp chỉ nói chuyện qua một giao diện hẹp.
+
+Ethereum cũng cố tình "không có tính năng". Giao thức chỉ cung cấp những khối cơ bản, còn token, ví nhiều chữ ký hay tên miền đều là hợp đồng. ERC-20 là một quy ước giữa các hợp đồng, không phải một phần của giao thức. Ví thông minh cũng vậy: [ERC-4337](../../can-ban/dung-ethereum/erc-4337.mdx) chạy hoàn toàn bằng hợp đồng từ năm 2023, trước khi giao thức thêm [EIP-7702](../../can-ban/dung-ethereum/eip-7702.mdx).
+
+## Lịch sử ngắn
+
+| Thời gian | Sự kiện | Thay đổi chính |
+|---|---|---|
+| 11/2013 | Sách trắng | Vitalik Buterin mô tả một chuỗi khối chạy được chương trình bất kỳ |
+| 4/2014 | Sách vàng | Gavin Wood viết đặc tả hình thức đầu tiên của Ethereum và EVM |
+| 7/2014 | Bán ether | Đợt bán kéo dài 42 ngày, trả bằng bitcoin |
+| 30/7/2015 | Frontier | Mạng chính ra mắt |
+| 14/3/2016 | Homestead | Bản ổn định đầu tiên, thêm lệnh `DELEGATECALL` |
+| 20/7/2016 | DAO fork | Lấy lại tiền bị rút khỏi The DAO; Ethereum Classic tách ra |
+| 10–11/2016 | Tangerine Whistle, Spurious Dragon | Tăng giá các lệnh bị lợi dụng để tấn công từ chối dịch vụ; chống phát lại giữa các chuỗi (EIP-155); giới hạn cỡ mã hợp đồng |
+| 16/10/2017 | Byzantium | `REVERT`, `STATICCALL`, precompile cho zk-SNARK |
+| 1/12/2020 | Beacon Chain | Chuỗi bằng chứng cổ phần chạy song song |
+| 15/4/2021 | Berlin | Nhiều kiểu giao dịch (EIP-2718), truy cập lạnh và ấm (EIP-2929) |
+| 5/8/2021 | London | EIP-1559: phí cơ sở bị đốt |
+| 15/9/2022 | The Merge | Chuyển hẳn sang bằng chứng cổ phần, ra đời Engine API |
+| 12/4/2023 | Shapella | Rút tiền cọc; nâng cấp kích hoạt theo thời gian thay vì số khối |
+| 13/3/2024 | Dencun | Blob (EIP-4844), transient storage |
+| 7/5/2025 | Pectra | Tài khoản ủy quyền EIP-7702, trình xác thực giữ tới 2.048 ETH |
+| 3/12/2025 | Fusaka | PeerDAS, giới hạn gas mỗi giao dịch, `eth_config`, lịch người đề xuất cố định |
+
+Sau Fusaka, hai nâng cấp chỉ đổi thông số blob (EIP-7892) nâng mục tiêu và mức tối đa số blob mỗi khối: BPO1 (9/12/2025) lên 10 và 15, BPO2 (7/1/2026) lên 14 và 21.
+
+Đợt kế tiếp, Glamsterdam, đã chạy trên mạng thử nghiệm Sepolia từ ngày 6/10/2026, chưa có ngày cho Hoodi và mạng chính (EIP-7773, đọc ngày 20/11/2026). Với kiến trúc nút, hai thay đổi lớn nhất là:
+
+- **ePBS** (EIP-7732): đưa việc tách người đề xuất và người xây khối vào giao thức, nên luồng đề xuất khối ở trên sẽ khác, và không còn phụ thuộc vào relay của MEV-Boost.
+- **Danh sách truy cập cấp khối** (EIP-7928): mỗi khối ghi sẵn những tài khoản và ô storage nó chạm tới, để nút đọc trước và chạy song song các giao dịch.
+
+Đặc tả Engine API đã có các phiên bản mới cho Glamsterdam (`engine_newPayloadV5`, `engine_forkchoiceUpdatedV4`, `engine_getPayloadV6`). Đợt sau nữa, Hegotá (EIP-8081), còn là bản nháp và chưa có ngày. Bài [Ethereum nâng cấp thế nào](../../can-ban/cach-hoat-dong/nang-cap.mdx) và [Lộ trình](./lo-trinh.mdx) kể tiếp.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **Chọn thẻ khối theo rủi ro.** `latest` là đầu chuỗi theo quy tắc chọn nhánh, có thể bị thay trong vài giây tới. Hiển thị giao diện thì dùng `latest`, còn ghi nhận tiền nạp hay giao hàng thì đợi `finalized`.
+- **Chuẩn bị cho khối bị thay thế.** Bộ lập chỉ mục (indexer) của bạn phải xử lý được việc một khối biến mất. Khi bộ lọc hay đăng ký WebSocket gửi lại một nhật ký có `removed: true`, hãy hoàn tác những gì bạn đã ghi từ nhật ký đó.
+- **Không mở cổng 8551.** Nếu tự chạy nút, chỉ mở JSON-RPC cho ứng dụng của mình, và giữ Engine API trong máy.
+- **Dùng Keccak-256.** Bộ chọn hàm, chủ đề sự kiện và vị trí storage đều tính bằng Keccak-256, không phải SHA3-256.
+- **Mỗi giao dịch tối đa 16.777.216 gas** (2<sup>24</sup>, từ Fusaka). Một lô thao tác hay một lần triển khai lớn phải vừa trong giới hạn này, dù khối còn chỗ.
+- **Theo dõi các đợt nâng cấp.** Nâng cấp có thể đổi giá gas, thêm kiểu giao dịch, thêm phương thức RPC. Đọc meta EIP của đợt nâng cấp, và cập nhật thư viện trước ngày kích hoạt.
+
+## Nguồn
+
+- EPF wiki: [Protocol architecture](https://epf.wiki/#/wiki/protocol/architecture), [Design rationale](https://epf.wiki/#/wiki/protocol/design-rationale), [Prehistory](https://epf.wiki/#/wiki/protocol/prehistory), [History](https://epf.wiki/#/wiki/protocol/history), [EL architecture](https://epf.wiki/#/wiki/EL/el-architecture), [Engine API](https://epf.wiki/#/wiki/EL/engine-api), [CL architecture](https://epf.wiki/#/wiki/CL/cl-architecture)
+- ethereum.org: [Nodes and clients](https://ethereum.org/developers/docs/nodes-and-clients/), [Node architecture](https://ethereum.org/developers/docs/nodes-and-clients/node-architecture/), [Intro to Ethereum](https://ethereum.org/developers/docs/intro-to-ethereum/), [Ethereum stack](https://ethereum.org/developers/docs/ethereum-stack/), [Lịch sử các đợt nâng cấp](https://ethereum.org/ethereum-forks/)
+- Đặc tả: [Engine API](https://github.com/ethereum/execution-apis/tree/main/src/engine) (`ethereum/execution-apis`), [ethereum/consensus-specs](https://github.com/ethereum/consensus-specs), [ethereum/execution-specs](https://github.com/ethereum/execution-specs)
+- EIP: [3675](https://eips.ethereum.org/EIPS/eip-3675), [7594](https://eips.ethereum.org/EIPS/eip-7594), [7600](https://eips.ethereum.org/EIPS/eip-7600), [7607](https://eips.ethereum.org/EIPS/eip-7607), [7773](https://eips.ethereum.org/EIPS/eip-7773), [7732](https://eips.ethereum.org/EIPS/eip-7732), [7825](https://eips.ethereum.org/EIPS/eip-7825), [7843](https://eips.ethereum.org/EIPS/eip-7843), [7864](https://eips.ethereum.org/EIPS/eip-7864), [7892](https://eips.ethereum.org/EIPS/eip-7892), [7917](https://eips.ethereum.org/EIPS/eip-7917), [7928](https://eips.ethereum.org/EIPS/eip-7928), [8081](https://eips.ethereum.org/EIPS/eip-8081), [8198](https://eips.ethereum.org/EIPS/eip-8198)
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

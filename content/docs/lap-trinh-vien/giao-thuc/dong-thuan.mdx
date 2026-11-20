@@ -1,0 +1,163 @@
+---
+title: Đồng thuận
+description: Cách Ethereum chọn đầu chuỗi mỗi khe và chốt khối mỗi kỷ nguyên. Gasper, ủy ban và chứng thực, thưởng phạt, đồng bộ từ mốc, và khi nào ứng dụng của bạn nên coi một giao dịch là xong.
+sources:
+  - https://epf.wiki/#/wiki/CL/overview
+  - https://epf.wiki/#/wiki/CL/gasper
+  - https://epf.wiki/#/wiki/CL/syncing
+  - https://epf.wiki/#/wiki/research/SSF
+  - https://epf.wiki/#/wiki/research/FCR/FCR
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/gasper/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/attestations/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/rewards-and-penalties/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/weak-subjectivity/
+  - https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/
+  - https://ethereum.org/roadmap/security/
+  - https://github.com/ethereum/consensus-specs
+---
+
+Bài [Đồng thuận](../../can-ban/cach-hoat-dong/dong-thuan.mdx) ở mục Căn bản giải thích vì sao một mạng mở cần cơ chế đồng thuận, và vì sao Ethereum dùng bằng chứng cổ phần. Bài này đi vào cách nó chạy: ai bỏ phiếu khi nào, phiếu được đếm ra sao, và từ đó suy ra câu hỏi mà mọi ứng dụng phải trả lời: **khi nào một giao dịch được coi là xong?**
+
+Phần đồng thuận nằm trong phần mềm lớp đồng thuận của mỗi nút (xem [Kiến trúc](./kien-truc.mdx)). Ai tham gia bỏ phiếu và đặt cọc bao nhiêu có ở bài [Trình xác thực](../../can-ban/cach-hoat-dong/trinh-xac-thuc.mdx).
+
+## Gasper: hai giao thức ghép lại
+
+Đồng thuận của Ethereum có tên **Gasper**, ghép từ hai phần làm hai việc khác nhau:
+
+| | LMD-GHOST | Casper FFG |
+|---|---|---|
+| Việc | **Luật chọn nhánh** (fork choice): đầu chuỗi đang ở đâu | Chốt khối: phần nào của chuỗi không thể đảo ngược nữa |
+| Nhịp | Mỗi khe | Mỗi kỷ nguyên |
+| Kết quả | Khối `latest`, có thể đổi | Khối `finalized`, chỉ đảo được nếu ít nhất 1/3 tiền cọc bị cắt |
+| Khi mạng có sự cố | Vẫn chạy, chuỗi vẫn ra khối | Có thể dừng chốt, cho tới khi đủ 2/3 trở lại |
+
+Cách ghép này cho Ethereum cả hai thứ: chuỗi không bao giờ ngừng ra khối, và phía sau đầu chuỗi luôn có một phần lịch sử đã được chốt chắc chắn.
+
+## Khe, kỷ nguyên và ủy ban
+
+Thời gian chia thành các **khe** (slot) 12 giây. 32 khe làm thành một **kỷ nguyên** (epoch), dài 6,4 phút. Mỗi khe có tối đa một khối. Khe có thể trống nếu người đề xuất vắng mặt.
+
+Mỗi kỷ nguyên, mọi trình xác thực đang hoạt động bỏ đúng một phiếu **chứng thực** (attestation). Để không ai phải xử lý cả triệu phiếu cùng lúc, trình xác thực được xáo trộn rồi chia đều cho 32 khe. Trong mỗi khe, họ lại được chia thành từ 1 tới 64 **ủy ban** (committee), mỗi ủy ban nhắm tới ít nhất 128 thành viên. Trong mỗi ủy ban, khoảng 16 người được chọn gom chữ ký BLS của cả ủy ban thành một chữ ký duy nhất.
+
+| Thời điểm trong khe | Việc gì xảy ra |
+|---|---|
+| 0 giây | Người đề xuất phát khối |
+| 4 giây | Các thành viên ủy ban của khe này bỏ phiếu cho khối mà họ thấy là đầu chuỗi |
+| 8 giây | Người gom phát chữ ký đã gom, để người đề xuất khe sau đưa vào khối |
+| 12 giây | Khe tiếp theo bắt đầu |
+
+Một chứng thực chứa ba phiếu:
+
+- **Đầu chuỗi** (head): khối mới nhất mà người bỏ phiếu thấy. Phiếu này dùng cho LMD-GHOST.
+- **Nguồn** (source) và **đích** (target): hai **mốc** (checkpoint). Đích là mốc của kỷ nguyên hiện tại, nguồn là mốc được chứng minh gần nhất. Cặp này dùng cho Casper FFG.
+
+Ngoài ra còn có **ủy ban đồng bộ** (sync committee): 512 trình xác thực, đổi người mỗi 256 kỷ nguyên (khoảng 27 giờ), ký đầu chuỗi mỗi khe để nút nhẹ theo dõi chuỗi mà không phải tải toàn bộ.
+
+## Ai đề xuất khối
+
+Người đề xuất mỗi khe được chọn ngẫu nhiên, với xác suất tỷ lệ theo **số dư hiệu dụng** (effective balance) của trình xác thực.
+
+- **Nguồn ngẫu nhiên là RANDAO.** Mỗi người đề xuất đóng góp một chữ ký BLS lên số kỷ nguyên. Người khác không đoán được chữ ký đó trước khi nó được công bố. Các đóng góp được trộn dần vào một giá trị chung. Người đề xuất có thể tác động một chút bằng cách bỏ khe, nhưng phải mất phần thưởng đề xuất.
+- **Lịch biết trước một kỷ nguyên.** Giá trị dùng để chọn người cho kỷ nguyên N được chốt ở cuối kỷ nguyên N − 2. Từ Fusaka (EIP-7917), lịch người đề xuất của kỷ nguyên hiện tại và kỷ nguyên kế tiếp được tính sẵn và lưu trong trạng thái beacon. Trước đó, lịch của kỷ nguyên sau vẫn có thể đổi nếu số dư hiệu dụng của ai đó thay đổi. Hợp đồng thông minh có thể kiểm chứng lịch này qua gốc khối beacon (EIP-4788). Các giao thức xác nhận trước (preconfirmation) cho rollup dựa vào người đề xuất của Layer 1 cần đúng điều đó.
+- **Tối đa 2.048 ETH.** Từ Pectra (tháng 5 năm 2025, EIP-7251), số dư hiệu dụng tối đa của một trình xác thực là 2.048 ETH thay vì 32 ETH, nếu trình xác thực dùng thông tin rút tiền loại `0x02`. Mức tối thiểu để kích hoạt vẫn là 32 ETH. Số dư hiệu dụng càng lớn, càng hay được chọn đề xuất và phiếu càng nặng.
+
+## LMD-GHOST: chọn đầu chuỗi
+
+Khi có hai nhánh, mỗi nút tự chạy LMD-GHOST. Bắt đầu từ mốc được chứng minh gần nhất, ở mỗi chỗ rẽ nhánh, nó chọn nhánh con có tổng tiền cọc bỏ phiếu đầu chuỗi nhiều hơn, cho tới khi gặp khối mới nhất. Chỉ phiếu **mới nhất** của mỗi trình xác thực được tính (chữ "LMD", latest message driven).
+
+Khi mạng bình thường, mỗi khe chỉ có một khối, và luật chọn nhánh gần như không phải làm gì. Nó quan trọng khi khối đến muộn, mạng bị chia cắt, hoặc ai đó gian lận.
+
+- **Ưu thế cho khối đúng giờ** (proposer boost). Khối đến trước giây thứ 4 của khe, tức trước hạn bỏ phiếu, được cộng thêm trọng số bằng 40% trọng số của một ủy ban khe. Việc này chống những kiểu tấn công giữ khối lại rồi tung ra muộn.
+- **Khối muộn có thể bị bỏ.** Trong một số điều kiện, đặc tả cho phép người đề xuất khe sau xây thẳng lên khối cha, bỏ qua một khối đến muộn mà nhận ít hơn 20% phiếu của ủy ban. Vì vậy thỉnh thoảng khối mới nhất bị thay. Đó là lý do khối `latest` không đáng tin cho việc quan trọng.
+
+## Casper FFG: mốc, được chứng minh, tính cuối cùng
+
+**Mốc** là khối ở khe đầu tiên của mỗi kỷ nguyên. Nếu khe đó trống, mốc là khối gần nhất trước nó. Việc chốt khối chỉ xét các mốc.
+
+1. Mỗi trình xác thực bỏ một phiếu FFG mỗi kỷ nguyên, nối nguồn với đích.
+2. Khi các phiếu nối cùng một nguồn với cùng một đích đạt **ít nhất 2/3 tổng số dư hiệu dụng đang hoạt động**, đích **được chứng minh** (justified).
+3. Khi hai mốc liên tiếp đều được chứng minh, và mốc sau dùng mốc trước làm nguồn, mốc trước đạt **tính cuối cùng** (finality), kéo theo mọi khối trước nó.
+
+Phiếu được cộng dồn khi khối đưa chúng vào chuỗi, nhưng việc chứng minh và chốt chỉ được tính ở ranh giới giữa hai kỷ nguyên.
+
+<Callout type="warn" title="Quan trọng">
+Không có quy tắc 2/3 cho từng khối. Mỗi khối chỉ nhận phiếu đầu chuỗi từ các ủy ban của khe đó, khoảng 1/32 số trình xác thực. Ngưỡng 2/3 áp dụng cho mốc, và tính trên phiếu của cả kỷ nguyên.
+</Callout>
+
+**Mất bao lâu?** Trong trường hợp tốt nhất, khối mốc đạt tính cuối cùng sau 2 kỷ nguyên, tức 64 khe hay 12,8 phút. Giao dịch nằm ngay sau một mốc phải chờ mốc kế tiếp được chốt: tới khoảng 95 khe, gần 19 phút. Trung bình khoảng 16 phút. Bài [Khối](../../can-ban/cach-hoat-dong/khoi.mdx#khi-nào-khối-không-thể-đảo-ngược) ở mục Căn bản có hình động minh họa quá trình này.
+
+**Vì sao không đảo được?** Muốn có hai mốc mâu thuẫn cùng đạt tính cuối cùng, mỗi bên cần phiếu của 2/3 tiền cọc, nên những trình xác thực nắm ít nhất 1/3 tiền cọc phải bỏ phiếu cho cả hai. Đó là lỗi bị cắt tiền cọc, và ai cũng chứng minh được bằng chính các chữ ký đó. Đảo một khối đã chốt vì thế tốn ít nhất 1/3 tổng số ETH đặt cọc.
+
+## Thưởng, phạt và cắt tiền cọc
+
+Phần thưởng của mỗi trình xác thực tỷ lệ với số dư hiệu dụng của nó, và tỷ lệ nghịch với căn bậc hai tổng tiền cọc. Phần thưởng tối đa được chia theo trọng số:
+
+| Việc | Trọng số (trên 64) | Làm sai hoặc vắng |
+|---|---|---|
+| Phiếu nguồn đúng và kịp | 14 | Bị trừ khoảng bằng phần lẽ ra được nhận |
+| Phiếu đích đúng và kịp | 26 | Bị trừ khoảng bằng phần lẽ ra được nhận |
+| Phiếu đầu chuỗi đúng và kịp | 14 | Chỉ mất phần thưởng |
+| Tham gia ủy ban đồng bộ | 2 | Bị trừ |
+| Đề xuất khối | 8 | Chỉ mất phần thưởng |
+
+**Cắt tiền cọc** (slashing) dành cho ba lỗi mà người trung thực gần như không thể mắc: ký hai khối khác nhau cho cùng một khe, bỏ hai phiếu khác nhau có cùng kỷ nguyên đích, và bỏ một phiếu "bao quanh" phiếu cũ của chính mình (nguồn sớm hơn và đích muộn hơn). Khi bị phát hiện:
+
+- Trình xác thực bị trừ ngay 1/4.096 số dư hiệu dụng (từ Pectra): 0,0078 ETH với 32 ETH, 0,5 ETH với 2.048 ETH. Nó bị buộc rời mạng lưới, và chỉ rút được tiền sau 8.192 kỷ nguyên, khoảng 36 ngày.
+- Ở giữa khoảng đó (khoảng ngày 18) là **phạt tương quan**: tỷ lệ bị trừ bằng 3 lần tỷ lệ tiền cọc bị cắt trong khoảng 36 ngày quanh thời điểm đó. Một trình xác thực lỡ tay chỉ mất rất ít. Nếu 1/3 tiền cọc cùng bị cắt, tức một cuộc tấn công thật sự, họ mất toàn bộ.
+
+**Trừ dần tiền cọc khi vắng mặt** (inactivity leak). Nếu quá 4 kỷ nguyên mà không có mốc nào đạt tính cuối cùng, giao thức vào chế độ khẩn cấp. Không ai nhận thưởng chứng thực nữa. Ai không bỏ phiếu đích đúng bị trừ một khoản tăng dần theo thời gian vắng mặt. Khi số dư của nhóm vắng mặt giảm đủ để nhóm còn hoạt động chiếm lại 2/3, các mốc lại được chốt. Chuyện này từng xảy ra: ngày 11 và 12 tháng 5 năm 2023, mạng chính mất tính cuối cùng hai lần, khoảng 25 phút rồi khoảng 64 phút, vì lỗi trong hai phần mềm lớp đồng thuận. Khối vẫn ra suốt thời gian đó, và lần thứ hai kéo dài đủ lâu để cơ chế trừ dần bắt đầu chạy.
+
+## Đồng bộ từ mốc và tính chủ quan yếu
+
+Với bằng chứng công việc, một nút mới có thể tải từ khối đầu tiên và tự kiểm tra mọi thứ. Với bằng chứng cổ phần thì không an toàn. Trình xác thực đã rút hết tiền cọc có thể ký một lịch sử khác mà không còn gì để mất. Nút đang theo chuỗi thật sẽ bỏ qua lịch sử giả đó, nhưng nút mới tinh không phân biệt được.
+
+Cách giải là **tính chủ quan yếu** (weak subjectivity): nút mới bắt đầu từ một mốc gần đây, lấy từ nguồn tin cậy, rồi từ chối mọi lịch sử mâu thuẫn với mốc đó. Đây là **đồng bộ từ mốc** (checkpoint sync), cách được khuyến nghị khi khởi động một nút mới. Nút tải trạng thái tại mốc, theo đầu chuỗi ngay từ đó, rồi tải bù lịch sử cũ sau.
+
+- Đối chiếu mã băm của mốc với vài nguồn độc lập: nút của người quen, trình khám phá khối, các nhà cung cấp mốc công khai.
+- Mốc phải đủ mới. Với các tham số hiện nay của mạng chính, công thức trong đặc tả cho khoảng 3.532 kỷ nguyên, chừng 15,7 ngày. Nút tắt lâu hơn thế nên đồng bộ lại từ một mốc mới. Glamsterdam, khi ra mắt, sẽ cho trình xác thực vào và ra nhanh hơn, nên theo đặc tả khoảng này sẽ ngắn lại còn chừng một tuần.
+
+## Đang nghiên cứu: tính cuối cùng nhanh hơn
+
+- **Tính cuối cùng trong một khe** (single-slot finality) là hướng nghiên cứu lâu năm. Theo ethereum.org, nó phát triển thành tính cuối cùng trong ba khe (3SF), rồi thành Minimmit, một giao thức đồng thuận trong chương trình Lean Ethereum ra mắt tháng 7 năm 2025. Lộ trình nháp nhắm tới tính cuối cùng tính bằng giây vào khoảng năm 2029, nhưng chưa có nâng cấp nào được giao việc này.
+- **Quy tắc xác nhận nhanh** (Fast Confirmation Rule, FCR) không cần nâng cấp mạng: mỗi nút tự áp dụng. Nếu mạng ổn định và không quá 25% tiền cọc gian lận, trong trường hợp tốt nó xác nhận một khối sẽ không bị thay chỉ sau 1 tới 2 khe. FCR được đưa vào đặc tả lớp đồng thuận tháng 4 năm 2026. Việc hỗ trợ trong các phần mềm client còn khác nhau: có client đã có tùy chọn bật, có client vẫn đang làm.
+- **Khe 10 giây** (EIP-8198) đang được cân nhắc cho nâng cấp Hegotá, chưa được xếp lịch.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+JSON-RPC có ba mức chắc chắn. Lớp đồng thuận báo cho lớp thực thi biết khối `safe` và `finalized` qua `engine_forkchoiceUpdated`, nên bạn hỏi được cả ba qua RPC thông thường:
+
+```bash
+cast block-number latest    --rpc-url $RPC   # đầu chuỗi, có thể bị thay
+cast block-number safe      --rpc-url $RPC   # khó bị thay nếu mạng bình thường
+cast block-number finalized --rpc-url $RPC   # chỉ đảo được nếu 1/3 tiền cọc bị cắt
+```
+
+| Mức | Nghĩa | Chậm hơn đầu chuỗi | Dùng cho |
+|---|---|---|---|
+| `latest` | Khối mới nhất mà nút thấy | 0 | Hiển thị, ước lượng, giao dịch nhỏ |
+| `safe` | Không bị thay nếu đa số trung thực và mạng đồng bộ | Vài khe nếu client dùng FCR, khoảng 6 tới 13 phút nếu không | Phần lớn việc cần chắc chắn vừa phải |
+| `finalized` | Đã đạt tính cuối cùng | Khoảng 13 tới 19 phút | Nạp tiền vào sàn, cầu nối, giao hàng ngoài đời thực |
+
+<Callout type="idea" title="Mẹo">
+Khi thử trên anvil, `safe` chậm 32 khối và `finalized` chậm 64 khối so với `latest` (anvil 1.5.1, kiểm tra tháng 11 năm 2026). Nhờ vậy bạn thử được logic chờ tính cuối cùng mà không cần mạng thật.
+</Callout>
+
+- **Chọn mức theo số tiền có thể mất.** Đếm thêm vài khối sau `latest` không cho bảo đảm kinh tế nào. Với việc không thể rút lại, chờ `finalized`.
+- **Hiện đúng trạng thái cho người dùng.** "Đã vào khối" và "đã đạt tính cuối cùng" là hai trạng thái khác nhau. Đừng gộp chúng thành một chữ "xong".
+- **Hiểu `safe` trên nút bạn dùng.** Đặc tả hiện định nghĩa `safe` bằng quy tắc xác nhận nhanh. Client chưa bật quy tắc đó thì trả về khối của mốc được chứng minh gần nhất, chậm hơn nhiều. Hỏi nhà cung cấp RPC của bạn.
+- **Xử lý tổ chức lại chuỗi.** Bộ lập chỉ mục đọc sự kiện ở `latest` phải xử lý được nhật ký bị rút lại (`removed: true`), hoặc chỉ lập chỉ mục tới `safe` hay `finalized`.
+- **Theo dõi việc chốt khối.** Nếu `finalized` đứng yên quá vài kỷ nguyên, hãy cảnh báo và tạm dừng các khoản rút lớn, thay vì treo ứng dụng.
+- **Đừng mã hóa cứng 12 giây.** Thời gian giữa hai khối là bội số của 12 giây vì có khe trống, và độ dài khe có thể đổi trong tương lai (EIP-8198). Glamsterdam dự kiến thêm lệnh `SLOTNUM` (EIP-7843) để hợp đồng đọc số khe trực tiếp.
+
+## Nguồn
+
+- EPF wiki: [Consensus layer overview](https://epf.wiki/#/wiki/CL/overview), [Gasper](https://epf.wiki/#/wiki/CL/gasper), [Syncing](https://epf.wiki/#/wiki/CL/syncing), [Single slot finality](https://epf.wiki/#/wiki/research/SSF), [Fast Confirmation Rule](https://epf.wiki/#/wiki/research/FCR/FCR)
+- ethereum.org: [Bằng chứng cổ phần](https://ethereum.org/developers/docs/consensus-mechanisms/pos/), [Gasper](https://ethereum.org/developers/docs/consensus-mechanisms/pos/gasper/), [Chứng thực](https://ethereum.org/developers/docs/consensus-mechanisms/pos/attestations/), [Thưởng và phạt](https://ethereum.org/developers/docs/consensus-mechanisms/pos/rewards-and-penalties/), [Tính chủ quan yếu](https://ethereum.org/developers/docs/consensus-mechanisms/pos/weak-subjectivity/), [Đề xuất khối](https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/), [An ninh trong lộ trình](https://ethereum.org/roadmap/security/)
+- [ethereum/consensus-specs](https://github.com/ethereum/consensus-specs): `phase0/fork-choice.md`, `phase0/fast-confirmation.md`, `altair/beacon-chain.md`, `electra/beacon-chain.md`, `electra/weak-subjectivity.md`, `configs/mainnet.yaml`
+- [ethereum/execution-apis](https://github.com/ethereum/execution-apis): định nghĩa các mức `latest`, `safe`, `finalized`
+- Thomas Thiery, [Cascading Network Effects on Ethereum's Finality](https://ethresear.ch/t/cascading-network-effects-on-ethereums-finality/15871): phân tích hai lần mất tính cuối cùng tháng 5 năm 2023
+- Bài báo: [Gasper](https://arxiv.org/abs/2003.03052), [Casper FFG](https://arxiv.org/abs/1710.09437), [Fast Confirmation Rule](https://arxiv.org/abs/2405.00549)
+- EIP: [4788](https://eips.ethereum.org/EIPS/eip-4788), [7251](https://eips.ethereum.org/EIPS/eip-7251), [7843](https://eips.ethereum.org/EIPS/eip-7843), [7917](https://eips.ethereum.org/EIPS/eip-7917), [8198](https://eips.ethereum.org/EIPS/eip-8198)
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

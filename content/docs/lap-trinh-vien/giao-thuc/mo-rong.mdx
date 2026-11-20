@@ -1,0 +1,195 @@
+---
+title: Mở rộng và dữ liệu khả dụng
+description: Vì sao Ethereum mở rộng bằng rollup, vì sao chỗ đăng dữ liệu là nút thắt, và blob, PeerDAS cùng giá sàn của blob quyết định phí Layer 2 mà người dùng ứng dụng của bạn trả như thế nào.
+sources:
+  - https://epf.wiki/#/wiki/research/scaling/scaling
+  - https://epf.wiki/#/wiki/research/scaling/data-availability
+  - https://epf.wiki/#/wiki/research/scaling/core-changes/core-changes
+  - https://epf.wiki/#/wiki/research/scaling/core-changes/eip-4844
+  - https://epf.wiki/#/wiki/research/peerdas
+  - https://ethereum.org/developers/docs/scaling/
+  - https://ethereum.org/developers/docs/data-availability/
+  - https://ethereum.org/roadmap/danksharding/
+  - https://ethereum.org/roadmap/fusaka/
+---
+
+Mỗi nút Ethereum tải và kiểm tra mọi khối. Khối càng lớn, nút càng cần nhiều băng thông và ổ đĩa, và càng ít người chạy nổi. Vì vậy Ethereum không mở rộng bằng cách đơn giản làm khối to ra.
+
+Hướng đi chính từ năm 2020 là để giao dịch chạy trên [Layer 2](../../can-ban/cach-hoat-dong/layer-2.mdx), còn Ethereum lo hai việc: chốt kết quả, và giữ dữ liệu để ai cũng kiểm tra lại được. Khi đó, thứ rollup cần nhất ở Ethereum không phải sức tính toán mà là chỗ để đăng dữ liệu. Bài này nói về chỗ đó: blob, thị trường phí của blob, PeerDAS, và cách chúng tạo nên phí Layer 2 của ứng dụng bạn.
+
+## Lộ trình lấy rollup làm trung tâm
+
+Vitalik Buterin đề xuất **lộ trình lấy rollup làm trung tâm** (rollup-centric roadmap) trên diễn đàn Ethereum Magicians ngày 2/10/2020. Ý chính:
+
+- Ứng dụng và người dùng dần chuyển sang rollup. Mỗi rollup gom nhiều giao dịch thành một **lô** (batch), chạy chúng bên ngoài Ethereum, rồi đăng dữ liệu và kết quả lên Ethereum.
+- Ethereum tối ưu cho hai vai trò: nơi chốt kết quả (settlement) và nơi bảo đảm **tính khả dụng của dữ liệu** (data availability).
+- Giao thức thêm chỗ chứa dữ liệu rẻ dành riêng cho rollup, thay cho kế hoạch cũ là chia chuỗi thành nhiều mảnh (sharding).
+
+Hướng này không có nghĩa Layer 1 đứng yên. Giới hạn gas của khối lên 60 triệu vào cuối năm 2025 và đang được nâng tiếp. Trong kế hoạch năm 2026, Quỹ Ethereum gộp việc mở rộng Layer 1 và mở rộng blob vào cùng một hướng ưu tiên, gọi là "Scale".
+
+## Vì sao dữ liệu là nút thắt
+
+Rollup chỉ an toàn nếu dữ liệu giao dịch của nó được công bố:
+
+- Với rollup lạc quan, không có dữ liệu thì không ai tính lại được để nộp bằng chứng gian lận.
+- Với ZK-rollup, bằng chứng hợp lệ bảo đảm kết quả đúng. Nhưng không có dữ liệu thì người dùng không biết số dư của mình, và không dựng lại được trạng thái để rút tiền khi bên vận hành ngừng hợp tác.
+
+"Công bố" ở đây có nghĩa hẹp: dữ liệu đã được gửi cho cả mạng lưới, và ai muốn đều tải được trong một khoảng thời gian đủ dài. Giao thức không hứa giữ dữ liệu mãi mãi. Giữ lâu dài là việc của rollup, của người dùng, hoặc của các dịch vụ lưu trữ.
+
+Trước năm 2024, rollup đăng dữ liệu vào calldata của một giao dịch thường. Cách này đắt vì ba lẽ: mỗi byte khác 0 tốn 16 gas, phải tranh chỗ với mọi giao dịch khác trong cùng một thị trường gas, và nằm trong lịch sử chuỗi vĩnh viễn dù rollup chỉ cần nó vài tuần.
+
+Bài toán thật sự là: làm sao cả mạng lưới chắc chắn dữ liệu đã được công bố, mà không bắt từng nút tải hết? Ethereum giải theo hai bước. Bước một là blob (2024): chỗ chứa riêng, giá riêng, tự xóa sau vài tuần, nhưng mỗi nút vẫn tải hết. Bước hai là PeerDAS (2025): mỗi nút chỉ tải một phần.
+
+## Blob (EIP-4844)
+
+Nâng cấp Dencun (13/3/2024) thêm **blob**: những gói dữ liệu đi kèm khối, được chở trên [giao dịch kiểu 3](./giao-dich.mdx).
+
+| Thuộc tính | Giá trị |
+|---|---|
+| Kích thước | 4.096 phần tử × 32 byte = 131.072 byte (128 KiB) |
+| EVM thấy gì | Chỉ mã băm của cam kết KZG, qua lệnh `BLOBHASH`. Không đọc được nội dung |
+| Ai lưu | Phần mềm lớp đồng thuận, không phải lớp thực thi |
+| Giữ bao lâu | Tối thiểu 4.096 **kỷ nguyên** (epoch), khoảng 18 ngày, rồi được xóa |
+| Mỗi giao dịch | Tối đa 6 blob, từ Fusaka (EIP-7594). Phải có địa chỉ nhận, nên không dùng để tạo hợp đồng |
+
+Mỗi phần tử 32 byte phải nhỏ hơn một số nguyên tố dài 255 bit, nên rollup thường chỉ nhét khoảng 31 byte dữ liệu vào mỗi phần tử.
+
+Thay cho nội dung, mỗi blob có một **cam kết** KZG (commitment) 48 byte, một kiểu "dấu vân tay" toán học của cả blob (xem [Mật mã](./mat-ma.mdx)). Hợp đồng chỉ thấy mã băm của cam kết này. Hợp đồng biên dịch sẵn ở địa chỉ `0x0a` kiểm tra được bằng chứng rằng blob có giá trị `y` tại điểm `z`. ZK-rollup dùng nó để buộc bằng chứng hợp lệ với đúng dữ liệu đã đăng.
+
+### Thị trường phí riêng
+
+Blob dùng **gas blob** (blob gas), tách hẳn với gas thường:
+
+- Mỗi blob tốn 131.072 gas blob (2<sup>17</sup>), tức một gas blob cho mỗi byte.
+- **Phí cơ sở** của blob (blob base fee) chỉnh theo cách giống EIP-1559: khối dùng nhiều blob hơn mức mục tiêu thì phí khối sau tăng, dùng ít hơn thì giảm. Đầu khối có trường `excess_blob_gas` cộng dồn phần dùng vượt mục tiêu.
+- Phí thấp nhất là 1 wei mỗi gas blob. Phí blob bị đốt, và không được hoàn nếu giao dịch thất bại.
+- Hợp đồng đọc phí hiện tại bằng lệnh `BLOBBASEFEE` (EIP-7516). Ứng dụng bên ngoài gọi RPC `eth_blobBaseFee`.
+
+Gửi thử một blob trên anvil, mạng thử nội bộ của Foundry (xem [Môi trường](../xay-dung/moi-truong.mdx)):
+
+```bash
+anvil --hardfork osaka   # chạy ở một cửa sổ khác
+
+printf 'xin chao rollup' > data.txt
+cast send --blob --path data.txt \
+  --unlocked --from 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 \
+  0x000000000000000000000000000000000000dEaD
+```
+
+Trong biên lai trả về có:
+
+```text
+gasUsed              21000
+type                 3
+blobGasPrice         1
+blobGasUsed          131072
+```
+
+Dữ liệu chỉ có 15 byte, nhưng giao dịch vẫn trả cho trọn một blob: 131.072 gas blob, nhân với giá 1 wei trên một mạng thử vừa khởi động. 21.000 gas thường được tính riêng. (Kiểm tra với Foundry 1.5.1, tháng 11/2026.)
+
+## Bao nhiêu blob mỗi khối
+
+Mỗi khối có một **mục tiêu** (target) và một **mức tối đa** (max) số blob.
+
+| Đợt nâng cấp | Mạng chính (UTC) | Mục tiêu | Tối đa | Theo |
+|---|---|---|---|---|
+| Dencun | 13/3/2024 | 3 | 6 | EIP-4844 |
+| Pectra | 7/5/2025 | 6 | 9 | EIP-7691 |
+| Fusaka | 3/12/2025 | 6 | 9 | Không đổi |
+| BPO1 | 9/12/2025 | 10 | 15 | EIP-7892 |
+| BPO2 | 7/1/2026 | 14 | 21 | EIP-7892 |
+
+Với BPO2, mỗi khối nhắm khoảng 1,8 MB dữ liệu blob, tối đa khoảng 2,75 MB. Từ Pectra, một khối đầy blob làm phí blob tăng khoảng 8,2%, một khối không có blob làm phí giảm khoảng 14,5% (EIP-7691). Hai BPO giữ nguyên độ nhạy này.
+
+**Nâng cấp chỉ đổi thông số blob** (Blob Parameter Only, BPO; EIP-7892) có từ Fusaka. Nó chỉ đổi ba con số: mục tiêu, mức tối đa và hệ số chỉnh phí. Không có mã mới, nên lịch BPO được cài sẵn trong bản phần mềm hỗ trợ Fusaka. Các nhóm phát triển tăng sức chứa từng nấc sau khi theo dõi mạng chính, không phải chờ một đợt nâng cấp lớn. Tới tháng 11/2026, mạng chính chưa xếp lịch BPO nào sau BPO2.
+
+## Giá sàn của blob (EIP-7918)
+
+Trước Fusaka, khi nhu cầu thấp hơn mục tiêu, phí blob cứ giảm dần về 1 wei. Lúc đó chi phí của rollup gần như chỉ còn là gas thường của giao dịch mang blob, nên phí blob không còn điều tiết được nhu cầu. Khi nhu cầu quay lại, cần hơn một giờ toàn khối gần đầy để giá leo về mức cân bằng.
+
+Fusaka thêm một **giá sàn** (reserve price). Nếu giá một blob thấp hơn giá của 8.192 gas thường, phí blob ngừng giảm, và mỗi blob được dùng còn đẩy giá lên. Kết quả: phí cơ sở của blob không ở lâu dưới khoảng 1/16 phí cơ sở của gas thường.
+
+Ví dụ: phí cơ sở gas thường là 1 gwei thì sàn của phí blob vào khoảng 0,0625 gwei mỗi gas blob, tức khoảng 8.192 gwei (0,000008192 ETH) mỗi blob. Khi blob đang rảnh, giá blob đi theo phí gas của Layer 1, chứ không nằm yên ở 1 wei như năm 2024.
+
+## PeerDAS (EIP-7594)
+
+Trước Fusaka, mọi nút lớp đồng thuận vẫn tải đủ mọi blob, nên thêm blob là thêm băng thông cho mọi nút. **PeerDAS** (Peer Data Availability Sampling, lấy mẫu tính khả dụng của dữ liệu qua [nút ngang hàng](./mang-ngang-hang.mdx)) ra mắt cùng Fusaka. Mỗi nút chỉ tải một phần, mà vẫn chắc chắn toàn bộ dữ liệu đã được công bố. Nó dựa trên ba ý.
+
+**Mã xóa** (erasure coding). Mỗi blob được kéo dài gấp đôi bằng mã Reed-Solomon. Có bất kỳ một nửa nào của bản kéo dài là dựng lại được toàn bộ. Muốn giấu dữ liệu, bên đề xuất khối phải giấu hơn một nửa, và giấu nhiều như vậy thì rất dễ bị phát hiện.
+
+**Ô và cột.** Mỗi blob sau khi kéo dài được chia thành 128 **ô** (cell), mỗi ô 2.048 byte, kèm bằng chứng KZG riêng nên kiểm tra được từng ô. **Cột** (column) thứ i gồm ô thứ i của mọi blob trong khối. Có 128 cột, mỗi cột truyền trên một mạng con riêng.
+
+**Giữ và lấy mẫu.** Mỗi nút được giao một nhóm cột cố định, tính từ ID của nút, nên ai cũng kiểm tra được nút nào phải giữ cột nào.
+
+- Nút thường giữ ít nhất 4 cột, và trong mỗi **khe** (slot) tải ít nhất 8 cột, tức khoảng 1/8 dữ liệu gốc.
+- Nút có trình xác thực giữ một cột cho mỗi 32 ETH đặt cọc, ít nhất 8, nhiều nhất 128. Nút giữ đủ 128 cột gọi là **siêu nút** (supernode).
+- Nút nào có từ 64 cột trở lên thì tự dựng lại các cột còn thiếu và phát lại cho mạng lưới.
+
+EIP-7594 tính rằng với khoảng 10.000 nút, xác suất bên giấu dữ liệu lừa được 2% số nút tin rằng dữ liệu đầy đủ là dưới 10<sup>-20</sup>.
+
+Một thay đổi người gửi blob thấy được: tính bằng chứng cho từng ô tốn công, nên từ Fusaka người gửi giao dịch blob tự tính 128 bằng chứng ô cho mỗi blob và gửi kèm, theo định dạng bọc mới (phiên bản 1). Thư viện bạn dùng để gửi blob phải hỗ trợ định dạng này.
+
+## Sau PeerDAS
+
+Tính tới tháng 11/2026, chưa bước nào dưới đây chạy trên mạng chính:
+
+- **Thêm BPO.** Tăng mục tiêu và mức tối đa khi mạng lưới chịu được. Chưa có lịch.
+- **Glamsterdam** đã chạy trên Sepolia từ ngày 6/10/2026, chưa có ngày cho Hoodi và mạng chính. ePBS (EIP-7732) cho dữ liệu của khối nhiều thời gian lan truyền hơn: theo ethereum.org, từ khoảng 2 giây lên khoảng 9 giây. Đó là chỗ trống cho nhiều blob hơn. Đợt này cũng gồm một thay đổi giao thức mạng để hàng chờ giao dịch blob ở lớp thực thi phần lớn chỉ lấy mẫu thay vì tải đủ (EIP-8070). Xem [Lộ trình](./lo-trinh.mdx).
+- **Danksharding đầy đủ** (nghiên cứu): kéo dài dữ liệu theo cả hai chiều và lấy mẫu từng ô thay vì cả cột, để mỗi nút tải ít hơn nữa trong khi khối chứa được nhiều blob hơn nhiều. Chưa có EIP nào được xếp lịch.
+- **Thay KZG** (nghiên cứu): cam kết KZG cần một **nghi thức thiết lập** (trusted setup, đã làm xong trước Dencun với hơn 140.000 lượt đóng góp) và không an toàn trước máy tính lượng tử. Hướng dài hạn là một loại cam kết không cần cả hai điều đó.
+
+## Phí Layer 2 gồm những gì
+
+Một giao dịch trên rollup thường trả hai phần:
+
+| Phần | Trả cho việc gì | Phụ thuộc vào |
+|---|---|---|
+| Phí thực thi | Chạy giao dịch trên Layer 2 | Gas dùng × phí gas của Layer 2, tức mức bận của chính Layer 2 |
+| Phí dữ liệu Layer 1 | Phần của bạn trong blob (hoặc calldata) mà rollup đăng lên Ethereum | Số byte sau nén của giao dịch × phí blob và phí gas trên Layer 1 |
+
+Mỗi bộ phần mềm rollup tính phần Layer 1 theo cách riêng:
+
+- **OP Stack** (OP Mainnet, Base…) ước lượng kích thước nén của giao dịch, rồi nhân với phí cơ sở và phí blob của Layer 1 qua các hệ số do chuỗi đặt. Một số chuỗi OP Stack thu thêm phí vận hành. Biên lai có thêm các trường `l1Fee`, `l1GasUsed`, `l1GasPrice`, `l1BlobBaseFee`. Hợp đồng `GasPriceOracle` cho ước lượng trước khi gửi:
+
+  ```bash
+  # Phí dữ liệu L1 tối đa (wei) cho một giao dịch chưa ký dài 200 byte, trên OP Mainnet
+  cast call 0x420000000000000000000000000000000000000F \
+    "getL1FeeUpperBound(uint256)(uint256)" 200 \
+    --rpc-url https://mainnet.optimism.io
+  ```
+
+- **Arbitrum** quy phần Layer 1 thành gas Layer 2 cộng thêm. Biên lai có trường `gasUsedForL1`: phần gas trong `gasUsed` dùng để trả cho Layer 1.
+
+Vì sao phí giảm khi sức chứa blob tăng: mỗi BPO tăng nguồn cung. Nếu nhu cầu tăng chậm hơn, phí blob đi xuống, kéo theo phần Layer 1 trong phí của người dùng. Có hai giới hạn: giá sàn của EIP-7918 gắn phí blob với phí gas Layer 1, và phí thực thi vẫn tăng khi chính Layer 2 bận. Xem thêm [Phí gas](../../can-ban/bat-dau/phi-gas.mdx).
+
+## Chọn Layer 2 nào
+
+Phí rẻ chưa đủ. Trước khi triển khai, kiểm tra:
+
+- **Dữ liệu nằm đâu.** Rollup đăng dữ liệu lên Ethereum. Validium và optimium giữ dữ liệu ở nơi khác: rẻ hơn, nhưng không thừa hưởng đủ an toàn của Ethereum. ETHBEAT (trước đây là L2BEAT) ghi rõ từng mạng thuộc loại nào.
+- **Stage và hệ thống bằng chứng.** Stage 0, 1, 2 trên ETHBEAT cho biết bên vận hành còn bao nhiêu quyền can thiệp, và hệ thống bằng chứng đã chạy thật chưa. Xem [Layer 2 cho doanh nghiệp](../../doanh-nghiep/layer-2-cho-doanh-nghiep.mdx).
+- **Lối thoát.** Người dùng có tự đưa giao dịch qua Ethereum được không, nếu bộ sắp xếp chặn họ.
+- **Thời gian rút về Ethereum.** Rollup lạc quan mất vài ngày. ZK-rollup tùy thời gian tạo bằng chứng và độ trễ an toàn mà mạng đặt.
+- **Tương thích EVM.** Mỗi Layer 2 tự quyết khi nào áp dụng các nâng cấp của Layer 1. Một lệnh hay precompile đã có trên mạng chính, như `CLZ` hay precompile secp256r1 của Fusaka, chưa chắc đã có trên Layer 2 của bạn.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **Ước lượng phí phải tính cả phần Layer 1.** Dùng cách ước lượng của chính Layer 2 (như `GasPriceOracle`), đừng chỉ lấy `eth_estimateGas` nhân phí gas. Phần Layer 1 dao động theo thị trường blob, nên hiển thị cho người dùng một khoảng, không phải một con số cố định.
+- **Gửi ít byte hơn.** Phần Layer 1 tỷ lệ với kích thước nén của giao dịch. Trên rollup, rút gọn calldata (kiểu dữ liệu nhỏ, bỏ tham số thừa) nhiều khi đáng giá hơn tối ưu gas thực thi.
+- **Không gán cứng giá blob.** Đọc `eth_blobBaseFee` hoặc `BLOBBASEFEE`. Từ EIP-7918, giá blob hiếm khi nằm ở 1 wei.
+- **Không gán cứng số blob mỗi khối.** Mục tiêu và mức tối đa có thể đổi bằng một BPO, không cần đợt nâng cấp có tên. Đọc lịch blob của nút bằng RPC `eth_config` (EIP-7910), xem [Phần mềm client và API](./client-va-api.mdx).
+- **Nếu bạn tự đăng blob:** tối đa 6 blob mỗi giao dịch, phải có địa chỉ nhận, phí blob không được hoàn khi giao dịch thất bại, và thư viện phải tạo bằng chứng ô theo định dạng của Fusaka.
+- **Tự lưu dữ liệu blob nếu cần dùng lâu.** Nút chỉ giữ khoảng 18 ngày, và hợp đồng chỉ thấy mã băm của cam kết, không thấy nội dung.
+- **Chọn Layer 2 theo an toàn, không chỉ theo phí,** và kiểm tra Layer 2 đó đã có những lệnh và precompile mà mã của bạn dùng.
+
+## Nguồn
+
+- EPF wiki: [Scaling](https://epf.wiki/#/wiki/research/scaling/scaling), [Data Availability](https://epf.wiki/#/wiki/research/scaling/data-availability), [Changes to Ethereum Core](https://epf.wiki/#/wiki/research/scaling/core-changes/core-changes), [EIP-4844](https://epf.wiki/#/wiki/research/scaling/core-changes/eip-4844), [PeerDAS](https://epf.wiki/#/wiki/research/peerdas)
+- ethereum.org: [Scaling](https://ethereum.org/developers/docs/scaling/), [Data availability](https://ethereum.org/developers/docs/data-availability/), [Danksharding](https://ethereum.org/roadmap/danksharding/), [Fusaka](https://ethereum.org/roadmap/fusaka/)
+- Vitalik Buterin, [A rollup-centric ethereum roadmap](https://ethereum-magicians.org/t/a-rollup-centric-ethereum-roadmap/4698) (2020)
+- EIP: [4844](https://eips.ethereum.org/EIPS/eip-4844), [7516](https://eips.ethereum.org/EIPS/eip-7516), [7594](https://eips.ethereum.org/EIPS/eip-7594), [7607](https://eips.ethereum.org/EIPS/eip-7607), [7691](https://eips.ethereum.org/EIPS/eip-7691), [7732](https://eips.ethereum.org/EIPS/eip-7732), [7892](https://eips.ethereum.org/EIPS/eip-7892), [7910](https://eips.ethereum.org/EIPS/eip-7910), [7918](https://eips.ethereum.org/EIPS/eip-7918), [8070](https://eips.ethereum.org/EIPS/eip-8070)
+- [ethereum/consensus-specs](https://github.com/ethereum/consensus-specs): tham số PeerDAS trong `specs/fulu/`, lịch BPO và thời gian giữ blob trong `configs/mainnet.yaml`
+- OP Stack: [Transaction fees](https://docs.optimism.io/stack/transactions/fees)
+- Quỹ Ethereum: [Protocol Priorities Update for 2026](https://blog.ethereum.org/2026/02/18/protocol-priorities-update-2026)
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

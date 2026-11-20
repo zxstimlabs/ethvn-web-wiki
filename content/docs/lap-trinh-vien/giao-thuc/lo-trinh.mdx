@@ -1,0 +1,187 @@
+---
+title: Lộ trình và cách giao thức thay đổi
+description: Các chủ đề lớn trong lộ trình của Ethereum, các đợt nâng cấp từ Frontier tới Fusaka, những gì Glamsterdam và Hegotá đang lên kế hoạch, và một thay đổi đi từ EIP tới mạng chính ra sao.
+sources:
+  - https://epf.wiki/#/wiki/research/roadmap
+  - https://epf.wiki/#/wiki/protocol/history
+  - https://epf.wiki/#/wiki/dev/core-development
+  - https://epf.wiki/#/wiki/dev/pm
+  - https://epf.wiki/#/wiki/testing/overview
+  - https://epf.wiki/#/wiki/testing/hive
+  - https://epf.wiki/#/wiki/testing/kurtosis
+  - https://ethereum.org/roadmap/
+  - https://ethereum.org/ethereum-forks/
+  - https://ethereum.org/roadmap/glamsterdam/
+  - https://ethereum.org/roadmap/hegota/
+  - https://ethereum.org/developers/docs/networks/
+---
+
+Ethereum đổi luật khoảng một hai lần mỗi năm. Với người dùng, một đợt nâng cấp gần như vô hình. Với người viết hợp đồng, nó có thể đổi giá gas của một lệnh, thêm lệnh mới, nâng một giới hạn, hoặc làm một giả định cũ trong mã không còn đúng.
+
+Bài [Ethereum nâng cấp thế nào](../../can-ban/cach-hoat-dong/nang-cap.mdx) ở mục Căn bản giải thích vì sao không ai "ra lệnh" nâng cấp được. Bài này đi sâu hơn: lộ trình gồm những gì, các đợt đã qua đổi những gì, và một thay đổi đi qua những bước nào trước khi lên mạng chính, để bạn biết theo dõi ở đâu và chuẩn bị gì.
+
+## Sáu chủ đề của lộ trình
+
+Ethereum không có lộ trình chính thức. Thứ gần nhất là sơ đồ do Vitalik Buterin cập nhật định kỳ, chia công việc thành sáu nhóm có tên vần với nhau. Bảng dưới tóm tắt trang lộ trình của EPF wiki (cập nhật tháng 5/2026), có sửa những chỗ đã cũ.
+
+| Chủ đề | Mục tiêu | Đã có trên mạng chính | Kế hoạch hoặc nghiên cứu |
+|---|---|---|---|
+| The Merge | Bằng chứng cổ phần, đồng thuận tốt hơn | Beacon Chain (2020), The Merge (2022), rút tiền cọc (2023), trình xác thực giữ tới 2.048 ETH (2025) | **Tính cuối cùng** (finality) trong một khe, giữ kín người đề xuất tới lúc ra khối, chữ ký an toàn trước máy tính lượng tử |
+| The Surge | Mở rộng qua rollup và dữ liệu | Blob (2024), PeerDAS và các BPO (2025) | Danksharding đầy đủ, hệ thống bằng chứng của rollup trưởng thành hơn |
+| The Scourge | Chống kiểm duyệt, giảm tập trung do MEV và đặt cọc thanh khoản | MEV-Boost (nằm ngoài giao thức) | ePBS (Glamsterdam: đã chạy trên Sepolia, chưa có ngày cho mạng chính), danh sách bắt buộc đưa vào (FOCIL, Hegotá), đốt MEV |
+| The Verge | Kiểm chứng khối bằng ít tài nguyên, tới mức chạy trên điện thoại | | Nút không cần giữ toàn bộ trạng thái (trước là cây Verkle, đề xuất mới hơn là cây nhị phân, EIP-7864), SNARK cho cả chuỗi |
+| The Purge | Bớt dữ liệu và nợ kỹ thuật | Hạn chế `SELFDESTRUCT` (2024), nút được bỏ các khối trước The Merge (7/2025) | Hết hạn lịch sử đầy đủ (EIP-4444), hết hạn trạng thái |
+| The Splurge | Những việc còn lại: trải nghiệm, kinh tế phí, EVM | EIP-1559 (2021), tài khoản ủy quyền EIP-7702 (2025) | Giao dịch dạng khung (EIP-8141, Hegotá), phí đa chiều |
+
+Trang của EPF còn ghi lấy mẫu dữ liệu là "đang nghiên cứu", trong khi PeerDAS đã chạy từ Fusaka. Nó cũng xếp EIP-7702 vào việc chưa làm và gọi ủy quyền là "tạm thời". Thực ra EIP-7702 chạy từ Pectra, và ủy quyền giữ nguyên cho tới khi chủ tài khoản đổi. EVM Object Format (EOF), cũng còn trong danh sách đó, đã bị rút khỏi Fusaka năm 2025 và không có trong Glamsterdam.
+
+<Callout type="info" title="Lưu ý">
+Ngoài sơ đồ sáu chủ đề, Quỹ Ethereum gom việc mỗi năm theo vài hướng ưu tiên. Năm 2026 có ba hướng: Scale (mở rộng cả Layer 1 lẫn blob), Improve UX (trải nghiệm, trừu tượng hóa tài khoản, liên thông giữa các Layer 2) và Harden the L1 (an ninh, chống kiểm duyệt, kiểm thử).
+</Callout>
+
+## Các đợt nâng cấp đã qua
+
+| Mạng chính (UTC) | Nâng cấp | Thay đổi chính |
+|---|---|---|
+| 30/7/2015 | Frontier | Mạng chính ra mắt, chạy bằng chứng công việc |
+| 14/3/2016 | Homestead | Thoát giai đoạn thử nghiệm, thêm `DELEGATECALL` (EIP-7) |
+| 20/7/2016 | DAO fork | Chuyển tiền của The DAO sang một hợp đồng hoàn tiền. Ethereum Classic tách ra |
+| 18/10/2016 | Tangerine Whistle | Tăng giá gas các lệnh đọc ghi nặng sau loạt tấn công từ chối dịch vụ, quy tắc 63/64 (EIP-150) |
+| 22/11/2016 | Spurious Dragon | Chống phát lại giữa các chuỗi bằng chain ID (EIP-155), mã hợp đồng tối đa 24.576 byte (EIP-170) |
+| 16/10/2017 | Byzantium | `REVERT`, `STATICCALL`, precompile cho zk-SNARK, trạng thái thành công trong biên lai |
+| 28/2/2019 | Constantinople | `CREATE2` (EIP-1014), lệnh dịch bit |
+| 8/12/2019 | Istanbul | Calldata rẻ hơn (EIP-2028), `CHAINID`, tăng giá lệnh đọc trạng thái (EIP-1884) |
+| 1/12/2020 | Beacon Chain | Chuỗi bằng chứng cổ phần ra mắt, chạy song song |
+| 15/4/2021 | Berlin | Giao dịch có kiểu (EIP-2718), truy cập lạnh và ấm (EIP-2929), danh sách truy cập |
+| 5/8/2021 | London | EIP-1559: phí cơ sở bị đốt. Giảm hoàn gas (EIP-3529) |
+| 27/10/2021 | Altair | Ủy ban đồng bộ cho nút nhẹ |
+| 15/9/2022 | The Merge | Bỏ đào, chuyển hẳn sang bằng chứng cổ phần |
+| 12/4/2023 | Shapella | Rút tiền cọc (EIP-4895), lệnh `PUSH0` |
+| 13/3/2024 | Dencun | Blob (EIP-4844), transient storage, `MCOPY`, hạn chế `SELFDESTRUCT` |
+| 7/5/2025 | Pectra | Tài khoản ủy quyền (EIP-7702), trình xác thực giữ tới 2.048 ETH, blob 6/9, precompile BLS12-381, giá sàn cho calldata |
+| 3/12/2025 | Fusaka | PeerDAS, BPO, lệnh `CLZ`, precompile secp256r1, mỗi giao dịch tối đa 2<sup>24</sup> gas |
+
+Fusaka kéo theo hai nâng cấp chỉ đổi thông số blob, ngày 9/12/2025 và 7/1/2026 (xem [Mở rộng](./mo-rong.mdx)). Bảng bỏ qua vài đợt nhỏ thời còn đào: Frontier Thawing (7/9/2015), Muir Glacier (2/1/2020), Arrow Glacier (9/12/2021) và Gray Glacier (30/6/2022), chủ yếu lùi "bom độ khó" (difficulty bomb). Bellatrix (6/9/2022) là phần chuẩn bị của lớp đồng thuận cho The Merge.
+
+Nhìn lại bảng, nhiều đợt đổi giá của những lệnh đã có: EIP-150 (2016), EIP-1884 (2019), EIP-2929 (2021). EIP-1884 tăng giá `SLOAD`, nên một số hợp đồng đọc storage khi nhận ETH, vốn chỉ được 2.300 gas, có thể không còn chạy được. Đó là lý do đừng gán cứng lượng gas trong mã.
+
+## Đang lên kế hoạch
+
+Chưa thay đổi nào trong phần này chạy trên mạng chính (đọc ngày 20/11/2026).
+
+### Glamsterdam
+
+Glamsterdam ghép Amsterdam (lớp thực thi) với Gloas (lớp đồng thuận). Nó đã chạy trên Sepolia từ ngày 6/10/2026, chưa có ngày cho Hoodi và mạng chính. Danh sách thay đổi nằm trong EIP meta của nó, EIP-7773, đang ở trạng thái Review. Hai thay đổi chính (headliner) là ePBS và danh sách truy cập cấp khối. Những EIP đã xếp lịch mà người viết hợp đồng nên biết:
+
+| EIP | Thay đổi dự kiến |
+|---|---|
+| 7732 | Tách người đề xuất và người xây khối ngay trong giao thức (ePBS), không cần relay của MEV-Boost |
+| 7928 | Danh sách truy cập cấp khối (BAL), để nút đọc dữ liệu và chạy giao dịch song song |
+| 7954 | Mã hợp đồng tối đa từ 24 KiB lên 64 KiB, mã khởi tạo từ 48 KiB lên 128 KiB |
+| 7708 | Mọi lần chuyển ETH đều phát nhật ký (log) |
+| 7997 | Một hợp đồng nhà máy `CREATE2` chung, để triển khai cùng một địa chỉ trên nhiều chuỗi |
+| 7843 | Lệnh `SLOTNUM` trả về số khe hiện tại |
+| 2780, 7778, 7976, 7981, 8037, 8038 | Định giá lại gas: tính lại phần gas cố định của giao dịch, tăng giá calldata, danh sách truy cập, tạo và truy cập trạng thái; khoản hoàn gas không còn được trừ khi tính gas của khối |
+
+Ngoài các EIP trên, danh sách còn có các thay đổi về đồng thuận, định dạng dữ liệu và giao thức mạng, như hàng chờ blob chỉ lấy mẫu (EIP-8070).
+
+Glamsterdam từng được dự kiến lên Hoodi ngày 26/10/2026 (chương trình họp ACDE #248, 22/10/2026), nhưng tới ngày 20/11/2026 EIP-7773 không ghi ngày nào cho Hoodi. Trước cuộc họp đó, công ty kiểm toán ChainSecurity [công bố](https://www.chainsecurity.com/blog/glamsterdam-gas) rằng với cách tính gas mới của EIP-8037 và EIP-8038, `gasleft()` có thể tăng lên. Một số hợp đồng đang chạy, vốn gán cứng lượng gas hoặc giả định `gasleft()` chỉ giảm, có thể không còn an toàn. Đầu năm 2026, Quỹ Ethereum còn nhắm Glamsterdam vào nửa đầu năm.
+
+### Hegotá
+
+Hegotá ghép Bogotá với Heze. EIP meta của nó, EIP-8081, vẫn là bản nháp. Mới có hai thay đổi được xếp lịch:
+
+- **FOCIL** (EIP-7805), xếp lịch từ tháng 2/2026: một ủy ban trình xác thực đưa ra danh sách giao dịch mà người xây khối buộc phải đưa vào, để không bên nào một mình kiểm duyệt được giao dịch.
+- **Giao dịch dạng khung** (frame transaction, EIP-8141), xếp lịch từ ngày 27/8/2026, văn bản vẫn là bản nháp: tài khoản tự quyết định thế nào là một giao dịch hợp lệ, gồm cả loại chữ ký nó dùng.
+
+Khoảng hai mươi EIP khác đang được xem xét. Hegotá chưa có ngày.
+
+<Callout type="warn" title="Quan trọng">
+Được xếp lịch không có nghĩa là chắc chắn. Một EIP có thể bị rút khỏi đợt nâng cấp tới lúc cuối, như EOF với Fusaka. Ngày dự kiến cũng thường bị lùi. Chỉ tin vào bảng kích hoạt trong EIP meta và thông báo chính thức.
+</Callout>
+
+## Từ ý tưởng tới mạng chính
+
+**1. Ý tưởng.** Bàn công khai trên ethresear.ch, Ethereum Magicians hoặc máy chủ Discord R&D của Ethereum.
+
+**2. EIP.** Ý tưởng chín thì thành một EIP, có trạng thái theo EIP-1:
+
+| Trạng thái | Nghĩa |
+|---|---|
+| Draft | Bản nháp đầu tiên được nhận vào kho EIP |
+| Review | Tác giả mời góp ý |
+| Last Call | Vòng góp ý cuối, thường 14 ngày |
+| Final | Văn bản cố định, chỉ sửa lỗi |
+| Stagnant | Draft, Review hoặc Last Call bỏ không quá 6 tháng |
+| Withdrawn | Tác giả rút |
+| Living | Cập nhật mãi, như EIP-1 |
+
+Trạng thái này nói văn bản đã chín tới đâu, không nói thay đổi đã chạy chưa. EIP-7732 (ePBS) đang là Last Call nhưng chưa có trên mạng chính.
+
+**3. Xếp vào một đợt nâng cấp.** Theo EIP-7723, với mỗi đợt nâng cấp, một EIP đi qua các bậc: đề xuất đưa vào (Proposed for Inclusion), được cân nhắc (Considered), được xếp lịch (Scheduled), rồi đã đưa vào (Included) sau khi kích hoạt. Ở bậc nào cũng có thể bị từ chối (Declined). Mỗi đợt có một EIP meta ghi các danh sách này: Fusaka là EIP-7607, Glamsterdam là EIP-7773, Hegotá là EIP-8081.
+
+**4. Các cuộc họp All Core Devs.** Quyết định được đưa ra trong các cuộc gọi công khai: ACDE bàn lớp thực thi và ACDC bàn lớp đồng thuận, xen kẽ mỗi tuần; ACDT bàn kiểm thử. Có thêm các phòng họp chuyên đề (breakout). Chương trình, bản ghi và tóm tắt nằm ở kho [ethereum/pm](https://github.com/ethereum/pm) và trang [Forkcast](https://forkcast.org).
+
+**5. Các nhóm phần mềm cùng làm.** Nhiều nhóm độc lập viết phần mềm lớp thực thi và lớp đồng thuận bằng nhiều ngôn ngữ (xem [Phần mềm client và API](./client-va-api.mdx)). Tất cả làm theo cùng một đặc tả: `ethereum/execution-specs` và `ethereum/consensus-specs`, viết bằng Python nên chạy được. Từ cuối năm 2025, bộ kiểm thử lớp thực thi nằm chung kho với đặc tả.
+
+**6. Mạng thử của nhà phát triển, rồi mạng thử nghiệm công khai.** Mỗi đợt chạy qua nhiều mạng thử ngắn hạn tên dạng `glamsterdam-devnet-0`, rồi tới các mạng thử nghiệm công khai, rồi mạng chính ở một mốc thời gian định trước.
+
+Các công cụ kiểm thử chính:
+
+- **Hive** dựng nhiều phần mềm client cùng lúc và chạy chung một kịch bản trên tất cả, để bắt chỗ chúng xử lý khác nhau.
+- **Kurtosis** với gói `ethereum-package` của nhóm ethPandaOps dựng một mạng thử nhiều client trên máy bạn, bằng Docker.
+- Các bộ kiểm thử sinh từ đặc tả. Mọi client phải cho ra cùng kết quả, vì chỉ một khác biệt trong cách chuyển trạng thái cũng đủ tách mạng lưới làm đôi.
+
+### Mạng thử nghiệm hiện nay
+
+| Mạng | Dành cho | Ghi chú (tháng 11/2026) |
+|---|---|---|
+| Sepolia | Nhà phát triển ứng dụng | Trình xác thực do các nhóm client và kiểm thử nắm. Thường lên đợt nâng cấp trước. Đã chạy Glamsterdam từ 6/10/2026 |
+| Hoodi | Người đặt cọc, nhà vận hành hạ tầng, thử nâng cấp | Ra mắt tháng 3/2025, ai cũng chạy trình xác thực được. Trạng thái lớn, đồng bộ lâu hơn |
+| Ephemery | Thử nhanh | Tự quay về khối đầu tiên sau mỗi 28 ngày |
+| Holešky | Đã ngừng | Ngừng sau đợt chạy thử Fusaka (10/2025). Glamsterdam chỉ còn lên lịch cho Sepolia và Hoodi |
+
+### Cách đặt tên
+
+- Nâng cấp lớp thực thi lấy tên các thành phố từng tổ chức Devcon và Devconnect, theo thứ tự: Shanghai, Cancun, Prague, Osaka, Amsterdam, Bogotá…
+- Nâng cấp lớp đồng thuận lấy tên một ngôi sao, theo thứ tự chữ cái: Altair, Bellatrix, Capella, Deneb, Electra, Fulu, Gloas, Heze…
+- Từ sau The Merge, hai lớp nâng cấp cùng lúc, nên tên được ghép: Shapella, Dencun, Pectra, Fusaka, Glamsterdam, Hegotá.
+- Nâng cấp chỉ đổi thông số blob đánh số `bpo1`, `bpo2`…
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **Theo dõi đúng chỗ.** Mục thông báo giao thức trên blog của Quỹ Ethereum, EIP meta của đợt sắp tới, Forkcast, và ghi chú phát hành của nhà cung cấp RPC bạn dùng.
+- **Thử trên Sepolia ngay khi đợt nâng cấp lên đó.** Glamsterdam đã có trên Sepolia, nên đây là lúc thử lại hợp đồng của bạn trên đó. Trước khi đợt nâng cấp lên Sepolia, thử trên anvil với `--hardfork` nếu Foundry đã hỗ trợ. Foundry 1.5.1 chạy được Osaka (Fusaka) nhưng chưa chạy được Amsterdam.
+- **Đọc kỹ thay đổi về lệnh và gas.** Tìm trong mã: lượng gas gán cứng (`call` với `gas` cố định, `transfer`, `send`), giả định `gasleft()` chỉ giảm, giới hạn kích thước mã, `SELFDESTRUCT`. Đó chính là những giả định mà phát hiện của ChainSecurity về Glamsterdam nhắm tới.
+- **Biên dịch cho đúng chuỗi đích.** Năm 2023, khi trình biên dịch Solidity chuyển mặc định sang Shanghai, mã có lệnh `PUSH0` không triển khai được lên các chuỗi chưa nâng cấp. Đặt `evm_version` trong `foundry.toml` khớp với chuỗi bạn triển khai. forge 1.5.1 mặc định `prague`, nên muốn dùng `CLZ` của Fusaka phải đặt `osaka`.
+- **Mỗi Layer 2 nâng cấp theo lịch riêng.** Kiểm tra lệnh, precompile và giới hạn trên từng chuỗi.
+- **Đừng dựa vào nút RPC để đọc lịch sử xa.** Từ tháng 7/2025, nút được bỏ các khối trước The Merge. Khi viết bài này, một RPC công khai lớn đã không trả về các khối đó. Nếu ứng dụng cần lịch sử cũ, dùng dịch vụ lưu trữ hoặc tự lập chỉ mục.
+- **Hỏi nút xem nó đang ở đợt nâng cấp nào.** RPC `eth_config` (EIP-7910, bắt buộc từ Fusaka) trả về cấu hình hiện tại và đợt kế tiếp:
+
+```bash
+anvil --hardfork osaka   # chạy ở một cửa sổ khác
+cast rpc eth_config | jq '.current.blobSchedule, .current.precompiles.P256VERIFY, .next'
+```
+
+```json
+{
+  "baseFeeUpdateFraction": 5007716,
+  "max": 9,
+  "target": 6
+}
+"0x0000000000000000000000000000000000000100"
+null
+```
+
+anvil chỉ mô phỏng Osaka gốc, không có các BPO, nên blob là 6/9. Precompile secp256r1 nằm ở `0x100`, và `next` là `null` vì không có đợt nào được lên lịch. Trên một nút mạng chính, `current` sẽ là cấu hình của BPO2, và `next` sẽ hiện Glamsterdam khi nó có ngày. (Kiểm tra với Foundry 1.5.1, tháng 11/2026.)
+
+## Nguồn
+
+- EPF wiki: [Ethereum Protocol Roadmap](https://epf.wiki/#/wiki/research/roadmap), [Protocol history](https://epf.wiki/#/wiki/protocol/history), [Core development](https://epf.wiki/#/wiki/dev/core-development), [Core development coordination](https://epf.wiki/#/wiki/dev/pm), [Testing](https://epf.wiki/#/wiki/testing/overview), [Hive](https://epf.wiki/#/wiki/testing/hive), [Kurtosis](https://epf.wiki/#/wiki/testing/kurtosis)
+- ethereum.org: [Lộ trình](https://ethereum.org/roadmap/), [Lịch sử các đợt nâng cấp](https://ethereum.org/ethereum-forks/), [Glamsterdam](https://ethereum.org/roadmap/glamsterdam/), [Hegotá](https://ethereum.org/roadmap/hegota/), [Networks](https://ethereum.org/developers/docs/networks/)
+- EIP: [1](https://eips.ethereum.org/EIPS/eip-1), [1884](https://eips.ethereum.org/EIPS/eip-1884), [7600](https://eips.ethereum.org/EIPS/eip-7600), [7607](https://eips.ethereum.org/EIPS/eip-7607), [7723](https://eips.ethereum.org/EIPS/eip-7723), [7732](https://eips.ethereum.org/EIPS/eip-7732), [7773](https://eips.ethereum.org/EIPS/eip-7773), [7805](https://eips.ethereum.org/EIPS/eip-7805), [7910](https://eips.ethereum.org/EIPS/eip-7910), [7954](https://eips.ethereum.org/EIPS/eip-7954), [8037](https://eips.ethereum.org/EIPS/eip-8037), [8081](https://eips.ethereum.org/EIPS/eip-8081), [8141](https://eips.ethereum.org/EIPS/eip-8141)
+- [ethereum/pm](https://github.com/ethereum/pm): lịch và bản ghi các cuộc họp All Core Devs, gồm ACDE #248 (22/10/2026)
+- [ethereum/execution-specs](https://github.com/ethereum/execution-specs), [ethereum/consensus-specs](https://github.com/ethereum/consensus-specs), [ethereum/hive](https://github.com/ethereum/hive), [ethpandaops/ethereum-package](https://github.com/ethpandaops/ethereum-package)
+- Quỹ Ethereum: [Protocol Priorities Update for 2026](https://blog.ethereum.org/2026/02/18/protocol-priorities-update-2026), [Holešky shutdown announcement](https://blog.ethereum.org/2025/09/01/holesky-shutdown-announcement), [Partial history expiry](https://blog.ethereum.org/2025/07/08/partial-history-exp)
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.

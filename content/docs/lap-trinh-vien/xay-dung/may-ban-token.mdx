@@ -1,0 +1,299 @@
+---
+title: Máy bán token
+description: Viết hợp đồng máy bán token, gửi ETH vào là nhận token XU theo tỉ giá cố định. Kiểm thử bằng Foundry, rồi chạy thử trên mạng nội bộ anvil.
+sources:
+  - https://docs.openzeppelin.com/contracts/5.x/erc20
+  - https://eips.ethereum.org/EIPS/eip-20
+  - https://www.getfoundry.sh/
+---
+
+Trong bài này bạn viết hợp đồng chính của dự án. Máy bán token hoạt động theo bốn luật:
+
+1. 1 ETH đổi được 1.000 XU. Tỉ giá cố định, ghi thẳng trong mã.
+2. Muốn mua, gọi hàm `buy()`, hoặc đơn giản là gửi ETH tới địa chỉ của máy.
+3. Máy chỉ bán số XU đang có. Hết hàng thì từ chối.
+4. Chỉ chủ máy rút được ETH đã thu.
+
+Bạn cần một dự án Foundry đã cài OpenZeppelin Contracts. Nếu chưa có, làm theo bài [Môi trường làm việc](./moi-truong.mdx).
+
+<Callout type="warn" title="Quan trọng">
+Dự án này để học và chỉ chạy trên mạng thử. Bán token cho người khác để lấy tiền thật có thể chịu sự điều chỉnh của pháp luật. Nếu định làm thật, hãy tìm hiểu quy định hiện hành.
+</Callout>
+
+## Bước 1: Viết hợp đồng
+
+Tạo tệp `src/VendingMachine.sol`:
+
+```solidity title="src/VendingMachine.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
+/// @title Máy bán token
+/// @notice Gửi ETH vào máy, nhận lại token XU theo tỉ giá cố định.
+contract VendingMachine is ERC20, Ownable {
+    /// 1 ETH đổi được 1.000 XU. ETH và XU đều có 18 chữ số thập phân,
+    /// nên chỉ cần nhân số wei với 1.000.
+    uint256 public constant TOKENS_PER_ETH = 1000;
+
+    event Sold(address indexed buyer, uint256 ethPaid, uint256 tokensOut);
+    event Withdrawn(address indexed to, uint256 amount);
+
+    error ZeroPayment();
+    error SoldOut(uint256 requested, uint256 available);
+    error WithdrawFailed();
+
+    /// @param initialStock số XU nạp sẵn vào máy (tính theo đơn vị nhỏ nhất)
+    constructor(uint256 initialStock) ERC20("Xu", "XU") Ownable(msg.sender) {
+        _mint(address(this), initialStock);
+    }
+
+    /// Gửi ETH thẳng tới địa chỉ của máy cũng là mua.
+    receive() external payable {
+        buy();
+    }
+
+    /// Mua XU bằng số ETH gửi kèm.
+    function buy() public payable returns (uint256 amount) {
+        if (msg.value == 0) revert ZeroPayment();
+        amount = msg.value * TOKENS_PER_ETH;
+        uint256 available = stock();
+        if (amount > available) revert SoldOut(amount, available);
+        _transfer(address(this), msg.sender, amount);
+        emit Sold(msg.sender, msg.value, amount);
+    }
+
+    /// Số XU còn trong máy.
+    function stock() public view returns (uint256) {
+        return balanceOf(address(this));
+    }
+
+    /// Chủ máy rút toàn bộ ETH đã thu.
+    function withdraw(address payable to) external onlyOwner {
+        uint256 amount = address(this).balance;
+        (bool ok,) = to.call{value: amount}("");
+        if (!ok) revert WithdrawFailed();
+        emit Withdrawn(to, amount);
+    }
+}
+```
+
+Từng phần làm gì:
+
+- **`is ERC20, Ownable`**: máy vừa là token XU, vừa có chủ. `ERC20("Xu", "XU")` đặt tên và ký hiệu cho token, theo chuẩn **ERC-20** mà mọi ví đều hiểu. `Ownable(msg.sender)` đặt người triển khai hợp đồng làm chủ.
+- **Hàng nằm trong máy.** Constructor tạo ra `initialStock` XU và ghi chúng vào số dư của chính hợp đồng (`address(this)`). Vì vậy số hàng còn lại chỉ đơn giản là số dư XU của máy, hàm `stock()`.
+- **Tỉ giá không cần phép chia.** XU có 18 chữ số thập phân giống ETH, nên số đơn vị nhỏ nhất của XU bằng số wei nhân 1.000. Gửi 0,1 ETH (10<sup>17</sup> wei) thì nhận 10<sup>20</sup> đơn vị, tức 100 XU.
+- **`receive()` gọi `buy()`**, nên gửi ETH trơn tới máy cũng là mua.
+- **Thứ tự trong `buy()`**: kiểm tra trước (có gửi ETH không, còn đủ hàng không), rồi chuyển token, rồi phát sự kiện `Sold`. `_transfer` là hàm nội bộ của OpenZeppelin, không gọi ra hợp đồng nào khác, nên không có rủi ro bị gọi ngược.
+- **`withdraw`** có `onlyOwner` từ `Ownable`: người khác gọi sẽ bị từ chối. ETH được gửi bằng `call` và kết quả luôn được kiểm tra.
+- **Lỗi tùy chỉnh mang dữ liệu.** `SoldOut(requested, available)` cho giao diện biết người mua muốn bao nhiêu và máy còn bao nhiêu, để hiện thông báo dễ hiểu.
+
+Chạy `forge build` để biên dịch.
+
+## Bước 2: Viết kiểm thử
+
+Kiểm thử trong Foundry là hợp đồng Solidity. Mỗi hàm có tên bắt đầu bằng `test` là một kiểm thử, và `setUp()` chạy lại trước mỗi kiểm thử. Tạo tệp `test/VendingMachine.t.sol`:
+
+```solidity title="test/VendingMachine.t.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Test} from "forge-std/Test.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {VendingMachine} from "../src/VendingMachine.sol";
+
+contract VendingMachineTest is Test {
+    VendingMachine machine;
+    address alice = makeAddr("alice");
+    address cashbox = makeAddr("cashbox");
+
+    function setUp() public {
+        // Nạp 1 triệu XU vào máy. `ether` ở đây chỉ có nghĩa là nhân 10^18.
+        machine = new VendingMachine(1_000_000 ether);
+        vm.deal(alice, 10 ether);
+    }
+
+    function test_Buy() public {
+        vm.prank(alice);
+        machine.buy{value: 1 ether}();
+
+        assertEq(machine.balanceOf(alice), 1_000 ether);
+        assertEq(address(machine).balance, 1 ether);
+    }
+
+    function test_SendEthDirectly() public {
+        vm.prank(alice);
+        (bool ok,) = address(machine).call{value: 0.5 ether}("");
+
+        assertTrue(ok);
+        assertEq(machine.balanceOf(alice), 500 ether);
+    }
+
+    function test_EmitsSold() public {
+        vm.expectEmit(address(machine));
+        emit VendingMachine.Sold(alice, 1 ether, 1_000 ether);
+
+        vm.prank(alice);
+        machine.buy{value: 1 ether}();
+    }
+
+    function test_RevertWhen_ZeroPayment() public {
+        vm.prank(alice);
+        vm.expectRevert(VendingMachine.ZeroPayment.selector);
+        machine.buy();
+    }
+
+    function test_RevertWhen_SoldOut() public {
+        VendingMachine small = new VendingMachine(500 ether);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(VendingMachine.SoldOut.selector, 1_000 ether, 500 ether));
+        small.buy{value: 1 ether}();
+    }
+
+    function test_OwnerWithdraws() public {
+        vm.prank(alice);
+        machine.buy{value: 2 ether}();
+
+        machine.withdraw(payable(cashbox));
+
+        assertEq(cashbox.balance, 2 ether);
+        assertEq(address(machine).balance, 0);
+    }
+
+    function test_RevertWhen_StrangerWithdraws() public {
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
+        machine.withdraw(payable(alice));
+    }
+
+    function testFuzz_Buy(uint256 paid) public {
+        paid = bound(paid, 1, 1_000 ether); // tối đa vừa hết hàng
+        vm.deal(alice, paid);
+
+        vm.prank(alice);
+        uint256 got = machine.buy{value: paid}();
+
+        assertEq(got, paid * 1_000);
+        assertEq(machine.balanceOf(alice) + machine.stock(), 1_000_000 ether);
+    }
+}
+```
+
+Kiểm thử dùng các **cheatcode**: lệnh đặc biệt của Foundry, chỉ có khi chạy kiểm thử, để điều khiển môi trường.
+
+| Cheatcode | Làm gì |
+|---|---|
+| `makeAddr("alice")` | Tạo một địa chỉ có tên, để kết quả dễ đọc |
+| `vm.deal(alice, 10 ether)` | Đặt số dư ETH cho một địa chỉ |
+| `vm.prank(alice)` | Lời gọi kế tiếp được gửi như thể từ `alice` |
+| `vm.expectRevert(...)` | Lời gọi kế tiếp phải thất bại, đúng với lỗi này |
+| `vm.expectEmit(address(machine))` | Lời gọi kế tiếp phải phát đúng sự kiện được `emit` ngay sau dòng này |
+| `bound(x, min, max)` | Ép một số ngẫu nhiên vào khoảng hợp lệ |
+
+Kiểm thử cuối có tham số, nên Foundry chạy nó 256 lần với các giá trị ngẫu nhiên khác nhau. Đó là **kiểm thử fuzz** (fuzz test). Nó không chỉ kiểm vài ví dụ bạn nghĩ ra, mà kiểm một tính chất phải luôn đúng: số XU của người mua cộng số XU còn trong máy luôn bằng số hàng ban đầu.
+
+Chạy:
+
+```bash
+forge test
+```
+
+```text
+Ran 8 tests for test/VendingMachine.t.sol:VendingMachineTest
+[PASS] testFuzz_Buy(uint256) (runs: 256, μ: 55091, ~: 54718)
+[PASS] test_Buy() (gas: 52101)
+[PASS] test_EmitsSold() (gas: 52748)
+[PASS] test_OwnerWithdraws() (gas: 92212)
+[PASS] test_RevertWhen_SoldOut() (gas: 1237817)
+[PASS] test_RevertWhen_StrangerWithdraws() (gas: 14972)
+[PASS] test_RevertWhen_ZeroPayment() (gas: 11276)
+[PASS] test_SendEthDirectly() (gas: 51383)
+Suite result: ok. 8 passed; 0 failed; 0 skipped
+```
+
+Số gas trên máy bạn có thể hơi khác, tùy phiên bản trình biên dịch.
+
+<Callout type="idea" title="Mẹo">
+Muốn biết kiểm thử có thật sự bảo vệ bạn không, hãy cố tình làm hỏng hợp đồng. Xóa dòng `if (amount > available) revert SoldOut(...)` rồi chạy lại `forge test`: kiểm thử nào thất bại, và vì sao? Gợi ý: OpenZeppelin vẫn chặn việc chuyển quá số dư, nhưng bằng một lỗi khác.
+</Callout>
+
+## Bước 3: Chạy thử trên anvil
+
+Mở một cửa sổ terminal và chạy chuỗi nội bộ:
+
+```bash
+anvil
+```
+
+anvil in ra 10 tài khoản thử kèm khóa riêng tư, rồi chờ ở `http://127.0.0.1:8545`. Mở cửa sổ thứ hai, trong thư mục dự án, và triển khai máy với 1 triệu XU:
+
+```bash
+# Khóa của tài khoản thử đầu tiên mà anvil in ra.
+# Ai cũng biết khóa này: chỉ dùng nó trên anvil.
+export ANVIL_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+export RPC=http://127.0.0.1:8545
+
+forge create src/VendingMachine.sol:VendingMachine \
+  --rpc-url $RPC --private-key $ANVIL_KEY --broadcast \
+  --constructor-args 1000000ether
+```
+
+```text
+Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+```
+
+Địa chỉ hợp đồng được tính từ địa chỉ người triển khai và số thứ tự giao dịch của họ, nên trên một anvil vừa khởi động, bạn sẽ thấy đúng địa chỉ này. Gửi 0,1 ETH tới máy, rồi xem kết quả:
+
+```bash
+export MACHINE=0x5FbDB2315678afecb367f032d93F642f64180aa3
+
+# Gửi 0,1 ETH thẳng tới máy: receive() sẽ gọi buy()
+cast send $MACHINE --value 0.1ether --rpc-url $RPC --private-key $ANVIL_KEY
+
+# Số XU của bạn, và số XU còn trong máy
+cast call $MACHINE "balanceOf(address)(uint256)" 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --rpc-url $RPC
+cast call $MACHINE "stock()(uint256)" --rpc-url $RPC
+```
+
+```text
+100000000000000000000 [1e20]
+999900000000000000000000 [9.999e23]
+```
+
+10<sup>20</sup> đơn vị là 100 XU (`cast from-wei 100000000000000000000` in ra `100.000000000000000000`), và trong máy còn 999.900 XU.
+
+Bây giờ thử mua mà không gửi ETH:
+
+```bash
+cast send $MACHINE "buy()" --rpc-url $RPC --private-key $ANVIL_KEY
+```
+
+```text
+Error: Failed to estimate gas: server returned an error response: error code 3:
+execution reverted: custom error 0x8f28ea88, data: "0x8f28ea88": ZeroPayment
+```
+
+Giao dịch bị từ chối ngay từ lúc ước tính gas, trước khi được gửi đi, nên bạn không mất phí. `0x8f28ea88` là bộ chọn (selector) của lỗi `ZeroPayment`: bài [EVM](../giao-thuc/evm.mdx#abi-hàm-được-gọi-thế-nào) giải thích con số này từ đâu ra.
+
+<Callout type="info" title="Lưu ý">
+Thử gửi 0,1 ETH thêm một lần nữa và để ý dòng `gasUsed` mà `cast send` in ra. Khi chạy thử lúc viết bài, lần gửi đầu tốn 53.203 gas, lần thứ hai 36.103 gas. Chênh lệch 17.100 gas đúng bằng 20.000 trừ 2.900: lần đầu, hợp đồng phải ghi một ô storage mới (số dư XU của bạn đi từ 0 lên khác 0), còn lần sau chỉ sửa ô đã có.
+</Callout>
+
+## Còn thiếu gì
+
+Máy đã chạy được, nhưng chưa sẵn sàng cho người dùng thật:
+
+- **Tỉ giá cố định trong mã.** Muốn đổi giá phải triển khai hợp đồng mới. Nếu cho chủ máy đổi giá, người mua cần được bảo vệ khỏi việc giá bị đổi ngay trước giao dịch của họ.
+- **Chưa có giao diện.** Người dùng bình thường không gõ `cast send`.
+- **Mới chạy trên máy bạn.** Cần triển khai lên mạng thử nghiệm để người khác dùng được.
+
+Các bài tiếp theo của phần Xây dựng ứng dụng (bảo mật, triển khai, giao diện web với wagmi và viem) sẽ giải quyết từng việc.
+
+## Đọc tiếp
+
+- [EVM](../giao-thuc/evm.mdx): vì sao ghi storage đắt, và bộ chọn hàm, bộ chọn lỗi từ đâu ra.
+- [Solidity cho người đã biết lập trình](./solidity.mdx)

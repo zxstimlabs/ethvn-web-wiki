@@ -11,6 +11,10 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
 - Follow `CONTRIBUTING.md` (Vietnamese) for the section plan, file conventions, writing style and standard terms. It moved here from the old `ethvn-wiki-contents/README.md` and includes later decisions: finality is "tính cuối cùng" (user decision 2026-11-08), never a standalone "cuối cùng", which can read as "last".
 - ethereum.org's terms of use license its text (non-code content) under **CC BY 4.0** and its code under MIT; its GitHub repo says MIT. `NOTICE.md` (updated 2026-11-09) meets both: credit, licence links, a note of changes, and no endorsement claimed. Keep it whenever adapted content is in this repo.
 - The Ethereum Foundation's public-sector site and PDFs state no licence: summarise and cite them, never copy.
+- **Licence (user, 2026-11-20): the wiki's text is CC BY-SA 4.0** so it can adapt the EPF wiki (CC BY-SA 4.0) and ethereum.org (text CC BY 4.0) directly, for accuracy. The site's code and the code samples in articles are MIT.
+  - `LICENSE.md` states both, and `NOTICE.md` credits EPF and ethereum.org.
+  - A licence line sits under every docs page (`app/tai-lieu/[[...slug]]/page.tsx`, from `contentLicense` in `lib/shared.ts`) and at the end of every Markdown copy (`renderPage` in `lib/source.ts`).
+  - Adapted pages end with a "Nguồn" list and an attribution line naming each source's licence.
 - Don't touch the wallet at `~/dev/zxstimlabs/ethvn-web-wallet`: the user is reviewing it.
 - Commit only when the user asks.
 
@@ -28,7 +32,20 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
 - Uncommitted so far (check `git status`): the Bun scripts in `package.json`, the home hero, the shadcn theme, and the content.
 - Sections (user's request, 2026-11-08): the wiki is split by reader into five Fumadocs root folders, shown as the dropdown at the top of the sidebar (like fumadocs.dev). In the phone drawer it's at the top with descriptions, and the intro page lists them as cards.
   - "Căn bản" (`content/docs/can-ban/`) is general, simplified content for everyone. It has its own URL, `/tai-lieu/can-ban`, so it can be indexed and shared (user's request, 2026-11-08). Its front page is titled "Căn bản" and also lists the other sections as cards.
-  - "Lập trình viên" (`lap-trinh-vien/`) is still a plain placeholder.
+  - "Lập trình viên" (`lap-trinh-vien/`), started 2026-11-20 at the user's request, has two groups:
+    - "Hiểu giao thức" (`giao-thuc/`), 11 pages, written 2026-11-20: kien-truc, evm (with `EvmScene`), trang-thai, giao-dich, tu-mempool-toi-khoi, dong-thuan, mang-ngang-hang, mat-ma, mo-rong, client-va-api, lo-trinh.
+      - They condense the EPF wiki for app developers. Each page ends with "Điều này ảnh hưởng gì tới ứng dụng của bạn", then "Nguồn" with a CC BY-SA / CC BY attribution line.
+      - Ten pages were drafted by parallel agents from EPF (fresh clone bd55164, May 2026) and the ethereum.org clone. Every number, date and status was checked against EIPs, execution-specs, consensus-specs and execution-apis, and the printed `cast`/anvil commands were run.
+      - EPF and ethereum.org were wrong or stale in many places; the pages follow the specs. Examples: base fee moves 1/8 per block, not 1/1024; malleability was fixed by EIP-2, not EIP-155; ePBS/7702/PeerDAS statuses; ethereum.org's BPO2 "15/21" (it is 14/21).
+      - Diagram ideas from the drafts (none built yet): node layers with a receive/propose switch, state-root-to-leaf proof path, transaction envelope bytes, sandwich vs private RPC, FFG checkpoints with latest/safe/finalized, tx/block propagation, signing pipeline, PeerDAS matrix, client-share gauge, upgrade pipeline.
+      - Dated facts to refresh:
+        - BPO1 2025-12-09 (blobs 10/15) and BPO2 2026-01-07 (14/21).
+        - FCR support per client (spec since Apr 2026; clients vary), so `safe` differs by client.
+        - The client lists; Glamsterdam and Hegotá status (below).
+      - Foundry 1.5.1 quirks the pages mention: anvil does not enforce the 2^24 transaction gas cap; `--hardfork amsterdam` panics; anvil's `safe`/`finalized` lag 32/64 blocks.
+    - "Xây dựng ứng dụng" (`xay-dung/`) carries one project through every page: a vending machine (`VendingMachine is ERC20, Ownable`: send ETH, get XU at 1.000 per ETH, stock limit, owner withdraws). Tooling (user): Foundry + wagmi/viem. Done: `moi-truong` (with an AI prompt to set up the Foundry project), `solidity`, `may-ban-token`. Planned: security, deploying to a testnet, frontend with wagmi/viem, events and indexing, UX on Layer 2, before mainnet.
+    - Project code is plain Markdown code blocks (user), but every block was compiled and run before publishing: `forge test` (8 tests), and the anvil commands exactly as printed. Re-run them when the code changes. Versions checked 2026-11-20: Foundry 1.10.0, Solidity 0.8.39, OpenZeppelin Contracts 5.6.1, viem 2.58, wagmi 3.7.
+    - The local EPF clone (`~/dev/main-projects/epf-protocol-studies`) is from 2026-02-20. The protocol pages used a fresh clone of github.com/eth-protocol-fellows/protocol-studies (commit bd55164, 2026-05-17). Even that is stale in places (it barely mentions Fusaka or Glamsterdam), so check facts against the EIPs, execution-specs and consensus-specs.
   - "Nhà đầu tư" (`nha-dau-tu/`, 9 pages) was written on 2026-11-09 at the user's request. It elaborates Vitalik Buterin's X thread of 2026-11-08 (https://x.com/VitalikButerin/status/2119401255919604064): ETH as a store of value, not a fee-burning token.
     - Supporting sources: ethereum.org, including the EF Mandate (Mar 2026), which defines CROPS and calls ether a store of value. Live figures are dated: ultrasound.money, validatorqueue.com, DefiLlama, rwa.xyz, Coin Metrics.
     - The user wants it attractive to investors. It presents the thesis persuasively but attributed, with a risks-and-counterviews page (`rui-ro-va-quan-diem-khac`).
@@ -56,7 +73,11 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
     - Dated figures to refresh: BundleBear all-time UserOperations (≈1,36 tỷ, World Chain 56%, Base 24%, Polygon 10%, mainnet 0,6%; read 2026-11-09), the gas-checker numbers from EntryPoint v0.9.0, Wintermute's ">97% sweeper delegations" (Cointelegraph, 2 Jun 2025), and EIP-8141's status (scheduled for Hegotá since Aug 2026, still Draft; Hegotá expected Q2 2027, not confirmed).
   - ethereum.org leaves some things out, and these pages state them carefully: that NFT images usually live off-chain, that royalties aren't enforced by the protocol, and that stablecoin issuers can freeze tokens.
   - It is also out of date on EIP-7702; the pages cover that an upgraded account's original key keeps full control.
-  - Glamsterdam is described as planned, not live (as of November 2026).
+  - Glamsterdam status (checked 2026-11-20 against EIP-7773 and ethereum/pm):
+    - It has run on Sepolia since 2026-10-06, with no Hoodi or mainnet date. A Hoodi date of Oct 26 was on the ACDE #248 agenda (2026-10-22).
+    - ChainSecurity reported that under EIP-8037/8038 `gasleft()` can increase, so contracts that hardcode gas or assume it only decreases may break.
+    - Write it as "đã chạy trên Sepolia, chưa có ngày cho mạng chính".
+    - Hegotá (EIP-8081, Draft, no date) schedules FOCIL (EIP-7805) and EIP-8141; EIP-8198 (10 s slots) is only Considered.
   - Smart contracts, consensus, validators and gas were added on the user's request.
   - Layer 2 (user's request, 2026-11-09) covers the L2 types: why data on Ethereum matters, optimistic rollups (bisection fraud proofs, bond, challenge period), ZK-rollups (validity proofs, recursion, SNARK vs STARK, zkEVM), a comparison table, then validium, optimium, sidechains, plasma and state channels in one table. Base's ZK + TEE multiproof is the "line is blurring" callout.
     - Per-network facts come from ETHBEAT, read 2026-11-09, and are dated in the text: Arbitrum One challenge 6d 8h; Base 5d (1d when both proofs agree); ZKsync Era 1-day execution delay; ZKsync Era and Scroll wrap STARKs in SNARKs; Arbitrum Nova moved from optimium to optimistic rollup on 2026-08-31. Polygon zkEVM is now "Other" (proof system removed Dec 2025), so it isn't a ZK example. Refresh these with dates.
@@ -68,6 +89,7 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
   - ethereum.org's Vietnamese uses "tính chung cuộc" and "điểm kiểm tra"; this wiki keeps "tính cuối cùng" and "mốc" (user's choices). "Blob" stays untranslated.
 - Isometric explainers for wiki pages live in `components/iso/` and are registered in `components/mdx.tsx`: `ChainScene`, `NodeScene`, `ByzantineScene`, `ConsensusScene` (Công việc / Cổ phần switch), `ValidatorsScene` (stylised world map, continents placed by longitude/latitude), `KeysScene`, `SignatureScene`, `ContractScene`, `GasScene`, `BlockAnatomy`, `RollupScene` (Lạc quan / ZK switch), `UpgradeScene`, `ExplorerScene` (a generic explorer, deliberately not Etherscan's look), `TokenScene` (Token / Stablecoin / NFT switch), `SmartWalletScene` (Ví thường / Ví thông minh switch), `PrivacyScene`.
   - Added 2026-11-09 (user's request: more diagrams in Căn bản, so Bắt đầu has them too): `FinalityScene` (khoi, new section "Khi nào khối không thể đảo ngược?"), `FeeMarketScene` (phi-gas: base fee ±12,5% per block), `RecoveryScene` (vi-va-tai-khoan; Mất điện thoại / Lộ cụm từ switch), `NetworksScene` (vi-va-tai-khoan, new section "Một địa chỉ, nhiều mạng"), `ApprovalScene` (giu-an-toan; Không giới hạn / Vừa đủ switch), `PoisoningScene` (giu-an-toan), `SupplyScene` (ether-la-gi; mechanism only, no figures), `DelegationScene` (eip-7702), `UserOpScene` (erc-4337).
+  - Added 2026-11-20 (user's request): `SeedScene` (vi-va-tai-khoan, new section "Từ cụm từ khôi phục ra khóa và địa chỉ"): 12 words → numbers → seed → private/public key pair → address, then accounts 2 and 3 at `m/44'/60'/0'/0/{1,2}` filling a "Ví của bạn" list; a dashed line splits secret from shareable. Its values are real, derived from the page's example phrase (`puppy cube … amused`, generated 2026-11-20 to replace ethereum.org's example, which isn't valid BIP-39). Change the phrase and you must recompute every value in the scene.
   - The hero's finality "+" buttons (`READ.finality` in `components/hero/content.ts`) now point at the khoi finality section.
   - `figure.tsx` (`IsoFigure`) wraps each one: play/pause, a progress line and clickable step captions. Captions sit side by side by container width (container queries).
   - Each scene is a pure function of `t` that React re-renders per frame (small SVGs, so that's fine). The server renders a `poster` frame.
@@ -162,7 +184,8 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
   - Absolute URLs come from `siteUrl` in `lib/shared.ts`, read from `NEXT_PUBLIC_SITE_URL`.
     - Next bakes it in at **build** time, so it must be set when building, not only at runtime.
     - The domain isn't decided. Without it, canonical links, share images and the sitemap point at localhost; `next.config.mjs` warns during production builds.
-- `bun run build` and `bun run types:check` both pass.
+- `bun run types:check` passes. Since 2026-11-20, `bun run build` compiles and generates every page, then Next 16.4.2 exits with `SecurityFatalError` (known vulnerability in this Next version), and `bun run dev` exits after printing the same notice on its first start; starting it again works. The user hasn't decided on upgrading.
+- `app/global.css` fixes collapsed blank lines in ```text code blocks (Shiki writes them as `<span class="line"><span></span></span>`, which Fumadocs' `.line:empty` rule misses), and adds `.ai-prompt`: wrap a ```text block in `<div className="ai-prompt">` to make a copyable prompt wrap on phones.
 
 ## Next steps (agreed direction, not done yet)
 
@@ -187,5 +210,4 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
 ## Open questions for the user
 
 - Domain mapping: is eth.vn the wallet or ethvn-home? Is the wiki at wiki.eth.vn?
-- Licence for the wiki's own content: MIT like ethereum.org, or CC BY-SA?
 - GitHub org and repo name for `gitConfig`.

@@ -1,0 +1,18 @@
+{
+  "title": "Hiểu giao thức",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "kien-truc",
+    "evm",
+    "trang-thai",
+    "giao-dich",
+    "tu-mempool-toi-khoi",
+    "dong-thuan",
+    "mang-ngang-hang",
+    "mat-ma",
+    "mo-rong",
+    "client-va-api",
+    "lo-trinh"
+  ]
+}

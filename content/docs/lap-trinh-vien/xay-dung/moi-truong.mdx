@@ -1,0 +1,148 @@
+---
+title: Môi trường làm việc
+description: Cài Foundry, tạo dự án máy bán token, cài OpenZeppelin và làm quen với forge, cast, anvil. Kèm lời nhắc để trợ lý AI dựng dự án cùng bạn.
+sources:
+  - https://www.getfoundry.sh/
+  - https://github.com/foundry-rs/foundry
+  - https://docs.openzeppelin.com/contracts/5.x
+---
+
+**Foundry** là bộ công cụ dòng lệnh để viết, kiểm thử và triển khai hợp đồng Solidity. Foundry viết bằng Rust nên chạy nhanh, và bạn viết kiểm thử bằng chính Solidity, không cần học thêm ngôn ngữ thứ hai.
+
+Foundry gồm bốn công cụ:
+
+| Công cụ | Dùng để |
+|---|---|
+| `forge` | Biên dịch, kiểm thử và triển khai hợp đồng |
+| `cast` | Gọi hợp đồng, gửi giao dịch, đọc dữ liệu trên chuỗi, đổi đơn vị |
+| `anvil` | Chạy một chuỗi Ethereum riêng trên máy bạn (mạng thử nội bộ) |
+| `chisel` | Gõ thử từng dòng Solidity, như cửa sổ REPL |
+
+## Nhờ trợ lý AI dựng cùng
+
+Nếu muốn có người dẫn từng bước, hãy dán lời nhắc dưới đây vào ChatGPT, Claude, Gemini, hoặc trợ lý lập trình trong trình soạn thảo của bạn. Sửa dòng "Máy của tôi" cho đúng. Các mục 1 tới 5 bên dưới làm đúng những việc này, nên bạn có thể đối chiếu câu trả lời của AI với bài.
+
+<div className="ai-prompt">
+
+```text title="Lời nhắc cho trợ lý AI"
+Bạn là người hướng dẫn lập trình Ethereum. Hãy giúp tôi dựng một dự án Foundry cho bài "Máy bán token" của Wiki ETH.vn. Trả lời bằng tiếng Việt.
+
+Máy của tôi: macOS / Linux / Windows (tôi sẽ sửa lại cho đúng).
+
+Mục tiêu:
+1. Cài Foundry bằng foundryup (trên Windows thì dùng WSL hoặc Git Bash), rồi kiểm tra bằng `forge --version`.
+2. Tạo dự án `may-ban-token` bằng `forge init`, chạy `forge test` để thấy kiểm thử mẫu Counter chạy được, rồi xóa ba tệp mẫu Counter. Giải thích ngắn các thư mục src, test, script, lib và tệp foundry.toml.
+3. Cài OpenZeppelin Contracts bản v5.6.1 bằng `forge install`, rồi dùng `forge remappings` để kiểm tra đường dẫn `@openzeppelin/contracts/`.
+4. Chỉ cho tôi các lệnh hằng ngày: forge build, forge test, forge fmt, anvil, cast.
+5. Gợi ý tiện ích Solidity cho trình soạn thảo của tôi.
+
+Cách làm việc:
+- Mỗi lần chỉ đưa một bước. Chờ tôi dán kết quả rồi mới sang bước tiếp theo.
+- Khi có lỗi, giải thích nguyên nhân trước, rồi mới đưa cách sửa.
+- Nếu không chắc một lệnh còn đúng với bản Foundry mới nhất, hãy nói rõ và bảo tôi kiểm tra bằng `--help`.
+- Chỉ dùng anvil và mạng thử nghiệm. Không bao giờ hỏi khóa riêng tư hay cụm từ khôi phục của tôi, và không bảo tôi dán chúng vào tệp nào.
+
+Tài liệu chính thức của Foundry: https://www.getfoundry.sh/
+```
+
+</div>
+
+<Callout type="idea" title="Mẹo">
+AI có thể nhớ cú pháp của phiên bản cũ. Khi một lệnh báo lỗi, chạy `forge <lệnh> --help` (ví dụ `forge install --help`) để xem cú pháp đúng của bản bạn đang có, rồi dán kết quả cho AI.
+</Callout>
+
+## 1. Cài Foundry
+
+Trên macOS và Linux:
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+```
+
+Lệnh này tải và chạy tập lệnh cài đặt chính thức của Foundry. Bạn có thể mở địa chỉ đó trong trình duyệt để đọc trước. Sau đó mở một cửa sổ terminal mới và chạy:
+
+```bash
+foundryup
+forge --version
+```
+
+`foundryup` cài bản ổn định mới nhất (tháng 11 năm 2026 là 1.10). Chạy lại `foundryup` bất cứ lúc nào để cập nhật.
+
+Trên Windows, Foundryup không chạy trong PowerShell hay Command Prompt. Hãy dùng [WSL](https://learn.microsoft.com/windows/wsl/install) (Windows Subsystem for Linux) hoặc [Git Bash](https://gitforwindows.org/), rồi làm như trên.
+
+## 2. Tạo dự án
+
+```bash
+forge init may-ban-token
+cd may-ban-token
+forge test
+```
+
+`forge init` cần có Git. Nó tạo một kho Git mới, cài sẵn thư viện kiểm thử `forge-std`, và kèm một hợp đồng mẫu tên `Counter`. Nếu `forge test` báo các kiểm thử của Counter đều đạt (`PASS`), môi trường của bạn đã chạy.
+
+```text
+may-ban-token/
+├── foundry.toml   cấu hình của dự án
+├── src/           hợp đồng
+├── test/          kiểm thử, viết bằng Solidity
+├── script/        kịch bản triển khai
+└── lib/           thư viện, mỗi thư viện là một Git submodule
+```
+
+Xóa các tệp mẫu để bắt đầu từ đầu:
+
+```bash
+rm src/Counter.sol test/Counter.t.sol script/Counter.s.sol
+```
+
+## 3. Cài OpenZeppelin Contracts
+
+**OpenZeppelin Contracts** là thư viện hợp đồng dựng sẵn và đã được kiểm toán: token ERC-20, ERC-721, phân quyền, và nhiều thứ khác. Máy bán token dùng nó để có token XU mà không phải tự viết.
+
+```bash
+forge install OpenZeppelin/openzeppelin-contracts@v5.6.1
+forge remappings
+```
+
+Trong kết quả của `forge remappings` có dòng:
+
+```text
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+```
+
+Nghĩa là Foundry đã tự nhận ra thư viện. Trong Solidity, bạn chỉ cần viết `import "@openzeppelin/contracts/..."`.
+
+Ghi rõ phiên bản (`@v5.6.1`) để mỗi lần cài lại, và mỗi người trong nhóm, đều dùng đúng một bản mã đã kiểm toán.
+
+## 4. Các lệnh hằng ngày
+
+```bash
+forge build                     # biên dịch
+forge test                      # chạy kiểm thử
+forge test -vvv                 # in chi tiết từng lời gọi của kiểm thử thất bại
+forge fmt                       # định dạng mã
+anvil                           # chạy chuỗi nội bộ tại http://127.0.0.1:8545
+cast to-wei 0.1                 # 100000000000000000
+cast from-wei 1000000000000000000   # 1.000000000000000000
+```
+
+ETH có 18 chữ số thập phân. Hợp đồng không dùng số thực, nên mọi số tiền đều tính bằng đơn vị nhỏ nhất là **wei**: 1 ETH = 10<sup>18</sup> wei. `cast to-wei` và `cast from-wei` giúp bạn đổi qua lại.
+
+## 5. Trình soạn thảo
+
+Dùng VS Code (hoặc trình soạn thảo dựa trên nó, như Cursor) với tiện ích **Solidity** của Nomic Foundation. Tiện ích tô màu mã, báo lỗi khi bạn gõ, nhảy tới định nghĩa, và hiểu được cách Foundry đặt thư viện.
+
+## Ví dùng khi phát triển
+
+- `anvil` tạo sẵn 10 tài khoản, mỗi tài khoản 10.000 ETH giả, và in khóa riêng tư của chúng ra màn hình. Các khóa này giống nhau trên máy mọi người, nên chỉ dùng chúng trên anvil.
+- Khi lên mạng thử nghiệm, bạn sẽ tạo một ví riêng cho việc phát triển và lưu khóa trong keystore được mã hóa của Foundry. Bài triển khai sẽ hướng dẫn.
+- Không bao giờ dùng ví đang giữ tiền thật cho việc phát triển.
+
+<Callout type="error" title="Thận trọng">
+Không để khóa riêng tư dạng chữ trong tệp `.env` hay trong mã. Đã có rất nhiều người mất tiền vì lỡ đẩy khóa lên GitHub: có những bot quét kho mã công khai liên tục và rút tiền chỉ vài giây sau đó.
+</Callout>
+
+## Đọc tiếp
+
+- [Solidity cho người đã biết lập trình](./solidity.mdx)
+- [Máy bán token](./may-ban-token.mdx)

@@ -1,6 +1,6 @@
 # Viết cho Wiki ETH.vn
 
-Nội dung wiki nằm trong `content/docs/`. Bản nháp đầu tiên tham khảo nội dung của [ethereum.org](https://ethereum.org) (giấy phép MIT, xem [NOTICE.md](./NOTICE.md)), được viết lại cho người đọc Việt Nam chứ không dịch nguyên văn.
+Nội dung wiki nằm trong `content/docs/`. Nội dung chữ dùng giấy phép CC BY-SA 4.0, mã nguồn và các đoạn mã ví dụ dùng giấy phép MIT (xem [LICENSE.md](./LICENSE.md)). Nhiều bài phỏng theo [ethereum.org](https://ethereum.org) (chữ theo CC BY 4.0) và [EPF wiki](https://epf.wiki) (CC BY-SA 4.0), được viết lại cho người đọc Việt Nam chứ không dịch nguyên văn. Ghi công ở [NOTICE.md](./NOTICE.md).
 
 ## Cấu trúc
 
@@ -10,7 +10,7 @@ Wiki chia theo người đọc thành năm mục. Người đọc chuyển mục
 |---|---|---|---|
 | `can-ban/` | Căn bản | Mọi người: nội dung phổ thông, giải thích đơn giản, dễ hiểu | Đang viết. Có ba nhóm: Bắt đầu (`bat-dau/`), Cách hoạt động (`cach-hoat-dong/`), Dùng Ethereum (`dung-ethereum/`) |
 | `nha-dau-tu/` | Nhà đầu tư | Người nắm giữ tài sản trên Ethereum | Trang giữ chỗ |
-| `lap-trinh-vien/` | Lập trình viên | Người xây dựng ứng dụng | Trang giữ chỗ |
+| `lap-trinh-vien/` | Lập trình viên | Người xây dựng ứng dụng | Đang viết. Có hai nhóm: Hiểu giao thức (`giao-thuc/`), Xây dựng ứng dụng (`xay-dung/`) |
 | `doanh-nghiep/` | Doanh nghiệp | Doanh nghiệp muốn dùng Ethereum | Đang viết |
 | `chinh-phu/` | Chính phủ | Cơ quan nhà nước và khu vực công | Đang viết |
 
@@ -81,6 +81,8 @@ Kế hoạch cũ, trước khi chia thành năm mục, có các nhóm Hướng d
 - Khi nói một dự án "chạy trên Ethereum", ghi rõ mạng: mạng chính, Layer 2 nào, hay một mạng khác (nhiều ví dụ hay được nhắc thực ra chạy trên Polygon hoặc Celo). Nói rõ dự án đang chạy, là thí điểm, hay đã dừng.
 - Số liệu thị trường (stablecoin, TVL, số nút…) luôn kèm nguồn và ngày đọc.
 - Mục Chính phủ và Doanh nghiệp dựa nhiều vào tài liệu của Quỹ Ethereum, vốn là bên vận động cho Ethereum. Giữ giọng trung lập: nêu cả giới hạn, dự án đã dừng, và quan điểm của phía khác. Mỗi trang ở hai mục này, và ở mục Nhà đầu tư, kết thúc bằng phần "Nguồn" (danh sách liên kết hiện trên trang), vì người đọc ở đây cần tự đối chiếu, và một số nguồn không có giấy phép mở nên chỉ được tóm tắt, không chép.
+- Phần Hiểu giao thức của mục Lập trình viên phỏng theo EPF wiki và ethereum.org để chính xác: được dịch, rút gọn và sắp xếp lại từ đó. Cả hai có thể đã cũ, nên mọi con số, ngày tháng và trạng thái nâng cấp phải đối chiếu với EIP hoặc đặc tả. Mỗi bài kết thúc bằng phần "Nguồn", và dòng cuối ghi công kèm giấy phép của nguồn (CC BY-SA 4.0 cho EPF wiki, CC BY 4.0 cho ethereum.org).
+- Mã trong mục Lập trình viên phải chạy được: biên dịch và chạy kiểm thử (`forge test`), chạy thử từng lệnh đúng như in trong bài, rồi mới đăng. Ghi phiên bản công cụ và tháng kiểm tra. Tên trong mã viết tiếng Anh, chú thích viết tiếng Việt.
 - Mục Nhà đầu tư trình bày luận điểm "ETH là tài sản lưu trữ giá trị" (Vitalik Buterin, tháng 11 năm 2026) như một luận điểm có tên tác giả, giải thích cho rõ và thuyết phục, nhưng luôn kèm rủi ro và quan điểm khác. Không khuyên mua bán, không dự đoán giá. Mọi số liệu giá, nguồn cung, đặt cọc đều ghi ngày.
 
 ## Thuật ngữ chuẩn
@@ -95,6 +97,8 @@ Dùng thống nhất trên toàn wiki (và trong ví ETH.vn). Phần lớn theo 
 | private key | khóa riêng tư | |
 | public key | khóa công khai | |
 | recovery phrase, seed phrase, secret phrase, mnemonic | cụm từ khôi phục | Một thuật ngữ duy nhất cho cả bốn |
+| seed (BIP-39, số 512 bit) | hạt giống | Số tính ra từ cụm từ khôi phục. Đừng nhầm với "seed phrase" (= cụm từ khôi phục) |
+| derivation path | đường dẫn (derivation path) | Ví dụ `m/44'/60'/0'/0/0` cho tài khoản 1 |
 | keystore | tệp keystore | |
 | hardware wallet | ví cứng | |
 | self-custody | tự lưu ký | |
@@ -244,5 +248,58 @@ Dùng thống nhất trên toàn wiki (và trong ví ETH.vn). Phần lớn theo 
 | statelessness | nút không cần giữ toàn bộ trạng thái | |
 | DeFi | tài chính phi tập trung (DeFi) | |
 | collateral, liquidation | tài sản bảo đảm, thanh lý | |
+| stack (EVM) | ngăn xếp | |
+| memory (EVM) | bộ nhớ | Trong mã Solidity giữ `memory` |
+| storage, calldata, transient storage | storage, calldata, transient storage | Giữ nguyên, giải thích lần đầu |
+| bytecode, opcode | mã byte, lệnh | |
+| cold / warm access | truy cập lạnh / ấm | Kèm "(cold/warm)" lần đầu |
+| precompile | hợp đồng biên dịch sẵn (precompile) | |
+| ABI, function selector | ABI, bộ chọn hàm | |
+| revert | revert | Giải thích: dừng và hoàn tác mọi thay đổi của lời gọi |
+| event, log | sự kiện, nhật ký (log) | |
+| custom error | lỗi tùy chỉnh | |
+| reentrancy | gọi ngược (reentrancy) | |
+| fuzz test, cheatcode | kiểm thử fuzz, cheatcode | |
+| testnet | mạng thử nghiệm | |
+| local devnet (anvil) | mạng thử nội bộ | |
+| deploy | triển khai | |
+| prompt | lời nhắc (prompt) | |
+| world state | trạng thái thế giới | |
+| state machine, state transition function | máy trạng thái, hàm chuyển trạng thái | |
+| program counter | bộ đếm chương trình | |
+| Merkle Patricia Trie, Merkle proof | cây Merkle-Patricia, bằng chứng Merkle | |
+| state root, storage root | gốc trạng thái, gốc storage | |
+| receipt, logs bloom | biên lai, bộ lọc Bloom | |
+| light client | nút nhẹ | |
+| execution layer / consensus layer | lớp thực thi / lớp đồng thuận | Phần mềm: client lớp thực thi, client lớp đồng thuận |
+| fork choice, head | luật chọn nhánh, đầu chuỗi | |
+| source / target (attestation) | nguồn / đích | |
+| effective balance | số dư hiệu dụng | |
+| sync committee | ủy ban đồng bộ | |
+| correlation penalty | phạt tương quan | |
+| weak subjectivity, checkpoint sync | tính chủ quan yếu, đồng bộ từ mốc | |
+| Fast Confirmation Rule (FCR) | quy tắc xác nhận nhanh (FCR) | |
+| single-slot finality | tính cuối cùng trong một khe | |
+| reorg | tổ chức lại chuỗi (reorg) | |
+| preconfirmation | xác nhận trước | |
+| searcher, bundle | người săn MEV, gói giao dịch | |
+| private order flow, private RPC | luồng lệnh riêng, RPC riêng | |
+| arbitrage, liquidation | kinh doanh chênh lệch giá, thanh lý | |
+| sandwich, front-running, back-running | kẹp lệnh, chạy trước, chạy sau | |
+| bid, slippage, deadline | giá thầu, trượt giá, hạn chót | |
+| commit-reveal | cam kết rồi tiết lộ | |
+| blinded block | khối đã che | Không dùng "ký mù": từ đó dành cho ký mù trên ví |
+| ePBS, PTC | ePBS, ủy ban đúng hạn (PTC) | |
+| inclusion list (FOCIL) | danh sách bắt buộc đưa vào (FOCIL) | |
+| block-level access list (BAL) | danh sách truy cập cấp khối (BAL) | |
+| frame transaction | giao dịch dạng khung | EIP-8141 |
+| erasure coding, column | mã xóa, cột | PeerDAS |
+| data availability, data availability sampling | dữ liệu khả dụng, lấy mẫu dữ liệu khả dụng | |
+| Blob Parameter Only fork (BPO) | nâng cấp chỉ đổi thông số blob (BPO) | |
+| commitment (KZG) | cam kết (KZG) | |
+| gossipsub, req/resp | lan truyền theo chủ đề (gossipsub), hỏi và đáp (req/resp) | |
+| Ethereum Node Record (ENR) | bản ghi nút (ENR) | |
+| malleable signature | chữ ký dẻo | |
+| sequencer | bộ sắp xếp | Layer 2 |
 
 > **Lưu ý:** bản dịch hiện tại của ví ETH.vn dùng cả "cụm từ bí mật" và "cụm từ khôi phục". Cần thống nhất về "cụm từ khôi phục".

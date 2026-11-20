@@ -1,6 +1,33 @@
 ---
 title: Lập trình viên
-description: Xây dựng ứng dụng trên Ethereum.
+description: Ethereum dưới góc nhìn kỹ sư. Hiểu EVM và giao thức, rồi tự tay viết hợp đồng Solidity với Foundry và làm giao diện web với wagmi và viem.
 ---
 
-Mục này đang được viết. Trong lúc chờ, bạn có thể đọc mục [Căn bản](/tai-lieu/can-ban).
+Mục này dành cho người đã biết lập trình nhưng chưa biết gì về Ethereum. Nếu bạn chưa từng dùng ví, hãy đọc nhanh [Bắt đầu](../can-ban/bat-dau/index.mdx) và [Ethereum hoạt động thế nào](../can-ban/cach-hoat-dong/index.mdx) trước. Các bài ở đây không giải thích lại những gì đã có ở đó.
+
+Mục có hai phần. Bạn có thể đọc song song.
+
+## Hiểu giao thức
+
+[Hiểu giao thức](./giao-thuc/index.mdx) giải thích Ethereum từ bên trong, viết ngắn cho kỹ sư: EVM, trạng thái, giao dịch, đồng thuận, mạng ngang hàng, mật mã. Mỗi bài kết thúc bằng phần "Điều này ảnh hưởng gì tới ứng dụng của bạn", và chỉ tới tài liệu sâu hơn trên EPF wiki của chương trình Ethereum Protocol Fellowship.
+
+## Xây dựng ứng dụng
+
+[Xây dựng ứng dụng](./xay-dung/index.mdx) đi qua một dự án duy nhất từ đầu tới cuối: một **máy bán token**. Bạn gửi ETH, máy trả lại token. Bạn sẽ viết hợp đồng bằng Solidity, kiểm thử bằng Foundry, triển khai lên mạng thử nghiệm, rồi làm giao diện web với wagmi và viem.
+
+Bài đầu tiên có sẵn một lời nhắc (prompt) để bạn dán vào trợ lý AI của mình, nhờ nó dựng dự án cùng bạn từng bước.
+
+## Công cụ
+
+Phiên bản mới nhất vào tháng 11 năm 2026:
+
+| Việc | Công cụ |
+|---|---|
+| Ngôn ngữ hợp đồng | Solidity 0.8 (bản mới nhất 0.8.39) |
+| Biên dịch, kiểm thử, triển khai | Foundry 1.10: `forge`, `cast`, `anvil` |
+| Hợp đồng dựng sẵn (token, phân quyền) | OpenZeppelin Contracts 5.6 |
+| Giao diện web | wagmi 3 và viem 2 |
+
+<Callout type="warn" title="Quan trọng">
+Khi học, chỉ dùng mạng thử nội bộ (anvil) và mạng thử nghiệm (testnet). Không bao giờ dùng khóa riêng tư hay cụm từ khôi phục của ví đang giữ tiền thật trong dự án lập trình.
+</Callout>

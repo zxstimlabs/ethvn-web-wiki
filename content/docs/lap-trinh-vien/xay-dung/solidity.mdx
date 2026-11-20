@@ -1,0 +1,148 @@
+---
+title: Solidity cho người đã biết lập trình
+description: Hợp đồng là một lớp có trạng thái lưu vĩnh viễn, mỗi hàm là một API ai cũng gọi được, và mỗi lần ghi đều tốn tiền. Kiểu dữ liệu, vị trí dữ liệu, hàm, lỗi và sự kiện qua một ví dụ ngắn.
+sources:
+  - https://docs.soliditylang.org/
+  - https://docs.soliditylang.org/en/latest/security-considerations.html
+---
+
+**Solidity** là ngôn ngữ phổ biến nhất để viết hợp đồng thông minh trên Ethereum. Cú pháp giống JavaScript hay C++, nên bạn sẽ đọc được ngay. Nhưng có ba điều làm nó khác hẳn những gì bạn quen:
+
+1. **Hợp đồng giống một lớp (class) chỉ có đúng một thực thể, sống mãi trên chuỗi.** Biến trạng thái được lưu vĩnh viễn, và mã không sửa được sau khi triển khai.
+2. **Mỗi hàm `public` hay `external` là một API mở cho cả thế giới.** Ai cũng gọi được, với tham số bất kỳ, theo thứ tự bất kỳ, kể cả những hợp đồng được viết ra chỉ để tấn công bạn.
+3. **Mỗi lần ghi đều tốn tiền thật.** Người gọi trả phí gas cho từng lệnh hợp đồng chạy, và ghi vào storage là việc đắt nhất. Bài [EVM](../giao-thuc/evm.mdx) giải thích vì sao.
+
+## Một ví dụ: sổ lưu bút
+
+Hợp đồng dưới đây là một sổ lưu bút: ai cũng ký được, có thể gửi kèm tiền boa, và chủ sổ rút được tiền boa. Các phần sau giải thích từng ý trong đó.
+
+```solidity title="src/Guestbook.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+/// Sổ lưu bút: ai cũng ký được, có thể gửi kèm tiền boa.
+contract Guestbook {
+    struct Entry {
+        address author;
+        string message;
+        uint64 time;
+    }
+
+    address public immutable owner; // gán một lần trong constructor
+    Entry[] public entries; // storage: lưu vĩnh viễn trên chuỗi
+    mapping(address => uint256) public signedCount; // mặc định là 0, không duyệt được
+
+    event Signed(address indexed author, uint256 index);
+
+    error EmptyMessage();
+    error NotOwner();
+    error TransferFailed();
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert NotOwner();
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    /// calldata: dữ liệu đầu vào, chỉ đọc. payable: được nhận ETH kèm theo.
+    function sign(string calldata message) external payable {
+        if (bytes(message).length == 0) revert EmptyMessage();
+        entries.push(Entry(msg.sender, message, uint64(block.timestamp)));
+        signedCount[msg.sender] += 1;
+        emit Signed(msg.sender, entries.length - 1);
+    }
+
+    /// view: chỉ đọc. Gọi từ bên ngoài (không qua giao dịch) thì không tốn phí.
+    function count() external view returns (uint256) {
+        return entries.length;
+    }
+
+    function withdrawTips() external onlyOwner {
+        (bool ok,) = owner.call{value: address(this).balance}("");
+        if (!ok) revert TransferFailed();
+    }
+}
+```
+
+## Kiểu dữ liệu
+
+- **`uint256`**, số nguyên không dấu 256 bit, là kiểu số mặc định. Solidity không có số thực. Tiền được tính bằng **wei** (1 ETH = 10<sup>18</sup> wei), và tỉ lệ được tính bằng số nguyên: nhân trước, chia sau.
+- Từ Solidity 0.8, phép tính bị tràn số sẽ dừng hàm với lỗi, thay vì quay vòng như C. Khi chắc chắn không tràn, bạn có thể bọc phép tính trong `unchecked { ... }` để tiết kiệm gas.
+- **`address`** là địa chỉ 20 byte. Ngoài ra còn `bool`, `bytes32`, `bytes`, `string`.
+- **`mapping(K => V)`** là bảng băm mà mọi khóa đều "có sẵn" giá trị 0. Bạn không đếm được số phần tử và không duyệt được nó. Cần duyệt thì lưu thêm một mảng.
+- `struct`, mảng `T[]` và `enum` dùng như bạn quen.
+- Không có `null`. Biến chưa gán luôn là giá trị 0 của kiểu đó: `0`, `false`, chuỗi rỗng, hay địa chỉ `0x0000…0000`.
+
+## Dữ liệu nằm ở đâu
+
+Biến kiểu tham chiếu (mảng, struct, `string`, `bytes`) phải ghi rõ vị trí:
+
+| Vị trí | Sống bao lâu | Ghi chú |
+|---|---|---|
+| `storage` | Vĩnh viễn | Trạng thái của hợp đồng. Đắt nhất |
+| `memory` | Trong một lần gọi hàm | Bản sao tạm, mất khi hàm trả về |
+| `calldata` | Trong một lần gọi hàm | Tham số đầu vào, chỉ đọc. Rẻ nhất |
+
+Gán từ `storage` sang một biến `memory` là sao chép. Còn một biến cục bộ khai báo `storage` là con trỏ: sửa nó là sửa trạng thái thật.
+
+Giá trị không bao giờ đổi nên khai báo `constant` (biết từ lúc biên dịch) hoặc `immutable` (gán một lần trong constructor, như `owner` ở trên). Hai loại này nằm thẳng trong mã của hợp đồng, nên đọc rẻ hơn nhiều so với đọc storage.
+
+## Hàm
+
+- **Phạm vi:** `public` (ai cũng gọi, kể cả từ bên trong), `external` (chỉ gọi từ bên ngoài), `internal` (trong hợp đồng này và hợp đồng con), `private` (chỉ trong hợp đồng này).
+- **`view`** chỉ đọc trạng thái, **`pure`** không đọc cũng không ghi. Gọi một hàm `view` từ bên ngoài không tạo giao dịch, nên không tốn phí.
+- **`payable`** cho phép hàm nhận ETH. Gửi ETH vào hàm không có `payable` thì giao dịch thất bại.
+- **`modifier`** là đoạn mã bọc quanh thân hàm, thường dùng để kiểm quyền. Dấu `_` là chỗ thân hàm được chèn vào.
+- **`receive()`** chạy khi có người gửi ETH mà không gọi hàm nào. **`fallback()`** chạy khi lời gọi không khớp hàm nào.
+
+## Ai đang gọi
+
+- `msg.sender`: địa chỉ vừa gọi hàm. Có thể là một ví, hoặc một hợp đồng khác.
+- `msg.value`: số wei được gửi kèm lời gọi.
+- `block.timestamp`: thời điểm của khối, tính bằng giây. Ethereum ra một khối mỗi 12 giây, nên đừng dựa vào nó cho việc cần chính xác tới từng giây.
+- `address(this).balance`: số ETH hợp đồng đang giữ.
+
+<Callout type="warn" title="Cảnh báo">
+Đừng dùng `tx.origin` (ví khởi đầu giao dịch) để kiểm quyền. Một hợp đồng độc có thể dụ bạn gọi nó, rồi gọi tiếp vào hợp đồng của bạn: lúc đó `tx.origin` vẫn là bạn, dù người gọi thật là kẻ gian. Hãy dùng `msg.sender`.
+</Callout>
+
+## Lỗi và hoàn tác
+
+- `revert` dừng hàm và **hoàn tác mọi thay đổi** của lần gọi đó, giống một giao dịch cơ sở dữ liệu bị rollback. Phí gas đã dùng thì không được trả lại.
+- **Lỗi tùy chỉnh** như `error EmptyMessage();` rẻ hơn kiểu cũ `require(điều_kiện, "thông báo")`, và mang được tham số. Ví và các thư viện như viem đọc ra được tên lỗi để hiện cho người dùng.
+- `try/catch` chỉ bắt được lỗi khi gọi sang hợp đồng khác, không dùng cho mã trong cùng hợp đồng.
+
+## Sự kiện
+
+`emit Signed(...)` ghi một **sự kiện** (event) vào biên lai của giao dịch. Sự kiện rẻ hơn storage nhiều, nhưng chính hợp đồng không đọc lại được. Chúng dành cho thế giới bên ngoài: giao diện web, ví, và các dịch vụ đánh chỉ mục. Tham số `indexed` (tối đa ba) cho phép lọc nhanh, chẳng hạn "mọi lần ký của địa chỉ này".
+
+## Gửi ETH đi
+
+Dùng `call` và luôn kiểm tra kết quả, như trong `withdrawTips`:
+
+```solidity
+(bool ok,) = to.call{value: amount}("");
+if (!ok) revert TransferFailed();
+```
+
+Tránh hai hàm cũ `transfer` và `send`. Chúng chỉ chuyển kèm 2.300 gas, không đủ khi người nhận là một hợp đồng cần làm thêm việc, chẳng hạn một ví thông minh.
+
+Gửi ETH cũng là trao quyền điều khiển. Nếu người nhận là hợp đồng, mã của nó chạy ngay lúc đó và có thể gọi ngược lại vào hợp đồng của bạn trước khi hàm của bạn chạy xong. Vì vậy hãy làm theo thứ tự: kiểm tra điều kiện, cập nhật trạng thái, rồi mới gọi ra ngoài (quy tắc checks-effects-interactions).
+
+## Kế thừa và thư viện
+
+`contract VendingMachine is ERC20, Ownable` kế thừa từ hai hợp đồng của OpenZeppelin. Hàm cho phép hợp đồng con ghi đè phải có `virtual`, và hàm ghi đè phải có `override`. Với token, phân quyền và những phần phổ biến khác, hãy dùng thư viện đã được kiểm toán thay vì tự viết.
+
+## Mọi thứ đều công khai
+
+`private` chỉ ngăn hợp đồng khác đọc biến qua mã. Dữ liệu vẫn nằm trên chuỗi, và ai cũng đọc được bằng `cast storage <địa chỉ> <số ô>`. Đừng bao giờ lưu mật khẩu hay bí mật trong hợp đồng.
+
+Tương tự, EVM không có nguồn số ngẫu nhiên an toàn. Mọi thứ hợp đồng thấy, người khác cũng thấy, và người đề xuất khối có thể tác động phần nào. Cần số ngẫu nhiên công bằng (xổ số, trò chơi) thì dùng dịch vụ số ngẫu nhiên có kiểm chứng (VRF) từ một oracle.
+
+## Đọc tiếp
+
+- [Máy bán token](./may-ban-token.mdx): áp dụng tất cả những điều trên vào một hợp đồng thật.
+- [EVM](../giao-thuc/evm.mdx): ngăn xếp, storage và giá gas từng lệnh.

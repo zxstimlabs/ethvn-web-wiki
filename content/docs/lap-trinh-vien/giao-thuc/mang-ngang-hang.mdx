@@ -1,0 +1,182 @@
+---
+title: Mạng ngang hàng
+description: Mỗi nút Ethereum tham gia hai mạng ngang hàng cùng lúc, devp2p ở lớp thực thi và libp2p ở lớp đồng thuận. Các nút tìm nhau thế nào, giao dịch và khối lan đi ra sao, và vì sao mỗi nút thấy một mempool khác nhau.
+sources:
+  - https://epf.wiki/#/wiki/EL/devp2p
+  - https://epf.wiki/#/wiki/CL/cl-networking
+  - https://ethereum.org/developers/docs/networking-layer/
+  - https://ethereum.org/developers/docs/networking-layer/network-addresses/
+  - https://github.com/ethereum/devp2p
+  - https://github.com/ethereum/consensus-specs/blob/master/specs/phase0/p2p-interface.md
+  - https://github.com/ethereum/consensus-specs/blob/master/specs/fulu/p2p-interface.md
+---
+
+Ethereum không có máy chủ trung tâm nhận giao dịch hay phát khối. Mỗi [nút](../../can-ban/cach-hoat-dong/nut.mdx) nối với vài chục **nút ngang hàng** (peer) và chuyển tiếp cho nhau những gì vừa nhận. Không nút nào thấy cả mạng lưới, nhưng chỉ sau vài bước chuyển tiếp, một khối mới đã tới gần như mọi nút.
+
+Một nút gồm hai phần mềm (xem [Kiến trúc](./kien-truc.mdx)), và mỗi phần mềm tham gia một mạng ngang hàng riêng, với khóa nút, giao thức và cổng riêng. Lớp thực thi dùng **devp2p**, bộ giao thức Ethereum tự viết và dùng từ khi mạng chính ra đời năm 2015. Lớp đồng thuận ra đời cùng Beacon Chain năm 2020, khi thư viện **libp2p** (vốn viết cho IPFS) đã đủ chín, nên dùng libp2p. Từ The Merge, hai mạng chia việc: lớp thực thi truyền giao dịch, lớp đồng thuận truyền khối và **chứng thực** (attestation), tức phiếu bầu của các **trình xác thực** (validator).
+
+## Hai mạng trong một nút
+
+| | Lớp thực thi | Lớp đồng thuận |
+|---|---|---|
+| Tìm nút | discv4 và discv5, trên UDP | discv5, trên UDP |
+| Đường truyền | RLPx trên TCP | libp2p: QUIC (trên UDP), dự phòng TCP |
+| Mã hóa kết nối | ECIES trên đường cong secp256k1 | TLS 1.3 với QUIC, Noise với TCP |
+| Định dạng dữ liệu | RLP, nén Snappy | SSZ, nén Snappy |
+| Truyền gì | Giao dịch đang chờ; lịch sử khối và trạng thái cho nút đang đồng bộ | Khối, chứng thực, cột dữ liệu blob, bằng chứng vi phạm |
+
+Hai phần mềm nói chuyện với nhau qua Engine API ngay trên máy (cổng `8551`), không qua mạng ngang hàng. Lớp thực thi không còn nhận khối mới từ nút khác: nó nhận khối từ lớp đồng thuận của chính nút mình.
+
+## Tìm nút ngang hàng
+
+Một nút vừa khởi động chưa biết ai. Nó bắt đầu từ vài **nút khởi đầu** (bootnode) có địa chỉ viết sẵn trong phần mềm, hỏi chúng "bạn biết những nút nào gần mã này?", rồi hỏi tiếp các nút vừa biết. Cách tìm này theo thuật toán Kademlia:
+
+- Mỗi nút có một **mã định danh nút** (node ID) 32 byte, là **mã băm** (hash) Keccak-256 của khóa công khai secp256k1 của nút.
+- "Khoảng cách" giữa hai nút là phép XOR hai mã định danh, không liên quan tới địa lý.
+- Mỗi nút giữ một bảng các nút đã gặp, chia ngăn theo khoảng cách, mỗi ngăn tối đa 16 nút.
+
+Việc tìm nút chạy trên UDP vì chỉ là những gói hỏi đáp ngắn. discv4 là bản cũ, mọi phần mềm lớp thực thi đều hiểu. discv5 mã hóa gói tin, bắt nút lạ chứng minh danh tính bằng gói thử thách `WHOAREYOU`, và trao đổi bản ghi ENR. Lớp đồng thuận chỉ dùng discv5. Ở lớp thực thi, nhiều phần mềm chạy cả hai song song, ví dụ Geth bật cả hai theo mặc định.
+
+### ENR: danh thiếp của một nút
+
+**Bản ghi nút Ethereum** (Ethereum Node Record, ENR, EIP-778) là danh thiếp do nút tự ký: địa chỉ IP, cổng, khóa công khai, và một số thứ tự tăng mỗi lần bản ghi đổi. Bản ghi là một danh sách RLP, tối đa 300 byte. Dạng chữ của nó bắt đầu bằng `enr:`, theo sau là danh sách đó mã hóa base64. ENR thay cho hai dạng cũ là `enode://` và multiaddr.
+
+Lấy bản ghi mẫu trong EIP-778, bỏ `enr:` và giải mã base64url, rồi đọc bằng `cast`:
+
+```bash
+cast from-rlp 0xf884b8407098ad865b00a582051940cb9cf36836572411a47278783077011599ed5cd16b76f2635f4e234738f30813a89eb9137e3e3df5266e3a1f11df72ecf1145ccb9c01826964827634826970847f00000189736563703235366b31a103ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31388375647082765f
+# ["0x7098…5ccb9c","0x01","0x6964","0x7634","0x6970","0x7f000001",
+#  "0x736563703235366b31","0x03ca…cd3138","0x756470","0x765f"]
+```
+
+Phần tử đầu là chữ ký, rồi tới số thứ tự `1`, rồi các cặp khóa và giá trị: `id` là `v4`, `ip` là `127.0.0.1`, `secp256k1` là khóa công khai nén 33 byte, `udp` là `0x765f`, tức cổng 30303 (`cast to-dec 0x765f`). Mã định danh nút là mã băm của khóa công khai đầy đủ 64 byte:
+
+```bash
+# Khóa riêng tư thử nghiệm công bố trong EIP-778. Ai cũng biết, không dùng thật.
+cast wallet public-key --private-key 0xb71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291 | xargs cast keccak
+# 0xa448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7
+```
+
+Mỗi lớp thêm khóa riêng vào ENR, để nút bỏ qua nút khác mạng trước khi kết nối. Lớp thực thi thêm `eth`, chứa **mã nâng cấp** (fork ID, EIP-2124). Lớp đồng thuận thêm `eth2` (nâng cấp hiện tại và kế tiếp), `attnets` (các mạng con chứng thực nút theo dõi), và từ Fusaka thêm `cgc` (số nhóm cột blob nút giữ) và `nfd` (mã của nâng cấp kế tiếp).
+
+## Lớp thực thi: devp2p
+
+Khi đã tìm thấy nhau, hai nút mở kết nối TCP và bắt tay theo **RLPx**: trao đổi khóa tạm theo ECIES trên secp256k1, rồi mã hóa mọi khung tin bằng AES. Tin đầu tiên là `Hello`, liệt kê các giao thức con mỗi bên hỗ trợ. Hai bên dùng những giao thức chung, ở phiên bản cao nhất cả hai cùng có. Một tin RLPx tối đa khoảng 16,7 MiB.
+
+Hai giao thức con chính:
+
+- **eth** trao đổi giao dịch đang chờ, và cho nút đang đồng bộ tải tiêu đề khối, thân khối và biên lai. Tin đầu tiên, `Status`, cho biết mạng, khối đầu tiên và mã nâng cấp, nên hai nút lệch mạng hay lệch nâng cấp ngắt kết nối ngay.
+- **snap** giúp nút mới đồng bộ nhanh. Nút chọn một khối gần đỉnh chuỗi, tải các tài khoản và ô storage của khối đó theo từng dải, mỗi dải kèm bằng chứng Merkle, tự dựng lại cây trạng thái, rồi vá những phần đã đổi trong lúc tải. Đây là chế độ đồng bộ mặc định của Geth.
+
+Từ Fusaka, mọi phần mềm lớp thực thi phải hỗ trợ **eth/69** (EIP-7642). `Status` bỏ trường độ khó tổng, vô nghĩa sau The Merge, và thêm dải khối mà nút còn phục vụ. Biên lai gửi qua mạng bỏ trường bloom, vì nút nhận tự tính lại được. Trên mạng chính hiện dùng eth/69 và snap/1.
+
+Đặc tả devp2p đã viết tới eth/72. Các phiên bản mới nằm trong danh sách EIP mạng của Glamsterdam, nâng cấp đã chạy trên Sepolia từ ngày 6/10/2026, chưa có ngày cho Hoodi và mạng chính:
+
+- **eth/70** (EIP-7975): tải biên lai của một khối thành nhiều phần, vì giới hạn gas tăng làm danh sách biên lai có thể vượt cỡ tin tối đa.
+- **eth/71** (EIP-8159): trao đổi danh sách truy cập của khối (EIP-7928), cũng do Glamsterdam đưa vào.
+- **eth/72** (EIP-8070): mempool blob "thưa", xem phần blob phía dưới.
+- **snap/2** (EIP-8189): vá trạng thái bằng danh sách truy cập của khối thay vì tải lại từng nút của cây.
+
+Các tin phát khối cũ (`NewBlock`, `NewBlockHashes`) đã ngừng dùng từ The Merge. Nút phải bỏ qua chúng.
+
+## Lớp đồng thuận: libp2p
+
+Đặc tả lớp đồng thuận bắt client hỗ trợ cả QUIC lẫn TCP, và từ tháng 7/2026 coi QUIC là đường truyền chính. Trên mỗi kết nối có hai kiểu trao đổi.
+
+**Lan truyền theo chủ đề** (gossipsub). Mỗi loại tin có một **chủ đề** (topic), như `/eth2/<fork_digest>/beacon_block/ssz_snappy`. Mã nâng cấp nằm trong tên chủ đề, nên mỗi lần nâng cấp, các nút tự chuyển sang chủ đề mới. Với mỗi chủ đề, nút giữ một "lưới" khoảng 8 nút ngang hàng (từ 6 tới 12) và gửi nguyên tin cho họ. Các nút khác chỉ được báo mã của tin, ai thiếu thì hỏi. Nút kiểm tra tin trước khi chuyển tiếp, và hạ điểm nút nào gửi tin sai.
+
+| Chủ đề | Nội dung |
+|---|---|
+| `beacon_block` | Khối mới, kèm toàn bộ phần thực thi |
+| `beacon_attestation_{subnet_id}` | Chứng thực đơn lẻ, chia vào 64 **mạng con** (subnet) |
+| `beacon_aggregate_and_proof` | Chứng thực đã gộp của từng **ủy ban** (committee) |
+| `data_column_sidecar_{subnet_id}` | Cột dữ liệu blob, 128 mạng con (từ Fusaka) |
+| `voluntary_exit`, `proposer_slashing`, `attester_slashing` | Rút khỏi vai trò trình xác thực, bằng chứng vi phạm |
+| `sync_committee_{subnet_id}`, `bls_to_execution_change` | Ủy ban đồng bộ phục vụ nút nhẹ; chuyển quyền rút tiền của trình xác thực sang một địa chỉ Ethereum |
+
+**Hỏi và đáp** (req/resp). Nút hỏi riêng một nút ngang hàng: `Status`, `BeaconBlocksByRange`, `BeaconBlocksByRoot`, `DataColumnSidecarsByRoot`, `Ping`, `GetMetaData`, `Goodbye`. Mỗi loại là một giao thức libp2p riêng, như `/eth2/beacon_chain/req/beacon_blocks_by_range/2/ssz_snappy`. Nút mới dùng các yêu cầu này để tải lại các khối đã qua.
+
+## Cổng mặc định
+
+| Phần mềm | Cổng | Dùng cho | Mở ra internet |
+|---|---|---|---|
+| Geth (lớp thực thi) | `30303` TCP và UDP | RLPx; discv4, discv5 | Nên mở |
+| Lighthouse, Teku, Nimbus | `9000` TCP và UDP | libp2p qua TCP; discv5 | Nên mở |
+| Lighthouse, Teku | `9001` UDP | libp2p qua QUIC | Nên mở |
+| Prysm | `13000` TCP và UDP, `12000` UDP | libp2p qua TCP và QUIC; discv5 | Nên mở |
+| Phần mềm lớp thực thi | `8545` | JSON-RPC cho ứng dụng | Không |
+| Phần mềm lớp thực thi | `8551` | Engine API, xác thực bằng JWT | Không bao giờ |
+
+Các cổng này đổi được bằng tham số khi chạy. Nút không mở cổng vẫn chạy, nhưng chỉ có những kết nối do chính nó gọi đi, nên ít nút ngang hàng hơn. Để xem nút của mình đang nối với ai: Geth có `admin_peers` và `admin_nodeInfo` (phải bật API `admin`), Beacon API có `/eth/v1/node/peers` và `/eth/v1/node/identity`.
+
+## Một giao dịch lan đi thế nào
+
+1. Ví ký giao dịch rồi gọi `eth_sendRawTransaction` tới một nút, thường của một nhà cung cấp RPC.
+2. Nút kiểm tra chữ ký, nonce không nhỏ hơn nonce hiện tại, số dư đủ trả giới hạn gas nhân phí tối đa cộng giá trị chuyển, và giới hạn gas đủ cho phần gas cơ bản. Hợp lệ thì giao dịch vào **mempool** (hàng chờ giao dịch) của nút.
+3. Nút gửi nguyên giao dịch cho một phần nhỏ nút ngang hàng (Geth chọn căn bậc hai số nút ngang hàng), và chỉ báo mã băm, kiểu và kích thước (`NewPooledTransactionHashes`) cho số còn lại. Nút nào chưa có sẽ hỏi lại bằng `GetPooledTransactions`.
+4. Giao dịch blob, và với Geth cả giao dịch lớn hơn 4 KiB, không bao giờ được gửi nguyên. Chúng chỉ được báo mã băm rồi tải theo yêu cầu.
+5. Mỗi nút nhận được lại làm như vậy, và không gửi ngược cho nút đã gửi cho mình.
+6. Tới lượt, **người xây khối** (block builder) lấy giao dịch từ mempool của mình. Xem [Từ mempool tới khối](./tu-mempool-toi-khoi.mdx).
+
+## Một khối lan đi thế nào
+
+Mỗi **khe** (slot) dài 12 giây:
+
+1. Đầu khe, **người đề xuất** (proposer) ký khối, đăng lên chủ đề `beacon_block`, và đăng các cột dữ liệu blob lên mạng con tương ứng.
+2. Mỗi nút nhận được chỉ kiểm tra nhanh: đúng khe, đúng người đề xuất, chữ ký BLS hợp lệ, đã biết khối cha. Đạt thì chuyển tiếp ngay, chưa cần chạy giao dịch. Nhờ vậy khối không bị chậm lại ở mỗi bước chuyển tiếp.
+3. Song song, lớp đồng thuận đưa phần thực thi sang lớp thực thi qua `engine_newPayload`. Lớp thực thi chạy mọi giao dịch, so gốc trạng thái, rồi bỏ các giao dịch đã vào khối khỏi mempool.
+4. Khoảng giây thứ 4 (một phần ba khe), các trình xác thực trong ủy ban của khe bỏ phiếu cho đỉnh chuỗi mà chúng thấy và gửi chứng thực vào mạng con của mình. Khoảng giây thứ 8, **người gộp** (aggregator) của mỗi ủy ban gửi bản gộp lên `beacon_aggregate_and_proof`.
+
+Khối tới sau giây thứ 4 có thể không được bỏ phiếu, và người đề xuất khe sau có thể xây thẳng lên khối cha của nó, làm khối trễ bị loại khỏi chuỗi. Vì vậy mạng ngang hàng phải nhanh. Xem thêm [Đồng thuận](./dong-thuan.mdx).
+
+Trình tự trên là của mạng chính hiện nay. Glamsterdam (đã chạy trên Sepolia, chưa có ngày cho mạng chính) đưa vào ePBS (EIP-7732): khối của lớp đồng thuận và phần thực thi được tách ra, đăng ở hai thời điểm khác nhau, và hạn chứng thực dời lên khoảng giây thứ 3.
+
+## Dữ liệu blob đi đường nào
+
+Trước khi vào khối, giao dịch blob nằm trong mempool của lớp thực thi, kèm toàn bộ blob, và chỉ được tải theo yêu cầu (bước 4 của phần giao dịch phía trên). Từ Fusaka, người gửi phải kèm bằng chứng KZG cho từng ô của blob (xem [Mật mã](./mat-ma.mdx)).
+
+Khi blob đã vào khối, lớp đồng thuận không gửi nguyên blob. Với **PeerDAS** (EIP-7594), mỗi blob được mở rộng gấp đôi bằng mã sửa lỗi rồi cắt thành 128 ô. Các ô cùng vị trí của mọi blob trong khối hợp thành một cột, và mỗi cột đi trên một mạng con riêng:
+
+- Mỗi nút giữ ít nhất 4 cột, chọn theo mã định danh nút, và khai số này trong ENR bằng khóa `cgc`.
+- Mỗi khe, nút lấy mẫu ít nhất 8 cột, tức khoảng 1/8 lượng dữ liệu blob. Có đủ một nửa số cột là dựng lại được toàn bộ.
+- Nút gắn với các trình xác thực có tổng từ 4.096 ETH trở lên phải giữ mọi cột, gọi là **siêu nút** (supernode).
+- Lớp đồng thuận còn hỏi mempool của lớp thực thi (`engine_getBlobsV2`). Nếu đã có đủ blob ở đó, nó tự dựng các cột thay vì chờ tải.
+
+Danh sách của Glamsterdam có thêm hai cải tiến cho đường đi này. Với eth/72 (EIP-8070), mỗi nút lớp thực thi chỉ tải nguyên blob với xác suất 15%, còn lại chỉ tải những ô ứng với các cột mà lớp đồng thuận của nó giữ. EIP-8136 cho các nút chỉ gửi nhau những ô còn thiếu trong một cột, thay vì cả cột. Chi tiết ở bài [Mở rộng và dữ liệu khả dụng](./mo-rong.mdx).
+
+## Vì sao mỗi nút thấy một mempool khác
+
+Mempool không phải một cơ sở dữ liệu chung. Mỗi nút có mempool của riêng nó:
+
+- **Tin lan dần.** Giao dịch tới các nút vào những lúc khác nhau, và có thể không bao giờ tới một số nút.
+- **Mỗi phần mềm có giới hạn riêng.** Với cấu hình mặc định, Geth giữ tối đa 5.120 giao dịch chạy được ngay và 1.024 giao dịch đang chờ một nonce còn thiếu. Khi đầy, giao dịch trả phí thấp nhất bị đẩy ra trước.
+- **Có kênh riêng.** Một phần giao dịch được gửi thẳng tới người xây khối và không bao giờ vào mempool công khai.
+
+Vì vậy, một giao dịch bạn đã thấy có thể biến mất:
+
+- **Bị thay thế** bằng giao dịch cùng người gửi, cùng nonce, phí cao hơn. Geth đòi phí tăng ít nhất 10%, riêng giao dịch blob là 100%.
+- **Bị đẩy ra** khi mempool đầy, nhất là khi phí cơ sở đã vượt phí tối đa của nó.
+- **Hết hạn.** Geth bỏ giao dịch đang chờ nonce còn thiếu nếu tài khoản không có tiến triển trong 3 giờ.
+- **Đổi nút.** Nút khởi động lại, hoặc ứng dụng chuyển sang một nhà cung cấp RPC khác.
+- **Khối chứa nó bị loại** khi chuỗi **tổ chức lại** (reorg). Giao dịch thường quay về mempool, nhưng có thể bị thay thế trước khi vào khối mới.
+
+## Điều này ảnh hưởng gì tới ứng dụng của bạn
+
+- **"Đã gửi" chưa phải "đã lan ra".** `eth_sendRawTransaction` trả về mã băm ngay khi một nút nhận giao dịch. Gửi cùng một giao dịch đã ký tới vài nhà cung cấp RPC không hại gì: cùng mã băm, và chỉ vào khối một lần.
+- **Theo dõi theo người gửi và nonce, không chỉ theo mã băm.** Giao dịch có thể bị thay bằng một giao dịch khác mã băm. Chỉ coi giao dịch là "rớt" khi nonce đó đã được một giao dịch khác dùng.
+- **Đừng hỏi nonce `pending` ở nhiều nút khác nhau.** Mỗi nút trả lời theo mempool của riêng nó. Ứng dụng gửi nhiều giao dịch liên tiếp nên tự quản lý nonce.
+- **Mempool công khai thì ai cũng đọc được.** Lệnh đổi token có thể bị người khác chen trước hoặc kẹp hai đầu. Xem MEV ở [Từ mempool tới khối](./tu-mempool-toi-khoi.mdx).
+- **Chọn mức chờ hợp với số tiền.** Khối `latest` vẫn có thể bị thay. Khối `finalized` đã đạt **tính cuối cùng** (finality): thường sau 64 tới 96 khe, tức hai tới ba **kỷ nguyên** (epoch), khoảng 13 tới 19 phút.
+- **Gửi blob thì dùng thư viện đã cập nhật cho Fusaka**, vì giao dịch phải kèm bằng chứng cho từng ô. Định giá phí blob cho đủ ngay từ đầu: với Geth, thay giao dịch blob tốn gấp đôi phí.
+- **Tự chạy nút thì mở cổng P2P** để có nhiều nút ngang hàng, và không bao giờ mở `8545` hay `8551` ra internet.
+
+## Nguồn
+
+- EPF wiki: [DevP2P](https://epf.wiki/#/wiki/EL/devp2p), [Networking](https://epf.wiki/#/wiki/CL/cl-networking)
+- ethereum.org: [Networking layer](https://ethereum.org/developers/docs/networking-layer/), [Network addresses](https://ethereum.org/developers/docs/networking-layer/network-addresses/)
+- [ethereum/devp2p](https://github.com/ethereum/devp2p): đặc tả discv4, discv5, ENR, RLPx, eth, snap
+- consensus-specs: [p2p-interface (Phase 0)](https://github.com/ethereum/consensus-specs/blob/master/specs/phase0/p2p-interface.md), [p2p-interface (Fulu)](https://github.com/ethereum/consensus-specs/blob/master/specs/fulu/p2p-interface.md)
+- EIP: [778](https://eips.ethereum.org/EIPS/eip-778), [2124](https://eips.ethereum.org/EIPS/eip-2124), [4844](https://eips.ethereum.org/EIPS/eip-4844), [7594](https://eips.ethereum.org/EIPS/eip-7594), [7607](https://eips.ethereum.org/EIPS/eip-7607), [7642](https://eips.ethereum.org/EIPS/eip-7642), [7732](https://eips.ethereum.org/EIPS/eip-7732), [7773](https://eips.ethereum.org/EIPS/eip-7773), [7928](https://eips.ethereum.org/EIPS/eip-7928), [7975](https://eips.ethereum.org/EIPS/eip-7975), [8070](https://eips.ethereum.org/EIPS/eip-8070), [8136](https://eips.ethereum.org/EIPS/eip-8136), [8159](https://eips.ethereum.org/EIPS/eip-8159), [8189](https://eips.ethereum.org/EIPS/eip-8189)
+- Mã nguồn [go-ethereum](https://github.com/ethereum/go-ethereum) (cấu hình mempool, cách phát giao dịch, cổng mặc định) và tài liệu [Lighthouse](https://lighthouse-book.sigmaprime.io/advanced_networking.html), Teku, Prysm về cổng, đọc tháng 11/2026. Lệnh `cast` kiểm tra với Foundry 1.5.1, tháng 11/2026.
+
+Bài này phỏng theo [EPF wiki](https://epf.wiki) (giấy phép [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) và [ethereum.org](https://ethereum.org) (giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), được dịch, rút gọn, sắp xếp lại và cập nhật.
