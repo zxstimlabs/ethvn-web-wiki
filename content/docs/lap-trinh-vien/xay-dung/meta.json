@@ -1,5 +1,5 @@
 {
   "title": "Xây dựng ứng dụng",
   "defaultOpen": true,
-  "pages": ["index", "moi-truong", "solidity", "may-ban-token"]
+  "pages": ["index", "moi-truong", "solidity", "may-ban-token", "trien-khai-va-giao-dien"]
 }

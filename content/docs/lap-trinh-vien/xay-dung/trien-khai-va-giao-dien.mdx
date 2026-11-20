@@ -1,0 +1,349 @@
+---
+title: Triển khai và giao diện web
+description: Mã mẫu để đưa máy bán token lên mạng thử nghiệm Sepolia và làm giao diện web với wagmi và viem. Kèm lời nhắc để trợ lý AI dựng dự án giao diện cùng bạn.
+sources:
+  - https://www.getfoundry.sh/
+  - https://wagmi.sh/react/getting-started
+  - https://viem.sh/
+  - https://ethereum.org/developers/docs/networks/
+---
+
+Bài này đưa máy bán token từ máy bạn lên mạng thử nghiệm, rồi làm một trang web để ai cũng mua được XU bằng ví của mình. Bài chỉ đưa mã mẫu và các lệnh chính. Phần dựng dự án, bạn có thể nhờ trợ lý AI làm cùng: lời nhắc soạn sẵn nằm ở [cuối bài](#nhờ-trợ-lý-ai-dựng-giao-diện).
+
+Bạn cần dự án Foundry và hợp đồng `VendingMachine` từ bài [Máy bán token](./may-ban-token.mdx).
+
+## Triển khai lên Sepolia
+
+**Sepolia** là mạng thử nghiệm dành cho lập trình viên ứng dụng. ETH trên đó không có giá trị, và bạn xin được miễn phí từ các **vòi** (faucet) mà trang [Mạng lưới của ethereum.org](https://ethereum.org/developers/docs/networks/) liệt kê.
+
+**1. Tạo một ví riêng cho việc phát triển.** Lệnh dưới đây tạo khóa mới, mã hóa bằng mật khẩu bạn đặt, rồi lưu trong thư mục keystore của Foundry dưới tên `dev`. Khóa không bao giờ hiện ra màn hình hay nằm trong tệp `.env`.
+
+```bash
+cast wallet new ~/.foundry/keystores dev
+```
+
+Lệnh in ra địa chỉ của ví. Xin ETH thử nghiệm từ vòi cho địa chỉ đó.
+
+**2. Viết kịch bản triển khai.** Tạo tệp `script/DeployVendingMachine.s.sol`:
+
+```solidity title="script/DeployVendingMachine.s.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Script, console} from "forge-std/Script.sol";
+import {VendingMachine} from "../src/VendingMachine.sol";
+
+contract DeployVendingMachine is Script {
+    function run() external returns (VendingMachine machine) {
+        // Mọi giao dịch giữa start và stop được ký bằng ví truyền vào qua --account
+        vm.startBroadcast();
+        machine = new VendingMachine(1_000_000 ether);
+        vm.stopBroadcast();
+
+        console.log("VendingMachine:", address(machine));
+    }
+}
+```
+
+**3. Triển khai.** Bạn cần một địa chỉ RPC của Sepolia, từ nhà cung cấp RPC hoặc nút của chính bạn.
+
+```bash
+foundryup   # cập nhật Foundry trước
+export SEPOLIA_RPC_URL=https://...
+
+forge script script/DeployVendingMachine.s.sol \
+  --rpc-url $SEPOLIA_RPC_URL --account dev --broadcast
+```
+
+Foundry hỏi mật khẩu của ví `dev`, chạy thử kịch bản, rồi gửi giao dịch thật. Kết quả có dòng `VendingMachine: 0x…` (địa chỉ của máy) và `ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.` Ghi lại địa chỉ đó để dùng cho giao diện.
+
+<Callout type="info" title="Lưu ý">
+Sepolia đã chạy nâng cấp Glamsterdam từ ngày 6/10/2026, còn mạng chính thì chưa. Vì vậy lượng gas trên Sepolia có thể khác lượng gas bạn đo trên anvil hay trên mạng chính (xem [EVM](../giao-thuc/evm.mdx#những-thay-đổi-gần-đây)). Hãy dùng Foundry bản mới nhất, vì bản cũ chưa hiểu các lệnh của Glamsterdam.
+</Callout>
+
+**4. Công khai mã nguồn.** Khi mã nguồn được xác minh (verify), trình khám phá khối hiện mã Solidity và cho người dùng gọi hàm ngay trên trang. Sourcify xác minh mà không cần khóa API:
+
+```bash
+forge verify-contract <địa chỉ máy> src/VendingMachine.sol:VendingMachine \
+  --chain sepolia --verifier sourcify \
+  --constructor-args $(cast abi-encode "constructor(uint256)" 1000000ether)
+```
+
+`--constructor-args` phải khớp với tham số lúc triển khai, ở đây là 1 triệu XU. Muốn xác minh trên Etherscan thì dùng `--verifier etherscan` kèm khóa API của Etherscan.
+
+## Giao diện web với wagmi và viem
+
+**viem** là thư viện TypeScript để nói chuyện với Ethereum: đọc hợp đồng, gửi giao dịch, giải mã lỗi và sự kiện. **wagmi** xây trên viem, đưa các việc đó vào React dưới dạng hook, và lo phần kết nối ví. Giao diện dưới đây gồm bốn tệp.
+
+**`abi.ts`: hợp đồng có những hàm gì.** ABI đầy đủ lấy bằng `forge inspect VendingMachine abi --json`. Giao diện chỉ cần một phần:
+
+```ts title="src/abi.ts"
+// Phần ABI mà giao diện cần, lấy từ `forge inspect VendingMachine abi --json`.
+// `as const` để wagmi và viem suy ra kiểu của tên hàm, tham số và kết quả.
+export const machineAbi = [
+  { type: 'function', name: 'buy', stateMutability: 'payable', inputs: [], outputs: [{ name: 'amount', type: 'uint256' }] },
+  { type: 'function', name: 'stock', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'event',
+    name: 'Sold',
+    inputs: [
+      { name: 'buyer', type: 'address', indexed: true },
+      { name: 'ethPaid', type: 'uint256', indexed: false },
+      { name: 'tokensOut', type: 'uint256', indexed: false },
+    ],
+  },
+  { type: 'error', name: 'ZeroPayment', inputs: [] },
+  {
+    type: 'error',
+    name: 'SoldOut',
+    inputs: [
+      { name: 'requested', type: 'uint256' },
+      { name: 'available', type: 'uint256' },
+    ],
+  },
+] as const;
+```
+
+**`wagmi.ts`: mạng nào, ví nào.**
+
+```ts title="src/wagmi.ts"
+import { createConfig, http } from 'wagmi';
+import { anvil, sepolia } from 'wagmi/chains';
+import { injected } from 'wagmi/connectors';
+
+export const config = createConfig({
+  chains: [sepolia, anvil],
+  // wagmi tự tìm các ví đã cài trong trình duyệt (EIP-6963).
+  // injected() là phương án dự phòng cho ví cũ.
+  connectors: [injected()],
+  transports: {
+    // Nên truyền URL RPC của riêng bạn: http('https://...').
+    // RPC công khai mặc định giới hạn số lần gọi.
+    [sepolia.id]: http(),
+    [anvil.id]: http(),
+  },
+});
+
+// Cho TypeScript biết cấu hình, để các hook kiểm được chain và ABI
+declare module 'wagmi' {
+  interface Register {
+    config: typeof config;
+  }
+}
+```
+
+**`VendingMachine.tsx`: trang mua XU.**
+
+```tsx title="src/VendingMachine.tsx"
+import { useEffect, useState } from 'react';
+import { BaseError, ContractFunctionRevertedError, formatUnits, parseEther } from 'viem';
+import {
+  useConnect,
+  useConnection,
+  useConnectors,
+  useDisconnect,
+  useReadContract,
+  useSimulateContract,
+  useWaitForTransactionReceipt,
+  useWatchContractEvent,
+  useWriteContract,
+} from 'wagmi';
+import { machineAbi } from './abi';
+
+// Địa chỉ mà kịch bản triển khai in ra. Đây là địa chỉ trên anvil ở bài trước:
+// đổi thành địa chỉ máy của bạn trên Sepolia.
+const machine = { address: '0x5FbDB2315678afecb367f032d93F642f64180aa3', abi: machineAbi } as const;
+
+export function VendingMachine() {
+  const { address, isConnected } = useConnection();
+  const connectors = useConnectors();
+  const connect = useConnect();
+  const disconnect = useDisconnect();
+  const [eth, setEth] = useState('0.01');
+  const [sales, setSales] = useState<string[]>([]);
+
+  // Đọc: không tạo giao dịch, không tốn phí
+  const stock = useReadContract({ ...machine, functionName: 'stock' });
+  const balance = useReadContract({
+    ...machine,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) },
+  });
+
+  // Chạy thử lệnh mua trước khi người dùng ký, để lỗi như SoldOut hiện ra ngay
+  const value = toWei(eth);
+  const simulation = useSimulateContract({
+    ...machine,
+    functionName: 'buy',
+    value,
+    query: { enabled: isConnected && value !== undefined && value > 0n },
+  });
+
+  // Ghi: ví hỏi người dùng ký, rồi gửi giao dịch lên mạng lưới
+  const buy = useWriteContract();
+  const receipt = useWaitForTransactionReceipt({ hash: buy.data });
+
+  // Giao dịch vào khối rồi thì đọc lại số dư và số hàng
+  useEffect(() => {
+    if (receipt.isSuccess) {
+      stock.refetch();
+      balance.refetch();
+    }
+  }, [receipt.isSuccess]);
+
+  // Nghe sự kiện Sold: thấy cả lượt mua của người khác
+  useWatchContractEvent({
+    ...machine,
+    eventName: 'Sold',
+    onLogs: (logs) =>
+      setSales((old) =>
+        [...logs.map((log) => `${log.args.buyer} mua ${formatUnits(log.args.tokensOut ?? 0n, 18)} XU`), ...old].slice(0, 5),
+      ),
+  });
+
+  if (!isConnected) {
+    return (
+      <div>
+        {connectors.map((connector) => (
+          <button key={connector.uid} type="button" onClick={() => connect.mutate({ connector })}>
+            Kết nối {connector.name}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  const busy = buy.isPending || receipt.isLoading;
+  return (
+    <div>
+      <p>
+        Ví: {address}{' '}
+        <button type="button" onClick={() => disconnect.mutate()}>
+          Ngắt kết nối
+        </button>
+      </p>
+      <p>Còn trong máy: {xu(stock.data)} XU</p>
+      <p>Bạn có: {xu(balance.data)} XU</p>
+
+      <label>
+        Số ETH <input value={eth} onChange={(e) => setEth(e.target.value)} />
+      </label>
+      {value !== undefined && <p>Bạn sẽ nhận {xu(value * 1000n)} XU</p>}
+      <button type="button" disabled={!simulation.data || busy} onClick={() => simulation.data && buy.mutate(simulation.data.request)}>
+        {buy.isPending ? 'Đang chờ ví ký…' : receipt.isLoading ? 'Đang chờ vào khối…' : 'Mua'}
+      </button>
+
+      {receipt.isSuccess && <p>Đã mua xong.</p>}
+      <p>{explain(simulation.error ?? buy.error ?? receipt.error)}</p>
+
+      <ul>
+        {sales.map((sale, i) => (
+          <li key={i}>{sale}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function toWei(eth: string) {
+  try {
+    return parseEther(eth);
+  } catch {
+    return undefined;
+  }
+}
+
+const xu = (amount?: bigint) => (amount === undefined ? '…' : formatUnits(amount, 18));
+
+/** Đổi lỗi của hợp đồng thành câu người dùng hiểu được */
+export function explain(error: Error | null) {
+  if (!error) return null;
+  if (!(error instanceof BaseError)) return error.message;
+  const revert = error.walk((e) => e instanceof ContractFunctionRevertedError);
+  if (revert instanceof ContractFunctionRevertedError) {
+    if (revert.data?.errorName === 'SoldOut') return 'Máy không còn đủ XU cho số ETH này.';
+    if (revert.data?.errorName === 'ZeroPayment') return 'Hãy nhập số ETH lớn hơn 0.';
+  }
+  return error.shortMessage;
+}
+```
+
+**`App.tsx`: bọc trang trong các provider.**
+
+```tsx title="src/App.tsx"
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { WagmiProvider } from 'wagmi';
+import { VendingMachine } from './VendingMachine';
+import { config } from './wagmi';
+
+const queryClient = new QueryClient();
+
+export function App() {
+  return (
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <VendingMachine />
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+```
+
+Vài điểm trong mã:
+
+- **Đọc và ghi khác nhau.** `useReadContract` gọi hàm `view` qua RPC, không cần ví ký và không tốn phí. Mua thì phải gửi giao dịch: ví hỏi người dùng ký, và người dùng trả phí gas.
+- **Chạy thử trước khi ký.** `useSimulateContract` chạy lệnh mua trên trạng thái hiện tại mà không gửi đi. Nếu máy hết hàng, lỗi `SoldOut` hiện ra trước khi người dùng mở ví, và nút Mua bị khóa. Kết quả chạy thử (`simulation.data.request`) được đưa thẳng cho `buy.mutate` để gửi.
+- **Ba trạng thái của một lần mua:** chờ ví ký (`buy.isPending`), chờ giao dịch vào khối (`receipt.isLoading`), rồi xong. Giao dịch vào khối chưa có nghĩa là đã đạt [tính cuối cùng](../giao-thuc/dong-thuan.mdx). Với số tiền lớn, hãy đợi thêm.
+- **Lỗi tùy chỉnh đọc được.** Vì ABI có `error SoldOut` và `error ZeroPayment`, viem giải mã được dữ liệu revert ra tên lỗi, và `explain` đổi tên đó thành câu tiếng Việt.
+- **Sự kiện cho thấy người khác.** `useWatchContractEvent` nghe sự kiện `Sold`, nên trang cập nhật cả khi người khác mua.
+
+<Callout type="warn" title="Quan trọng">
+wagmi 3 đổi tên một số API so với wagmi 2: `useAccount` thành `useConnection`, danh sách ví lấy từ `useConnectors`, và các hàm như `connect` hay `writeContract` được thay bằng `mutate`. Trợ lý AI và nhiều bài hướng dẫn cũ vẫn viết theo wagmi 2. Mã cũ vẫn chạy nhưng bị đánh dấu lỗi thời (deprecated).
+</Callout>
+
+Nếu dùng Next.js với App Router, thêm dòng `'use client';` vào đầu `VendingMachine.tsx` và `App.tsx`, vì hook và provider chỉ chạy được ở phía trình duyệt.
+
+Mã trên đã được kiểm tra kiểu bằng TypeScript với wagmi 3.7, viem 2.57 và React 19, vào tháng 11 năm 2026. Các lệnh đọc, chạy thử, mua, chờ biên lai và giải mã lỗi `SoldOut` đã được chạy thật trên anvil, qua một ví giả lập của wagmi.
+
+## Nhờ trợ lý AI dựng giao diện
+
+Dán lời nhắc dưới đây vào trợ lý AI của bạn, kèm bốn tệp ở trên.
+
+<div className="ai-prompt">
+
+```text title="Lời nhắc cho trợ lý AI"
+Bạn là người hướng dẫn lập trình Ethereum. Hãy giúp tôi dựng giao diện web cho máy bán token trong bài "Triển khai và giao diện web" của Wiki ETH.vn. Trả lời bằng tiếng Việt.
+
+Tôi đã có: dự án Foundry với hợp đồng VendingMachine, và bốn tệp giao diện (abi.ts, wagmi.ts, VendingMachine.tsx, App.tsx) mà tôi sẽ dán bên dưới.
+
+Mục tiêu:
+1. Tạo một dự án React + TypeScript bằng Vite, đặt cạnh dự án Foundry.
+2. Cài wagmi 3, viem 2 và @tanstack/react-query 5.
+3. Đặt bốn tệp vào thư mục src và sửa main.tsx để hiện App.
+4. Chạy anvil và triển khai máy lên anvil như bài trước, rồi kết nối một ví trong trình duyệt (ví dụ MetaMask hay Rabby) tới anvil (chain ID 31337, RPC http://127.0.0.1:8545) và thử mua.
+5. Sau đó đổi địa chỉ máy sang địa chỉ trên Sepolia và thử lại trên Sepolia.
+
+Cách làm việc:
+- Mỗi lần chỉ đưa một bước. Chờ tôi dán kết quả rồi mới sang bước tiếp theo.
+- Dùng API của wagmi 3 (useConnection, useConnectors, mutate), không dùng tên cũ của wagmi 2.
+- Khi có lỗi, giải thích nguyên nhân trước, rồi mới đưa cách sửa.
+- Chỉ dùng anvil và mạng thử nghiệm. Không bao giờ hỏi khóa riêng tư hay cụm từ khôi phục của ví thật. Nếu cần tài khoản thử của anvil trong ví trình duyệt, nhắc tôi dùng một hồ sơ ví riêng cho phát triển.
+
+Bốn tệp của tôi:
+[dán abi.ts, wagmi.ts, VendingMachine.tsx, App.tsx vào đây]
+```
+
+</div>
+
+## Đọc tiếp
+
+- [Từ mempool tới khối](../giao-thuc/tu-mempool-toi-khoi.mdx): giao dịch của bạn đi đâu sau khi bấm Mua, và vì sao thứ tự giao dịch không được bảo đảm
+- [Đồng thuận](../giao-thuc/dong-thuan.mdx): khi nào nên coi một giao dịch là xong
