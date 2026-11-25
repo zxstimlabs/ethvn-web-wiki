@@ -183,7 +183,7 @@ Created on 2026-11-08 with `bunx create-fumadocs-app ethvn-web-wiki -y --install
     - The design, per the user: dark background, faint iso grid, mark + "Wiki ETH.vn", section label, title, description. No block chain and no bottom bar. Titles shrink to fit one line when they can.
     - Font: JetBrains Mono from `@fontsource/jetbrains-mono` (woff, which Satori reads). The latin and Vietnamese subsets are registered as two families ("JBM", "JBM Vietnamese") listed together; with one shared name, bold titles fell back to regular for Vietnamese letters.
     - Satori only accepts plain elements inside `<svg>`, so the cube is a function, not a component.
-  - Icons: `app/icon.svg` and `app/apple-icon.tsx` draw an isometric cube. **Placeholder**: the user will supply the real logo; swap it in there and in the mark in `lib/og.tsx`.
+  - Logo (user, 2026-11-25): the ETH.vn symbol, a white mark on a black rounded tile, supplied as `public/ethvn-symbol.svg` (served at `/ethvn-symbol.svg`; the original export, left as is). Its path, cleaned up, is `LOGO_MARK` in `lib/logo.ts`, used by `app/apple-icon.tsx` (full-bleed tile; iOS rounds it) and the share-image mark in `lib/og.tsx`. `app/icon.svg` is a static copy of the same path, so keep the two in step. Other versions of the logo go in `public/` too.
   - Absolute URLs come from `siteUrl` in `lib/shared.ts`, read from `NEXT_PUBLIC_SITE_URL`.
     - Next bakes it in at **build** time, so it must be set when building, not only at runtime.
     - The domain isn't decided. Without it, canonical links, share images and the sitemap point at localhost; `next.config.mjs` warns during production builds.

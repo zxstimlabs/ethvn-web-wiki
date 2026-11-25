@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
+import { LOGO_MARK, LOGO_RADIUS, LOGO_VIEWBOX } from './logo';
 import { appName } from './shared';
 
 /**
@@ -35,34 +36,11 @@ function loadFonts() {
   return fonts;
 }
 
-/** "#60a5fa" → "rgba(96,165,250,0.2)" (the renderer is happier with rgba than 8-digit hex). */
-function alpha(hex: string, a: number) {
-  const n = Number.parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
 /** Cut text at a word boundary so it fits the space it has, with an ellipsis. */
 function clip(text: string, max: number) {
   if (text.length <= max) return text;
   const cut = text.slice(0, max);
   return `${cut.slice(0, cut.lastIndexOf(' ')).replace(/[,.:;]$/, '')}…`;
-}
-
-/**
- * An isometric cube (the hero's blocks), the mark until the real logo arrives, as SVG polygons.
- * A plain function, not a component: the renderer only accepts intrinsic
- * elements inside <svg>.
- */
-function cube(key: string, x: number, y: number, s: number, color: string, o = 1) {
-  const c = 0.866 * s;
-  const top = `${x},${y - s} ${x + c},${y - s / 2} ${x},${y} ${x - c},${y - s / 2}`;
-  const left = `${x - c},${y - s / 2} ${x},${y} ${x},${y + s} ${x - c},${y + s / 2}`;
-  const right = `${x},${y} ${x + c},${y - s / 2} ${x + c},${y + s / 2} ${x},${y + s}`;
-  return [
-    <polygon key={`${key}l`} points={left} fill={alpha(color, 0.22 * o)} stroke={alpha(color, o)} strokeWidth={2} strokeLinejoin="round" />,
-    <polygon key={`${key}r`} points={right} fill={alpha(color, 0.12 * o)} stroke={alpha(color, o)} strokeWidth={2} strokeLinejoin="round" />,
-    <polygon key={`${key}t`} points={top} fill={alpha(color, 0.35 * o)} stroke={alpha(color, o)} strokeWidth={2} strokeLinejoin="round" />,
-  ];
 }
 
 export interface OgContent {
@@ -104,8 +82,9 @@ export async function renderOgImage({ eyebrow, title, description, color = '#a78
         </svg>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <svg width="44" height="48" viewBox="0 0 44 48">
-            {cube('logo', 22, 20, 20, '#a78bfa')}
+          <svg width="48" height="48" viewBox={LOGO_VIEWBOX}>
+            <rect width="375" height="375" rx={LOGO_RADIUS} fill="#000" />
+            <path d={LOGO_MARK} fill="#fff" fillRule="evenodd" />
           </svg>
           <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.01em' }}>{appName}</span>
         </div>
