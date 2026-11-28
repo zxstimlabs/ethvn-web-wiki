@@ -223,8 +223,12 @@ function placeChain(dom: Dom, u: number, head: number) {
   }
 }
 
-/** Checkpoints, gap labels and the epoch's 2/3 gauge, for head slot H (fractional f during the fast-forward). */
-function renderFinality(dom: Dom, H: number, slot: number, votesLanded: number, bump: number) {
+/**
+ * Checkpoints, gap labels and the 2/3 gauge, for head slot H (fractional f
+ * during the fast-forward). The gauge shows the epoch of `gaugeSlot`, with
+ * `votesLanded` of that slot's votes counted.
+ */
+function renderFinality(dom: Dom, H: number, slot: number, votesLanded: number, bump: number, gaugeSlot = slot) {
   const { L } = dom;
   const cp = checkpoints(slot);
   text(dom.finalSlot, fmt.format(cp.finalized));
@@ -235,9 +239,9 @@ function renderFinality(dom: Dom, H: number, slot: number, votesLanded: number, 
   setAttr(dom.finalInner, 'transform', `translate(0 ${n2(-7 * bump)})`);
   setAttr(dom.justInner, 'transform', `translate(0 ${n2(-7 * bump)})`);
 
-  const share = epochVotes(slot % SLOTS_PER_EPOCH, votesLanded);
+  const share = epochVotes(gaugeSlot % SLOTS_PER_EPOCH, votesLanded);
   const done = share >= 2 / 3;
-  text(dom.gaugeTitle, `Phiếu cho mốc kỷ nguyên ${fmt.format(Math.floor(slot / SLOTS_PER_EPOCH))}`);
+  text(dom.gaugeTitle, `Phiếu cho mốc kỷ nguyên ${fmt.format(Math.floor(gaugeSlot / SLOTS_PER_EPOCH))}`);
   setAttr(dom.gaugeFill, 'width', n2(L.gauge.w * share));
   text(dom.gaugePct, `${fmtPct.format(share * 100)}%`);
   text(dom.gaugeStatus, done ? L.gauge.done : 'cần 2/3 tổng ETH đặt cọc');
@@ -469,7 +473,10 @@ function renderFF(dom: Dom, S: number, t: number, next: number) {
   fade(dom.ringHead, 0);
   const inEpoch = n % SLOTS_PER_EPOCH;
   const bump = inEpoch < 2 && n > S + 1 ? Math.sin((Math.PI * (inEpoch + f)) / 2) : 0;
-  renderFinality(dom, n, n, f * VOTERS, bump);
+  // Once the block is finalized, hold the gauge full on the epoch whose 2/3
+  // finalized it, rather than show the next epoch's gauge restarting from 0.
+  if (n >= target) renderFinality(dom, n, n, VOTERS, bump, target - 1);
+  else renderFinality(dom, n, n, f * VOTERS, bump);
 
   // every validator votes once per epoch: a steady stream toward the head
   const running = t >= FF.run[0] && t < end(FF.run);
